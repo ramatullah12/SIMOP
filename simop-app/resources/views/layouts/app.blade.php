@@ -15,52 +15,52 @@
 
         $menus = [
             'admin' => [
-                ['Dashboard', 'dashboard', 'layout-dashboard'],
-                ['Order & RFQ', 'admin.orders.index', 'clipboard-list'],
-                ['Client', 'admin.clients.index', 'users'],
-                ['Survey', 'admin.surveys.index', 'map-pinned'],
-                ['Work Estimate', 'admin.work-estimates.index', 'calculator'],
-                ['Approval', 'admin.approvals.index', 'clipboard-check'],
-                ['Project', 'admin.projects.index', 'folder-kanban'],
-                ['Planning', 'admin.planning.index', 'calendar-days'],
-                ['Produksi & Instalasi', 'admin.production.index', 'hard-hat'],
-                ['BAPP', 'admin.bapp.index', 'file-check'],
-                ['Dokumen', 'admin.documents.index', 'files'],
-                ['Invoice', 'admin.invoices.index', 'receipt'],
-                ['Vendor', 'admin.vendors.index', 'building-2'],
-                ['Laporan', 'admin.reports.index', 'chart-no-axes-combined'],
-                ['Pengguna', 'admin.users.index', 'user-cog'],
+                ['Dashboard', 'dashboard', '▦'],
+                ['Order & RFQ', 'admin.orders.index', '☷'],
+                ['Client', 'admin.clients.index', '♙'],
+                ['Survey', 'admin.surveys.index', '◎'],
+                ['Work Estimate', 'admin.work-estimates.index', '∑'],
+                ['Approval', 'admin.approvals.index', '✓'],
+                ['Project', 'admin.projects.index', '▤'],
+                ['Planning', 'admin.planning.index', '▦'],
+                ['Produksi & Instalasi', 'admin.production.index', '◈'],
+                ['BAPP', 'admin.bapp.index', '☑'],
+                ['Dokumen', 'admin.documents.index', '▧'],
+                ['Invoice', 'admin.invoices.index', '▤'],
+                ['Vendor', 'admin.vendors.index', '▥'],
+                ['Laporan', 'admin.reports.index', '▥'],
+                ['Pengguna', 'admin.users.index', '⚙'],
             ],
             'direktur' => [
-                ['Dashboard', 'dashboard', 'layout-dashboard'],
-                ['Survey', 'direktur.surveys.index', 'map-pinned'],
-                ['Work Estimate', 'direktur.work-estimates.index', 'calculator'],
-                ['Approval', 'direktur.approvals.index', 'clipboard-check'],
-                ['Project', 'direktur.projects.index', 'folder-kanban'],
-                ['Laporan', 'direktur.reports.index', 'chart-no-axes-combined'],
+                ['Dashboard', 'dashboard', '▦'],
+                ['Survey', 'direktur.surveys.index', '◎'],
+                ['Work Estimate', 'direktur.work-estimates.index', '∑'],
+                ['Approval', 'direktur.approvals.index', '✓'],
+                ['Project', 'direktur.projects.index', '▤'],
+                ['Laporan', 'direktur.reports.index', '▥'],
             ],
             'ceo' => [
-                ['Dashboard', 'dashboard', 'layout-dashboard'],
-                ['Approval', 'ceo.approvals.index', 'clipboard-check'],
-                ['Project', 'ceo.projects.index', 'folder-kanban'],
-                ['Invoice', 'ceo.invoices.index', 'receipt'],
-                ['Laporan', 'ceo.reports.index', 'chart-no-axes-combined'],
+                ['Dashboard', 'dashboard', '▦'],
+                ['Approval', 'ceo.approvals.index', '✓'],
+                ['Project', 'ceo.projects.index', '▤'],
+                ['Invoice', 'ceo.invoices.index', '▤'],
+                ['Laporan', 'ceo.reports.index', '▥'],
             ],
             'petugas-lapangan' => [
-                ['Dashboard', 'dashboard', 'layout-dashboard'],
-                ['Survey', 'petugas-lapangan.surveys.index', 'map-pinned'],
-                ['Produksi & Instalasi', 'petugas-lapangan.production.index', 'hard-hat'],
-                ['BAPP', 'petugas-lapangan.bapp.index', 'file-check'],
-                ['Project', 'petugas-lapangan.projects.index', 'folder-kanban'],
-                ['Dokumen', 'petugas-lapangan.documents.index', 'files'],
+                ['Dashboard', 'dashboard', '▦'],
+                ['Survey', 'petugas-lapangan.surveys.index', '◎'],
+                ['Produksi & Instalasi', 'petugas-lapangan.production.index', '◈'],
+                ['BAPP', 'petugas-lapangan.bapp.index', '☑'],
+                ['Project', 'petugas-lapangan.projects.index', '▤'],
+                ['Dokumen', 'petugas-lapangan.documents.index', '▧'],
             ],
             'client' => [
-                ['Dashboard', 'dashboard', 'layout-dashboard'],
-                ['Order & RFQ', 'client.orders.index', 'clipboard-list'],
-                ['Tracking', 'client.tracking.index', 'map-pinned'],
-                ['Dokumen', 'client.documents.index', 'files'],
-                ['Invoice', 'client.invoices.index', 'receipt'],
-                ['Rating', 'client.ratings.index', 'star'],
+                ['Dashboard', 'dashboard', '▦'],
+                ['Order & RFQ', 'client.orders.index', '☷'],
+                ['Tracking', 'client.tracking.index', '◎'],
+                ['Dokumen', 'client.documents.index', '▧'],
+                ['Invoice', 'client.invoices.index', '▤'],
+                ['Rating', 'client.ratings.index', '☆'],
             ],
         ];
 
@@ -107,40 +107,15 @@
                     @endphp
 
                     @if ($routeExists)
-                        <a
-                            href="{{ route($routeName) }}"
-                            aria-current="{{ $active ? 'page' : 'false' }}"
-                            class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition
-                            {{ $active
-                                ? 'bg-blue-600 font-semibold text-white shadow-sm'
-                                : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
-                        >
-                            <span class="text-base" aria-hidden="true">
-                                @switch($icon)
-                                    @case('layout-dashboard') ▦ @break
-                                    @case('clipboard-list') ☷ @break
-                                    @case('users') ♙ @break
-                                    @case('map-pinned') ◎ @break
-                                    @case('calculator') ∑ @break
-                                    @case('clipboard-check') ✓ @break
-                                    @case('folder-kanban') ▤ @break
-                                    @case('calendar-days') ▦ @break
-                                    @case('hard-hat') ◈ @break
-                                    @case('file-check') ☑ @break
-                                    @case('files') ▧ @break
-                                    @case('receipt') ▤ @break
-                                    @case('building-2') ▥ @break
-                                    @case('chart-no-axes-combined') ▥ @break
-                                    @case('user-cog') ⚙ @break
-                                    @case('star') ☆ @break
-                                    @default ○
-                                @endswitch
-                            </span>
+                        <a href="{{ route($routeName) }}"
+                           aria-current="{{ $active ? 'page' : 'false' }}"
+                           class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition {{ $active ? 'bg-blue-600 font-semibold text-white shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                            <span class="w-5 text-center" aria-hidden="true">{{ $icon }}</span>
                             <span>{{ $label }}</span>
                         </a>
                     @else
                         <div class="flex cursor-not-allowed items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-500">
-                            <span aria-hidden="true">○</span>
+                            <span class="w-5 text-center" aria-hidden="true">{{ $icon }}</span>
                             <span>{{ $label }}</span>
                             <span class="ml-auto text-xs">Segera</span>
                         </div>
@@ -149,21 +124,17 @@
             </nav>
 
             <div class="border-t border-slate-700 px-3 py-4">
-                <a
-                    href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                >
-                    <span aria-hidden="true">?</span>
+                <a href="{{ route('dashboard') }}"
+                   class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white">
+                    <span class="w-5 text-center" aria-hidden="true">?</span>
                     <span>Pusat Bantuan</span>
                 </a>
 
                 <form method="POST" action="{{ route('logout') }}" class="mt-1">
                     @csrf
-                    <button
-                        type="submit"
-                        class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm text-red-300 transition hover:bg-slate-800 hover:text-red-200"
-                    >
-                        <span aria-hidden="true">↪</span>
+                    <button type="submit"
+                            class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm text-red-300 transition hover:bg-slate-800 hover:text-red-200">
+                        <span class="w-5 text-center" aria-hidden="true">↪</span>
                         <span>Keluar</span>
                     </button>
                 </form>
