@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\WorkEstimateController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -70,6 +71,17 @@ Route::middleware('auth')->group(function () {
                 Route::post('/', 'store')->name('store');
                 Route::get('/{survey}', 'show')->name('show');
                 Route::put('/{survey}', 'update')->name('update');
+            });
+
+        // Work Estimate
+        Route::prefix('admin/work-estimates')
+            ->name('admin.work-estimates.')
+            ->controller(WorkEstimateController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{workEstimate}', 'show')->name('show');
             });
     });
 });
