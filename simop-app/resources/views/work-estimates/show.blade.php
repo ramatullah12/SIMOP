@@ -1,143 +1,225 @@
 
 @extends('layouts.app')
 
-@section('title', 'Detail Work Estimate | SIMOP')
-@section('page-title', 'Detail Estimasi Biaya')
+@section('title', 'Detail Work Estimate - SIMOP')
+@section('page-title', 'Detail Work Estimate')
 
 @section('content')
-<div class="mx-auto max-w-5xl space-y-6">
+<div class="space-y-6">
 
-    <div>
-        <a href="{{ route('admin.work-estimates.index') }}"
-           class="text-sm font-medium text-blue-600 hover:text-blue-800">
-            &larr; Kembali ke Daftar Estimasi
-        </a>
-
-        <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900">
-                    {{ $estimate->title }}
-                </h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    Nomor: {{ $estimate->estimate_number }}
-                </p>
-            </div>
-
-            <span class="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
-                {{ ucfirst(str_replace('_', ' ', $estimate->status)) }}
-            </span>
+    {{-- Header --}}
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">
+                Detail Work Estimate
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+                Nomor estimasi:
+                <span class="font-semibold text-slate-700">
+                    {{ $estimate->estimate_number }}
+                </span>
+            </p>
         </div>
+
+        <a href="{{ route('admin.work-estimates.index') }}"
+           class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            Kembali ke Daftar
+        </a>
     </div>
 
+    {{-- Notifikasi --}}
     @if (session('success'))
-        <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
+        <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
             {{ session('success') }}
         </div>
     @endif
 
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-bold text-slate-900">Informasi Estimasi</h3>
+    @if (session('error'))
+        <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {{ session('error') }}
+        </div>
+    @endif
 
-        <dl class="mt-5 grid gap-5 sm:grid-cols-2">
-            <div>
-                <dt class="text-sm text-slate-500">Nomor Estimasi</dt>
-                <dd class="mt-1 font-semibold text-slate-900">
-                    {{ $estimate->estimate_number }}
-                </dd>
-            </div>
+    @if ($errors->any())
+        <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <p class="mb-2 font-semibold">Ada kesalahan:</p>
+            <ul class="list-inside list-disc">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-            <div>
-                <dt class="text-sm text-slate-500">Nomor Order</dt>
-                <dd class="mt-1 font-semibold text-slate-900">
-                    {{ $estimate->order->order_number ?? 'Order #'.$estimate->order_id }}
-                </dd>
-            </div>
+    {{-- Informasi utama --}}
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-            <div>
-                <dt class="text-sm text-slate-500">Perusahaan</dt>
-                <dd class="mt-1 font-semibold text-slate-900">
-                    {{ $estimate->order->company_name ?? '-' }}
-                </dd>
-            </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+            <h2 class="mb-5 text-lg font-bold text-slate-900">
+                Informasi Estimasi
+            </h2>
 
-            <div>
-                <dt class="text-sm text-slate-500">Survey Terkait</dt>
-                <dd class="mt-1 font-semibold text-slate-900">
-                    {{ $estimate->survey?->location ?? 'Tidak ada' }}
-                </dd>
-            </div>
+            <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm text-slate-500">Nomor Estimasi</dt>
+                    <dd class="mt-1 font-semibold text-slate-900">
+                        {{ $estimate->estimate_number }}
+                    </dd>
+                </div>
 
-            <div>
-                <dt class="text-sm text-slate-500">Dibuat Oleh</dt>
-                <dd class="mt-1 font-semibold text-slate-900">
-                    {{ $estimate->creator?->name ?? '-' }}
-                </dd>
-            </div>
+                <div>
+                    <dt class="text-sm text-slate-500">Judul</dt>
+                    <dd class="mt-1 font-semibold text-slate-900">
+                        {{ $estimate->title }}
+                    </dd>
+                </div>
 
-            <div>
-                <dt class="text-sm text-slate-500">Tanggal Dibuat</dt>
-                <dd class="mt-1 font-semibold text-slate-900">
-                    {{ $estimate->created_at?->format('d-m-Y H:i') ?? '-' }}
-                </dd>
-            </div>
+                <div>
+                    <dt class="text-sm text-slate-500">Nomor Order</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                        {{ $estimate->order->order_number ?? '-' }}
+                    </dd>
+                </div>
 
-            <div class="sm:col-span-2">
-                <dt class="text-sm text-slate-500">Deskripsi Pekerjaan</dt>
-                <dd class="mt-1 whitespace-pre-line text-slate-800">
-                    {{ $estimate->description ?: '-' }}
-                </dd>
-            </div>
-        </dl>
+                <div>
+                    <dt class="text-sm text-slate-500">Client / Perusahaan</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                        {{ $estimate->order->company_name ?? '-' }}
+                    </dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm text-slate-500">Survey</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                        {{ $estimate->survey->location ?? 'Belum dihubungkan' }}
+                    </dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm text-slate-500">Dibuat oleh</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                        {{ $estimate->creator->name ?? '-' }}
+                    </dd>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <dt class="text-sm text-slate-500">Deskripsi</dt>
+                    <dd class="mt-1 whitespace-pre-line text-slate-700">
+                        {{ $estimate->description ?: 'Tidak ada deskripsi.' }}
+                    </dd>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <dt class="text-sm text-slate-500">Catatan Estimasi</dt>
+                    <dd class="mt-1 whitespace-pre-line text-slate-700">
+                        {{ $estimate->notes ?: 'Tidak ada catatan.' }}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        {{-- Status --}}
+        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-4 text-lg font-bold text-slate-900">
+                Status Estimasi
+            </h2>
+
+            @php
+                $statusStyles = [
+                    'draft' => 'bg-slate-100 text-slate-700',
+                    'pending' => 'bg-amber-100 text-amber-800',
+                    'approved' => 'bg-green-100 text-green-800',
+                    'rejected' => 'bg-red-100 text-red-800',
+                ];
+
+                $statusLabels = [
+                    'draft' => 'Draft',
+                    'pending' => 'Menunggu Persetujuan',
+                    'approved' => 'Disetujui',
+                    'rejected' => 'Ditolak',
+                ];
+
+                $status = $estimate->status;
+            @endphp
+
+            <span class="inline-flex rounded-full px-3 py-1.5 text-sm font-semibold {{ $statusStyles[$status] ?? 'bg-slate-100 text-slate-700' }}">
+                {{ $statusLabels[$status] ?? ucfirst($status) }}
+            </span>
+
+            <p class="mt-4 text-sm leading-6 text-slate-500">
+                @if ($status === 'draft')
+                    Estimasi belum diajukan untuk persetujuan.
+                @elseif ($status === 'pending')
+                    Estimasi sedang menunggu keputusan Direktur atau CEO.
+                @elseif ($status === 'approved')
+                    Estimasi telah disetujui.
+                @elseif ($status === 'rejected')
+                    Estimasi ditolak dan perlu ditinjau kembali.
+                @endif
+            </p>
+        </div>
     </div>
 
+    {{-- Rincian biaya --}}
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-200 p-6">
-            <h3 class="text-lg font-bold text-slate-900">Rincian Item Pekerjaan</h3>
+        <div class="border-b border-slate-200 px-6 py-5">
+            <h2 class="text-lg font-bold text-slate-900">
+                Rincian Biaya
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Daftar item yang membentuk nilai estimasi.
+            </p>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
-                <thead class="bg-slate-50">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-600">
                     <tr>
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">No.</th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">Item Pekerjaan</th>
-                        <th class="px-5 py-4 text-right text-xs font-semibold uppercase text-slate-500">Kuantitas</th>
-                        <th class="px-5 py-4 text-right text-xs font-semibold uppercase text-slate-500">Harga Satuan</th>
-                        <th class="px-5 py-4 text-right text-xs font-semibold uppercase text-slate-500">Total</th>
+                        <th class="px-5 py-4">No.</th>
+                        <th class="px-5 py-4">Nama Item</th>
+                        <th class="px-5 py-4">Deskripsi</th>
+                        <th class="px-5 py-4 text-right">Kuantitas</th>
+                        <th class="px-5 py-4">Satuan</th>
+                        <th class="px-5 py-4 text-right">Harga Satuan</th>
+                        <th class="px-5 py-4 text-right">Total</th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($estimate->items as $item)
                         <tr>
-                            <td class="px-5 py-4 text-sm text-slate-600">
+                            <td class="px-5 py-4">
                                 {{ $loop->iteration }}
                             </td>
 
-                            <td class="px-5 py-4">
-                                <p class="font-semibold text-slate-900">{{ $item->item_name }}</p>
-                                @if ($item->description)
-                                    <p class="mt-1 text-sm text-slate-500">{{ $item->description }}</p>
-                                @endif
+                            <td class="px-5 py-4 font-medium text-slate-900">
+                                {{ $item->item_name }}
                             </td>
 
-                            <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-slate-600">
+                            <td class="px-5 py-4 text-slate-600">
+                                {{ $item->description ?: '-' }}
+                            </td>
+
+                            <td class="px-5 py-4 text-right">
                                 {{ number_format((float) $item->quantity, 2, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-4">
                                 {{ $item->unit }}
                             </td>
 
-                            <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-slate-600">
-                                Rp{{ number_format((float) $item->unit_price, 0, ',', '.') }}
+                            <td class="whitespace-nowrap px-5 py-4 text-right">
+                                Rp {{ number_format((float) $item->unit_price, 0, ',', '.') }}
                             </td>
 
-                            <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-semibold text-slate-900">
-                                Rp{{ number_format((float) $item->total_price, 0, ',', '.') }}
+                            <td class="whitespace-nowrap px-5 py-4 text-right font-medium">
+                                Rp {{ number_format((float) $item->total_price, 0, ',', '.') }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-500">
-                                Belum ada rincian item.
+                            <td colspan="7" class="px-5 py-8 text-center text-slate-500">
+                                Belum ada rincian item biaya.
                             </td>
                         </tr>
                     @endforelse
@@ -145,38 +227,123 @@
             </table>
         </div>
 
-        <div class="border-t border-slate-200 bg-slate-50 p-6">
-            <div class="ml-auto max-w-sm space-y-3">
-                <div class="flex justify-between gap-4 text-sm">
-                    <span class="text-slate-600">Subtotal</span>
-                    <span class="font-semibold text-slate-900">
-                        Rp{{ number_format((float) $estimate->subtotal, 0, ',', '.') }}
-                    </span>
+        <div class="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-5">
+            <dl class="w-full space-y-3 sm:max-w-sm">
+                <div class="flex justify-between gap-4">
+                    <dt class="text-slate-600">Subtotal</dt>
+                    <dd class="font-medium text-slate-900">
+                        Rp {{ number_format((float) $estimate->subtotal, 0, ',', '.') }}
+                    </dd>
                 </div>
 
-                <div class="flex justify-between gap-4 text-sm">
-                    <span class="text-slate-600">Pajak</span>
-                    <span class="font-semibold text-slate-900">
-                        Rp{{ number_format((float) $estimate->tax_amount, 0, ',', '.') }}
-                    </span>
+                <div class="flex justify-between gap-4">
+                    <dt class="text-slate-600">Pajak</dt>
+                    <dd class="font-medium text-slate-900">
+                        Rp {{ number_format((float) $estimate->tax_amount, 0, ',', '.') }}
+                    </dd>
                 </div>
 
-                <div class="flex justify-between gap-4 border-t border-slate-300 pt-4">
-                    <span class="font-bold text-slate-900">Total Estimasi</span>
-                    <span class="text-xl font-bold text-blue-700">
-                        Rp{{ number_format((float) $estimate->total_amount, 0, ',', '.') }}
-                    </span>
+                <div class="flex justify-between gap-4 border-t border-slate-200 pt-3">
+                    <dt class="font-bold text-slate-900">Total Estimasi</dt>
+                    <dd class="text-lg font-bold text-blue-700">
+                        Rp {{ number_format((float) $estimate->total_amount, 0, ',', '.') }}
+                    </dd>
                 </div>
-            </div>
+            </dl>
         </div>
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-bold text-slate-900">Catatan Tambahan</h3>
-        <p class="mt-3 whitespace-pre-line text-sm text-slate-600">
-            {{ $estimate->notes ?: 'Tidak ada catatan tambahan.' }}
-        </p>
-    </div>
+    {{-- Ajukan persetujuan --}}
+    @if (auth()->user()?->role?->slug === 'admin' && $status === 'draft')
+        <div class="rounded-xl border border-blue-200 bg-blue-50 p-6">
+            <h2 class="text-lg font-bold text-slate-900">
+                Ajukan Persetujuan
+            </h2>
+
+            <p class="mt-1 text-sm leading-6 text-slate-600">
+                Kirim estimasi ini untuk diperiksa oleh Direktur atau CEO.
+                Pastikan seluruh rincian biaya sudah benar sebelum mengajukan.
+            </p>
+
+            <form method="POST"
+                  action="{{ route('approvals.store', $estimate) }}"
+                  class="mt-5 space-y-4">
+                @csrf
+
+                <div>
+                    <label for="approval_notes"
+                           class="mb-1 block text-sm font-medium text-slate-700">
+                        Catatan Pengajuan (Opsional)
+                    </label>
+
+                    <textarea
+                        id="approval_notes"
+                        name="notes"
+                        rows="3"
+                        class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Tambahkan informasi untuk pemberi persetujuan..."
+                    >{{ old('notes') }}</textarea>
+                </div>
+
+                <button type="submit"
+                        onclick="return confirm('Ajukan estimasi ini untuk persetujuan?')"
+                        class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+                    Ajukan Persetujuan
+                </button>
+            </form>
+        </div>
+    @endif
+
+    {{-- Informasi status proses --}}
+    @if (in_array($status, ['pending', 'approved', 'rejected']))
+        @php
+            $approval = $estimate->approvals
+                ->sortByDesc('created_at')
+                ->first();
+        @endphp
+
+        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900">
+                Informasi Persetujuan
+            </h2>
+
+            @if ($approval)
+                <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm text-slate-500">Status Approval</dt>
+                        <dd class="mt-1 font-semibold text-slate-900">
+                            {{ ucfirst($approval->status) }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt class="text-sm text-slate-500">Pemberi Persetujuan</dt>
+                        <dd class="mt-1 font-semibold text-slate-900">
+                            {{ $approval->approver->name ?? 'Belum diproses' }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt class="text-sm text-slate-500">Waktu Keputusan</dt>
+                        <dd class="mt-1 text-slate-700">
+                            {{ $approval->approved_at?->format('d-m-Y H:i') ?? '-' }}
+                        </dd>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <dt class="text-sm text-slate-500">Catatan Approval</dt>
+                        <dd class="mt-1 whitespace-pre-line text-slate-700">
+                            {{ $approval->notes ?: 'Tidak ada catatan.' }}
+                        </dd>
+                    </div>
+                </dl>
+            @else
+                <p class="mt-3 text-sm text-slate-500">
+                    Data keputusan belum tersedia.
+                </p>
+            @endif
+        </div>
+    @endif
 
 </div>
 @endsection
