@@ -20,7 +20,7 @@
                 ['Client', 'admin.clients.index', '♙'],
                 ['Survey', 'admin.surveys.index', '◎'],
                 ['Work Estimate', 'admin.work-estimates.index', '∑'],
-                ['Approval', 'admin.approvals.index', '✓'],
+                ['Approval', 'approvals.index', '✓'],
                 ['Project', 'admin.projects.index', '▤'],
                 ['Planning', 'admin.planning.index', '▦'],
                 ['Produksi & Instalasi', 'admin.production.index', '◈'],
@@ -35,13 +35,13 @@
                 ['Dashboard', 'dashboard', '▦'],
                 ['Survey', 'direktur.surveys.index', '◎'],
                 ['Work Estimate', 'direktur.work-estimates.index', '∑'],
-                ['Approval', 'direktur.approvals.index', '✓'],
+                ['Approval', 'approvals.index', '✓'],
                 ['Project', 'direktur.projects.index', '▤'],
                 ['Laporan', 'direktur.reports.index', '▥'],
             ],
             'ceo' => [
                 ['Dashboard', 'dashboard', '▦'],
-                ['Approval', 'ceo.approvals.index', '✓'],
+                ['Approval', 'approvals.index', '✓'],
                 ['Project', 'ceo.projects.index', '▤'],
                 ['Invoice', 'ceo.invoices.index', '▤'],
                 ['Laporan', 'ceo.reports.index', '▥'],
@@ -80,7 +80,8 @@
 
     <div class="min-h-screen lg:flex">
         <aside class="flex w-full flex-col bg-slate-900 text-white lg:min-h-screen lg:w-64 lg:shrink-0">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 border-b border-slate-700 px-6 py-6">
+            <a href="{{ route('dashboard') }}"
+               class="flex items-center gap-3 border-b border-slate-700 px-6 py-6">
                 <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold">
                     S
                 </div>
@@ -109,7 +110,10 @@
                     @if ($routeExists)
                         <a href="{{ route($routeName) }}"
                            aria-current="{{ $active ? 'page' : 'false' }}"
-                           class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition {{ $active ? 'bg-blue-600 font-semibold text-white shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                           class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition
+                           {{ $active
+                                ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                             <span class="w-5 text-center" aria-hidden="true">{{ $icon }}</span>
                             <span>{{ $label }}</span>
                         </a>
@@ -154,7 +158,9 @@
 
                 <div class="flex items-center gap-3">
                     <div class="hidden text-right sm:block">
-                        <p class="text-sm font-semibold text-slate-800">{{ $user?->name ?? 'Pengguna' }}</p>
+                        <p class="text-sm font-semibold text-slate-800">
+                            {{ $user?->name ?? 'Pengguna' }}
+                        </p>
                         <p class="mt-1 text-xs text-slate-500">{{ $roleLabel }}</p>
                     </div>
 

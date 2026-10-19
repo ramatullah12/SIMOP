@@ -1,6 +1,7 @@
 
 <?php
 
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
@@ -82,6 +83,24 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
                 Route::get('/{workEstimate}', 'show')->name('show');
+            });
+
+        // Approval
+        Route::prefix('approvals')
+            ->name('approvals.')
+            ->controller(ApprovalController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+
+                Route::post(
+                    '/work-estimates/{workEstimate}',
+                    'store'
+                )->name('store');
+
+                Route::patch(
+                    '/{approval}/decide',
+                    'decide'
+                )->name('decide');
             });
     });
 });
