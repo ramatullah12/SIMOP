@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\BappController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
@@ -149,6 +150,21 @@ Route::middleware('auth')->group(function () {
 
                 Route::patch(
                     '/{production}/status',
+                    'updateStatus'
+                )->name('status');
+            });
+
+        Route::prefix('bapps')
+            ->name('bapps.')
+            ->controller(BappController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{bapp}', 'show')->name('show');
+
+                Route::patch(
+                    '/{bapp}/status',
                     'updateStatus'
                 )->name('status');
             });
