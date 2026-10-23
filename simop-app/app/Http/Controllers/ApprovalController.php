@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\Approval;
 use App\Models\WorkEstimate;
 use Illuminate\Http\Request;
@@ -11,9 +10,6 @@ use Illuminate\Validation\Rule;
 
 class ApprovalController extends Controller
 {
-    /**
-     * Menampilkan daftar pengajuan persetujuan.
-     */
     public function index()
     {
         abort_unless(
@@ -36,10 +32,6 @@ class ApprovalController extends Controller
         return view('approvals.index', compact('approvals'));
     }
 
-    /**
-     * Mengajukan Work Estimate untuk persetujuan.
-     * Hanya Admin yang dapat mengajukan.
-     */
     public function store(Request $request, WorkEstimate $workEstimate)
     {
         abort_unless(
@@ -64,6 +56,7 @@ class ApprovalController extends Controller
 
             Approval::create([
                 'work_estimate_id' => $workEstimate->id,
+                'stage' => 'direktur',
                 'approver_id' => null,
                 'status' => 'pending',
                 'notes' => $validated['notes'] ?? null,
@@ -75,22 +68,17 @@ class ApprovalController extends Controller
             ->route('admin.work-estimates.show', $workEstimate)
             ->with(
                 'success',
-                'Estimasi berhasil diajukan untuk persetujuan.'
+                'Work Estimate berhasil diajukan dan menunggu persetujuan Direktur.'
             );
     }
 
-    /**
-     * Menyetujui atau menolak pengajuan.
-     * Hanya Direktur atau CEO yang dapat memutuskan.
-     */
     public function decide(Request $request, Approval $approval)
     {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
         abort_unless(
-            in_array(
-                auth()->user()?->role?->slug,
-                ['direktur', 'ceo'],
-                true
-            ),
+            in_array($role, ['direktur', 'ceo'], true),
             403
         );
 
@@ -99,7 +87,11 @@ class ApprovalController extends Controller
                 'required',
                 Rule::in(['approved', 'rejected']),
             ],
-            'notes' => ['nullable', 'string', 'max:5000'],
+            'notes' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
         ]);
 
         abort_unless(
@@ -108,26 +100,84 @@ class ApprovalController extends Controller
             'Pengajuan ini sudah diproses sebelumnya.'
         );
 
-        DB::transaction(function () use ($approval, $validated) {
+        abort_unless(
+            $approval->stage === $role,
+            403,
+            'Pengajuan ini bukan tahap persetujuan Anda.'
+        );
+
+        DB::transaction(function () use (
+            $approval,
+            $validated,
+            $user,
+            $role
+        ) {
             $approval->update([
-                'approver_id' => auth()->id(),
+                'approver_id' => $user->id,
                 'status' => $validated['status'],
                 'notes' => $validated['notes'] ?? $approval->notes,
                 'approved_at' => now(),
             ]);
 
-            $approval->workEstimate()->update([
-                'status' => $validated['status'],
-            ]);
+            if ($validated['status'] === 'rejected') {
+                $approval->workEstimate()->update([
+                    'status' => 'rejected',
+                ]);
+
+                return;
+            }
+
+            if ($role === 'direktur') {
+                $approval->workEstimate()->update([
+                    'status' => 'pending',
+                ]);
+
+                Approval::firstOrCreate(
+                    [
+                        'work_estimate_id' => $approval->work_estimate_id,
+                        'stage' => 'ceo',
+                    ],
+                    [
+                        'approver_id' => null,
+                        'status' => 'pending',
+                        'notes' => null,
+                        'approved_at' => null,
+                    ]
+                );
+
+                return;
+            }
+
+            if ($role === 'ceo') {
+                $approval->workEstimate()->update([
+                    'status' => 'approved',
+                ]);
+            }
         });
+
+        if ($validated['status'] === 'rejected') {
+            return redirect()
+                ->route('approvals.index')
+                ->with(
+                    'success',
+                    'Work Estimate berhasil ditolak.'
+                );
+        }
+
+        if ($role === 'direktur') {
+            return redirect()
+                ->route('approvals.index')
+                ->with(
+                    'success',
+                    'Work Estimate disetujui Direktur dan diteruskan ke CEO.'
+                );
+        }
 
         return redirect()
             ->route('approvals.index')
             ->with(
                 'success',
-                $validated['status'] === 'approved'
-                    ? 'Work Estimate berhasil disetujui.'
-                    : 'Work Estimate ditolak.'
+                'Work Estimate berhasil disetujui CEO dan mendapatkan persetujuan final.'
             );
     }
 }

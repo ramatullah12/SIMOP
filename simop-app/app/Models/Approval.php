@@ -9,6 +9,7 @@ class Approval extends Model
 {
     protected $fillable = [
         'work_estimate_id',
+        'stage',
         'approver_id',
         'status',
         'notes',
