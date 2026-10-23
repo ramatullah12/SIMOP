@@ -5,6 +5,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PlanningController;
+use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SurveyController;
@@ -128,6 +129,26 @@ Route::middleware('auth')->group(function () {
 
                 Route::patch(
                     '/{planning}/status',
+                    'updateStatus'
+                )->name('status');
+            });
+
+        Route::prefix('productions')
+            ->name('productions.')
+            ->controller(ProductionController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{production}', 'show')->name('show');
+
+                Route::patch(
+                    '/{production}/progress',
+                    'updateProgress'
+                )->name('progress');
+
+                Route::patch(
+                    '/{production}/status',
                     'updateStatus'
                 )->name('status');
             });

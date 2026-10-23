@@ -22,7 +22,7 @@
                 ['Approval', 'approvals.index', '✓'],
                 ['Project', 'projects.index', '▤'],
                 ['Planning', 'plannings.index', '▦'],
-                ['Produksi & Instalasi', 'admin.production.index', '◈'],
+                ['Produksi & Instalasi', 'productions.index', '◈'],
                 ['BAPP', 'admin.bapp.index', '☑'],
                 ['Dokumen', 'admin.documents.index', '▧'],
                 ['Invoice', 'admin.invoices.index', '▤'],
@@ -51,7 +51,7 @@
             'petugas-lapangan' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Survey', 'petugas-lapangan.surveys.index', '◎'],
-                ['Produksi & Instalasi', 'petugas-lapangan.production.index', '◈'],
+                ['Produksi & Instalasi', 'productions.index', '◈'],
                 ['BAPP', 'petugas-lapangan.bapp.index', '☑'],
                 ['Project', 'projects.index', '▤'],
                 ['Dokumen', 'petugas-lapangan.documents.index', '▧'],
@@ -128,6 +128,10 @@
                             || (
                                 $routeName === 'plannings.index'
                                 && request()->routeIs('plannings.*')
+                            )
+                            || (
+                                $routeName === 'productions.index'
+                                && request()->routeIs('productions.*')
                             );
                     @endphp
 
