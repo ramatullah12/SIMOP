@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -21,8 +20,8 @@
                 ['Survey', 'admin.surveys.index', '◎'],
                 ['Work Estimate', 'admin.work-estimates.index', '∑'],
                 ['Approval', 'approvals.index', '✓'],
-                ['Project', 'admin.projects.index', '▤'],
-                ['Planning', 'admin.planning.index', '▦'],
+                ['Project', 'projects.index', '▤'],
+                ['Planning', 'plannings.index', '▦'],
                 ['Produksi & Instalasi', 'admin.production.index', '◈'],
                 ['BAPP', 'admin.bapp.index', '☑'],
                 ['Dokumen', 'admin.documents.index', '▧'],
@@ -31,29 +30,33 @@
                 ['Laporan', 'admin.reports.index', '▥'],
                 ['Pengguna', 'admin.users.index', '⚙'],
             ],
+
             'direktur' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Survey', 'direktur.surveys.index', '◎'],
                 ['Work Estimate', 'direktur.work-estimates.index', '∑'],
                 ['Approval', 'approvals.index', '✓'],
-                ['Project', 'direktur.projects.index', '▤'],
+                ['Project', 'projects.index', '▤'],
                 ['Laporan', 'direktur.reports.index', '▥'],
             ],
+
             'ceo' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Approval', 'approvals.index', '✓'],
-                ['Project', 'ceo.projects.index', '▤'],
+                ['Project', 'projects.index', '▤'],
                 ['Invoice', 'ceo.invoices.index', '▤'],
                 ['Laporan', 'ceo.reports.index', '▥'],
             ],
+
             'petugas-lapangan' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Survey', 'petugas-lapangan.surveys.index', '◎'],
                 ['Produksi & Instalasi', 'petugas-lapangan.production.index', '◈'],
                 ['BAPP', 'petugas-lapangan.bapp.index', '☑'],
-                ['Project', 'petugas-lapangan.projects.index', '▤'],
+                ['Project', 'projects.index', '▤'],
                 ['Dokumen', 'petugas-lapangan.documents.index', '▧'],
             ],
+
             'client' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Order & RFQ', 'client.orders.index', '☷'],
@@ -82,18 +85,30 @@
         <aside class="flex w-full flex-col bg-slate-900 text-white lg:min-h-screen lg:w-64 lg:shrink-0">
             <a href="{{ route('dashboard') }}"
                class="flex items-center gap-3 border-b border-slate-700 px-6 py-6">
+
                 <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold">
                     S
                 </div>
+
                 <div>
-                    <h1 class="text-xl font-bold tracking-wide">SIMOP</h1>
-                    <p class="mt-1 text-xs text-slate-400">Manajemen Operasional</p>
+                    <h1 class="text-xl font-bold tracking-wide">
+                        SIMOP
+                    </h1>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        Manajemen Operasional
+                    </p>
                 </div>
             </a>
 
             <div class="border-b border-slate-700 px-5 py-4">
-                <p class="text-xs text-slate-500">LOGIN SEBAGAI</p>
-                <p class="mt-1 font-semibold">{{ $roleLabel }}</p>
+                <p class="text-xs text-slate-500">
+                    LOGIN SEBAGAI
+                </p>
+
+                <p class="mt-1 font-semibold">
+                    {{ $roleLabel }}
+                </p>
             </div>
 
             <nav class="flex-1 space-y-1 px-3 py-5">
@@ -104,7 +119,16 @@
                 @foreach ($currentMenus as [$label, $routeName, $icon])
                     @php
                         $routeExists = \Illuminate\Support\Facades\Route::has($routeName);
-                        $active = $currentRoute === $routeName;
+
+                        $active = $currentRoute === $routeName
+                            || (
+                                $routeName === 'projects.index'
+                                && request()->routeIs('projects.*')
+                            )
+                            || (
+                                $routeName === 'plannings.index'
+                                && request()->routeIs('plannings.*')
+                            );
                     @endphp
 
                     @if ($routeExists)
@@ -114,14 +138,29 @@
                            {{ $active
                                 ? 'bg-blue-600 font-semibold text-white shadow-sm'
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                            <span class="w-5 text-center" aria-hidden="true">{{ $icon }}</span>
-                            <span>{{ $label }}</span>
+
+                            <span class="w-5 text-center" aria-hidden="true">
+                                {{ $icon }}
+                            </span>
+
+                            <span>
+                                {{ $label }}
+                            </span>
                         </a>
                     @else
                         <div class="flex cursor-not-allowed items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-500">
-                            <span class="w-5 text-center" aria-hidden="true">{{ $icon }}</span>
-                            <span>{{ $label }}</span>
-                            <span class="ml-auto text-xs">Segera</span>
+
+                            <span class="w-5 text-center" aria-hidden="true">
+                                {{ $icon }}
+                            </span>
+
+                            <span>
+                                {{ $label }}
+                            </span>
+
+                            <span class="ml-auto text-xs">
+                                Segera
+                            </span>
                         </div>
                     @endif
                 @endforeach
@@ -130,16 +169,32 @@
             <div class="border-t border-slate-700 px-3 py-4">
                 <a href="{{ route('dashboard') }}"
                    class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white">
-                    <span class="w-5 text-center" aria-hidden="true">?</span>
-                    <span>Pusat Bantuan</span>
+
+                    <span class="w-5 text-center" aria-hidden="true">
+                        ?
+                    </span>
+
+                    <span>
+                        Pusat Bantuan
+                    </span>
                 </a>
 
-                <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                <form method="POST"
+                      action="{{ route('logout') }}"
+                      class="mt-1">
+
                     @csrf
+
                     <button type="submit"
                             class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm text-red-300 transition hover:bg-slate-800 hover:text-red-200">
-                        <span class="w-5 text-center" aria-hidden="true">↪</span>
-                        <span>Keluar</span>
+
+                        <span class="w-5 text-center" aria-hidden="true">
+                            ↪
+                        </span>
+
+                        <span>
+                            Keluar
+                        </span>
                     </button>
                 </form>
             </div>
@@ -147,10 +202,12 @@
 
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-10">
+
                 <div>
                     <p class="text-xs font-medium uppercase tracking-wider text-blue-600">
                         Sistem Informasi Manajemen Operasional
                     </p>
+
                     <h2 class="mt-1 text-xl font-bold text-slate-900">
                         @yield('page-title', 'Dashboard')
                     </h2>
@@ -161,7 +218,10 @@
                         <p class="text-sm font-semibold text-slate-800">
                             {{ $user?->name ?? 'Pengguna' }}
                         </p>
-                        <p class="mt-1 text-xs text-slate-500">{{ $roleLabel }}</p>
+
+                        <p class="mt-1 text-xs text-slate-500">
+                            {{ $roleLabel }}
+                        </p>
                     </div>
 
                     <div class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">

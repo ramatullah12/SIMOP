@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class WorkEstimate extends Model
 {
@@ -55,5 +55,10 @@ class WorkEstimate extends Model
     public function approvals(): HasMany
     {
         return $this->hasMany(Approval::class);
+    }
+
+    public function project(): HasOne
+    {
+        return $this->hasOne(Project::class);
     }
 }
