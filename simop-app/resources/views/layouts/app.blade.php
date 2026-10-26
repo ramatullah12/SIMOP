@@ -24,7 +24,7 @@
                 ['Planning', 'plannings.index', '▦'],
                 ['Produksi & Instalasi', 'productions.index', '◈'],
                 ['BAPP', 'bapps.index', '☑'],
-                ['Dokumen', 'admin.documents.index', '▧'],
+                ['Dokumen', 'documents.index', '▧'],
                 ['Invoice', 'admin.invoices.index', '▤'],
                 ['Vendor', 'admin.vendors.index', '▥'],
                 ['Laporan', 'admin.reports.index', '▥'],
@@ -46,14 +46,14 @@
                 ['Produksi & Instalasi', 'productions.index', '◈'],
                 ['BAPP', 'bapps.index', '☑'],
                 ['Project', 'projects.index', '▤'],
-                ['Dokumen', 'petugas-lapangan.documents.index', '▧'],
+                ['Dokumen', 'documents.index', '▧'],
             ],
 
             'client' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Order & RFQ', 'client.orders.index', '☷'],
                 ['Tracking', 'client.tracking.index', '◎'],
-                ['Dokumen', 'client.documents.index', '▧'],
+                ['Dokumen', 'documents.index', '▧'],
                 ['Invoice', 'client.invoices.index', '▤'],
                 ['Rating', 'client.ratings.index', '☆'],
             ],
@@ -127,6 +127,10 @@
                             || (
                                 $routeName === 'bapps.index'
                                 && request()->routeIs('bapps.*')
+                            )
+                            || (
+                                $routeName === 'documents.index'
+                                && request()->routeIs('documents.*')
                             );
                     @endphp
 
