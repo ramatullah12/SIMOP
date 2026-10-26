@@ -249,9 +249,24 @@ class PlanningController extends Controller
             );
         }
 
-        $planning->update([
-            'status' => $validated['status'],
-        ]);
+        DB::transaction(function () use ($planning, $validated) {
+            $planning->update([
+                'status' => $validated['status'],
+            ]);
+
+            if (
+                in_array(
+                    $validated['status'],
+                    ['ready', 'in_progress', 'completed'],
+                    true
+                )
+                && $planning->project->status === 'planning'
+            ) {
+                $planning->project->update([
+                    'status' => 'ongoing',
+                ]);
+            }
+        });
 
         return redirect()
             ->route(

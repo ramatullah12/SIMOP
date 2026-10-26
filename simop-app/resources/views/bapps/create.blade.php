@@ -54,6 +54,7 @@
             @csrf
 
             <div class="space-y-6">
+
                 <div>
                     <label for="production_id"
                            class="mb-2 block text-sm font-semibold text-slate-700">
@@ -78,6 +79,12 @@
                             </option>
                         @endforeach
                     </select>
+
+                    @error('production_id')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -92,6 +99,12 @@
                            value="{{ old('completion_date') }}"
                            required
                            class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                    @error('completion_date')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -106,6 +119,12 @@
                            value="{{ old('location') }}"
                            placeholder="Lokasi penyelesaian pekerjaan"
                            class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                    @error('location')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -119,6 +138,12 @@
                               rows="5"
                               placeholder="Jelaskan hasil pekerjaan..."
                               class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('work_result') }}</textarea>
+
+                    @error('work_result')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -132,12 +157,19 @@
                               rows="4"
                               placeholder="Catatan tambahan..."
                               class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+
+                    @error('notes')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <p class="text-sm text-blue-700">
-                        BAPP baru akan dibuat dengan status
+                        BAPP akan dibuat dengan status
                         <span class="font-semibold">Draft</span>.
+                        Setelah selesai diperiksa, BAPP dapat diajukan dan kemudian disetujui.
                     </p>
                 </div>
 
@@ -152,6 +184,7 @@
                         Buat BAPP
                     </button>
                 </div>
+
             </div>
         </form>
     @endif

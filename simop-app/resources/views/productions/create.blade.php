@@ -17,7 +17,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-slate-500">
-            Buat pekerjaan produksi dan instalasi berdasarkan Planning yang tersedia.
+            Buat pekerjaan produksi dan instalasi berdasarkan Planning yang telah selesai.
         </p>
     </div>
 
@@ -38,7 +38,7 @@
             </h3>
 
             <p class="mt-2 text-sm text-amber-700">
-                Planning harus berstatus Siap, Berjalan, atau Selesai dan belum memiliki Produksi & Instalasi.
+                Planning harus berstatus Selesai dan belum memiliki Produksi & Instalasi.
             </p>
 
             <a href="{{ route('plannings.index') }}"
@@ -79,6 +79,12 @@
                             </option>
                         @endforeach
                     </select>
+
+                    @error('planning_id')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -103,6 +109,12 @@
                             </option>
                         @endforeach
                     </select>
+
+                    @error('assigned_to')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -118,6 +130,12 @@
                            required
                            placeholder="Contoh: Produksi dan Instalasi Media Promosi"
                            class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                    @error('title')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -133,6 +151,12 @@
                                name="start_date"
                                value="{{ old('start_date') }}"
                                class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        @error('start_date')
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
 
                     <div>
@@ -146,6 +170,12 @@
                                name="end_date"
                                value="{{ old('end_date') }}"
                                class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        @error('end_date')
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
 
                 </div>
@@ -161,6 +191,12 @@
                               rows="5"
                               placeholder="Jelaskan pekerjaan produksi dan instalasi..."
                               class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description') }}</textarea>
+
+                    @error('description')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -174,11 +210,17 @@
                               rows="4"
                               placeholder="Catatan tambahan..."
                               class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+
+                    @error('notes')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <p class="text-sm text-blue-700">
-                        Produksi & Instalasi baru akan dibuat dengan status
+                        Produksi & Instalasi akan dibuat dengan status
                         <span class="font-semibold">Menunggu</span>
                         dan progress
                         <span class="font-semibold">0%</span>.

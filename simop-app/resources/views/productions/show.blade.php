@@ -30,7 +30,6 @@
     </div>
 
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-
         <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
             <div>
@@ -89,13 +88,30 @@
                 </div>
             </div>
         </div>
-
     </div>
+
+    @if ($production->status === 'completed')
+        <div class="rounded-xl border border-green-200 bg-green-50 p-5">
+            <h3 class="font-bold text-green-800">
+                Produksi & Instalasi telah selesai
+            </h3>
+
+            <p class="mt-1 text-sm text-green-700">
+                Progress pekerjaan telah mencapai 100%. Tahap berikutnya adalah pembuatan BAPP.
+            </p>
+
+            @if (auth()->user()?->role?->slug === 'admin')
+                <a href="{{ route('bapps.create') }}"
+                   class="mt-4 inline-flex rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">
+                    Buat BAPP
+                </a>
+            @endif
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
         <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-
             <h3 class="text-lg font-bold text-slate-900">
                 Informasi Pekerjaan
             </h3>
@@ -178,7 +194,6 @@
         <div class="space-y-6">
 
             <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-
                 <h3 class="text-lg font-bold text-slate-900">
                     Project & Planning
                 </h3>
@@ -213,10 +228,13 @@
             </div>
 
             @if (
-                auth()->user()?->role?->slug === 'admin'
-                || (
-                    auth()->user()?->role?->slug === 'petugas-lapangan'
-                    && $production->assigned_to === auth()->id()
+                $production->status !== 'cancelled'
+                && (
+                    auth()->user()?->role?->slug === 'admin'
+                    || (
+                        auth()->user()?->role?->slug === 'petugas-lapangan'
+                        && $production->assigned_to === auth()->id()
+                    )
                 )
             )
                 <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

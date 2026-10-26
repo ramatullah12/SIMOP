@@ -4,6 +4,7 @@ use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\BappController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\ProductionController;
@@ -167,6 +168,30 @@ Route::middleware('auth')->group(function () {
                     '/{bapp}/status',
                     'updateStatus'
                 )->name('status');
+            });
+
+        Route::prefix('documents')
+            ->name('documents.')
+            ->controller(DocumentController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+
+                Route::get(
+                    '/{document}/download',
+                    'download'
+                )->name('download');
+
+                Route::get(
+                    '/{document}',
+                    'show'
+                )->name('show');
+
+                Route::delete(
+                    '/{document}',
+                    'destroy'
+                )->name('destroy');
             });
     });
 });

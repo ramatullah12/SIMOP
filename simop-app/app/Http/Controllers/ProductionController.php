@@ -57,11 +57,7 @@ class ProductionController extends Controller
         $plannings = Planning::with([
             'project.assignedUser',
         ])
-            ->whereIn('status', [
-                'ready',
-                'in_progress',
-                'completed',
-            ])
+            ->where('status', 'completed')
             ->whereDoesntHave('production')
             ->latest()
             ->get();
@@ -138,17 +134,9 @@ class ProductionController extends Controller
             );
 
         abort_unless(
-            in_array(
-                $planning->status,
-                [
-                    'ready',
-                    'in_progress',
-                    'completed',
-                ],
-                true
-            ),
+            $planning->status === 'completed',
             422,
-            'Planning harus berstatus Siap, Berjalan, atau Selesai.'
+            'Planning harus berstatus Selesai sebelum Produksi & Instalasi dapat dibuat.'
         );
 
         $fieldOfficer = User::with('role')
@@ -157,8 +145,7 @@ class ProductionController extends Controller
             );
 
         abort_unless(
-            $fieldOfficer->role?->slug
-                === 'petugas-lapangan',
+            $fieldOfficer->role?->slug === 'petugas-lapangan',
             422,
             'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
         );
@@ -168,7 +155,7 @@ class ProductionController extends Controller
                 $validated,
                 $planning
             ) {
-                $production = Production::create([
+                return Production::create([
                     'planning_id' =>
                         $planning->id,
                     'created_by' =>
@@ -192,14 +179,6 @@ class ProductionController extends Controller
                     'notes' =>
                         $validated['notes'] ?? null,
                 ]);
-
-                if ($planning->status === 'ready') {
-                    $planning->update([
-                        'status' => 'in_progress',
-                    ]);
-                }
-
-                return $production;
             }
         );
 
@@ -278,6 +257,12 @@ class ProductionController extends Controller
             abort(403);
         }
 
+        abort_if(
+            $production->status === 'cancelled',
+            422,
+            'Produksi & Instalasi yang dibatalkan tidak dapat diperbarui.'
+        );
+
         $validated = $request->validate([
             'progress' => [
                 'required',
@@ -307,19 +292,15 @@ class ProductionController extends Controller
                 ]);
 
                 if ($status === 'in_progress') {
-                    $production
-                        ->planning()
-                        ->update([
-                            'status' => 'in_progress',
-                        ]);
+                    $production->planning->project->update([
+                        'status' => 'ongoing',
+                    ]);
                 }
 
                 if ($status === 'completed') {
-                    $production
-                        ->planning()
-                        ->update([
-                            'status' => 'completed',
-                        ]);
+                    $production->planning->project->update([
+                        'progress' => 100,
+                    ]);
                 }
             }
         );
@@ -378,19 +359,15 @@ class ProductionController extends Controller
                 $production->update($data);
 
                 if ($status === 'in_progress') {
-                    $production
-                        ->planning()
-                        ->update([
-                            'status' => 'in_progress',
-                        ]);
+                    $production->planning->project->update([
+                        'status' => 'ongoing',
+                    ]);
                 }
 
                 if ($status === 'completed') {
-                    $production
-                        ->planning()
-                        ->update([
-                            'status' => 'completed',
-                        ]);
+                    $production->planning->project->update([
+                        'progress' => 100,
+                    ]);
                 }
             }
         );

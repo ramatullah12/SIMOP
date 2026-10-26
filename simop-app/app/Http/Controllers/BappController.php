@@ -112,7 +112,7 @@ class BappController extends Controller
 
         abort_unless(
             $production->status === 'completed'
-            && $production->progress === 100,
+            && (int) $production->progress === 100,
             422,
             'BAPP hanya dapat dibuat dari pekerjaan yang sudah selesai 100%.'
         );
@@ -197,6 +197,12 @@ class BappController extends Controller
             403
         );
 
+        abort_if(
+            $bapp->status === 'approved',
+            422,
+            'BAPP yang sudah disetujui tidak dapat diubah kembali.'
+        );
+
         $validated = $request->validate([
             'status' => [
                 'required',
@@ -208,9 +214,41 @@ class BappController extends Controller
             ],
         ]);
 
-        $bapp->update([
-            'status' => $validated['status'],
-        ]);
+        if (
+            $validated['status'] === 'approved'
+            && $bapp->status !== 'submitted'
+        ) {
+            abort(
+                422,
+                'BAPP harus diajukan terlebih dahulu sebelum disetujui.'
+            );
+        }
+
+        DB::transaction(
+            function () use (
+                $bapp,
+                $validated
+            ) {
+                $bapp->update([
+                    'status' => $validated['status'],
+                ]);
+
+                if ($validated['status'] === 'approved') {
+                    $bapp->load(
+                        'production.planning.project'
+                    );
+
+                    $bapp
+                        ->production
+                        ->planning
+                        ->project
+                        ->update([
+                            'status' => 'completed',
+                            'progress' => 100,
+                        ]);
+                }
+            }
+        );
 
         return redirect()
             ->route(
@@ -219,7 +257,9 @@ class BappController extends Controller
             )
             ->with(
                 'success',
-                'Status BAPP berhasil diperbarui.'
+                $validated['status'] === 'approved'
+                    ? 'BAPP berhasil disetujui dan Project telah diselesaikan.'
+                    : 'Status BAPP berhasil diperbarui.'
             );
     }
 

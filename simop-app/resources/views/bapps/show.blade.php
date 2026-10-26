@@ -31,6 +31,7 @@
 
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+
             <div>
                 <p class="text-sm font-medium text-slate-500">
                     Berita Acara Penyelesaian Pekerjaan
@@ -63,8 +64,21 @@
                     </span>
                 @endif
             </div>
+
         </div>
     </div>
+
+    @if ($bapp->status === 'approved')
+        <div class="rounded-xl border border-green-200 bg-green-50 p-5">
+            <h3 class="font-bold text-green-800">
+                BAPP telah disetujui
+            </h3>
+
+            <p class="mt-1 text-sm text-green-700">
+                BAPP telah disahkan dan Project telah dinyatakan selesai dengan progress 100%.
+            </p>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -74,6 +88,7 @@
             </h3>
 
             <div class="mt-5 space-y-5">
+
                 <div>
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Nomor BAPP
@@ -123,6 +138,7 @@
                         {{ $bapp->notes ?: '-' }}
                     </p>
                 </div>
+
             </div>
         </div>
 
@@ -134,6 +150,7 @@
                 </h3>
 
                 <div class="mt-5 space-y-5">
+
                     <div>
                         <p class="text-xs font-semibold uppercase text-slate-400">
                             Produksi & Instalasi
@@ -177,14 +194,42 @@
                             {{ $bapp->production->progress }}%
                         </p>
                     </div>
+
+                    <div>
+                        <p class="text-xs font-semibold uppercase text-slate-400">
+                            Status Project
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold text-slate-800">
+                            @if ($bapp->production->planning->project->status === 'planning')
+                                Planning
+                            @elseif ($bapp->production->planning->project->status === 'ongoing')
+                                Berjalan
+                            @elseif ($bapp->production->planning->project->status === 'completed')
+                                Selesai
+                            @elseif ($bapp->production->planning->project->status === 'cancelled')
+                                Dibatalkan
+                            @else
+                                {{ $bapp->production->planning->project->status }}
+                            @endif
+                        </p>
+                    </div>
+
                 </div>
             </div>
 
-            @if (auth()->user()?->role?->slug === 'admin')
+            @if (
+                auth()->user()?->role?->slug === 'admin'
+                && $bapp->status !== 'approved'
+            )
                 <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 class="text-lg font-bold text-slate-900">
                         Status BAPP
                     </h3>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Proses BAPP dilakukan secara berurutan dari Draft, Diajukan, kemudian Disetujui.
+                    </p>
 
                     <form method="POST"
                           action="{{ route('bapps.status', $bapp) }}"
@@ -199,33 +244,63 @@
                         </label>
 
                         <div class="flex flex-col gap-3 sm:flex-row">
+
                             <select id="status"
                                     name="status"
                                     required
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
 
-                                <option value="draft"
-                                    @selected($bapp->status === 'draft')>
-                                    Draft
-                                </option>
+                                @if ($bapp->status === 'draft')
+                                    <option value="draft" selected>
+                                        Draft
+                                    </option>
 
-                                <option value="submitted"
-                                    @selected($bapp->status === 'submitted')>
-                                    Diajukan
-                                </option>
+                                    <option value="submitted">
+                                        Diajukan
+                                    </option>
+                                @elseif ($bapp->status === 'submitted')
+                                    <option value="submitted" selected>
+                                        Diajukan
+                                    </option>
 
-                                <option value="approved"
-                                    @selected($bapp->status === 'approved')>
-                                    Disetujui
-                                </option>
+                                    <option value="approved">
+                                        Disetujui
+                                    </option>
+                                @endif
+
                             </select>
 
                             <button type="submit"
                                     class="whitespace-nowrap rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
                                 Update Status
                             </button>
+
                         </div>
                     </form>
+                </div>
+            @endif
+
+            @if ($bapp->status === 'approved')
+                <div class="rounded-xl border border-green-200 bg-white p-6 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900">
+                        Status Akhir
+                    </h3>
+
+                    <div class="mt-4 flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                            ✓
+                        </div>
+
+                        <div>
+                            <p class="font-semibold text-green-700">
+                                BAPP Disetujui
+                            </p>
+
+                            <p class="text-sm text-slate-500">
+                                Proses pelaksanaan pekerjaan telah selesai.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
