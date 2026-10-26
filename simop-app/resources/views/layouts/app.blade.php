@@ -60,7 +60,6 @@
         ];
 
         $currentMenus = $menus[$role] ?? [];
-        $currentRoute = request()->route()?->getName();
 
         $roleLabels = [
             'admin' => 'Administrator',
@@ -74,9 +73,10 @@
 
     <div class="min-h-screen lg:flex">
         <aside class="flex w-full flex-col bg-slate-900 text-white lg:min-h-screen lg:w-64 lg:shrink-0">
-            <a href="{{ route('dashboard') }}"
-               class="flex items-center gap-3 border-b border-slate-700 px-6 py-6">
-
+            <a
+                href="{{ route('dashboard') }}"
+                class="flex items-center gap-3 border-b border-slate-700 px-6 py-6"
+            >
                 <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold">
                     S
                 </div>
@@ -111,37 +111,115 @@
                     @php
                         $routeExists = \Illuminate\Support\Facades\Route::has($routeName);
 
-                        $active = $currentRoute === $routeName
-                            || (
-                                $routeName === 'projects.index'
-                                && request()->routeIs('projects.*')
-                            )
-                            || (
-                                $routeName === 'plannings.index'
-                                && request()->routeIs('plannings.*')
-                            )
-                            || (
-                                $routeName === 'productions.index'
-                                && request()->routeIs('productions.*')
-                            )
-                            || (
-                                $routeName === 'bapps.index'
-                                && request()->routeIs('bapps.*')
-                            )
-                            || (
-                                $routeName === 'documents.index'
-                                && request()->routeIs('documents.*')
-                            );
+                        $patterns = match ($routeName) {
+                            'dashboard' => ['dashboard'],
+
+                            'admin.orders.index' => [
+                                'admin.orders.*',
+                            ],
+
+                            'client.orders.index' => [
+                                'client.orders.*',
+                            ],
+
+                            'admin.clients.index' => [
+                                'admin.clients.*',
+                            ],
+
+                            'admin.surveys.index' => [
+                                'admin.surveys.*',
+                            ],
+
+                            'direktur.surveys.index' => [
+                                'direktur.surveys.*',
+                            ],
+
+                            'petugas-lapangan.surveys.index' => [
+                                'petugas-lapangan.surveys.*',
+                            ],
+
+                            'admin.work-estimates.index' => [
+                                'admin.work-estimates.*',
+                            ],
+
+                            'direktur.work-estimates.index' => [
+                                'direktur.work-estimates.*',
+                            ],
+
+                            'approvals.index' => [
+                                'approvals.*',
+                            ],
+
+                            'projects.index' => [
+                                'projects.*',
+                            ],
+
+                            'plannings.index' => [
+                                'plannings.*',
+                            ],
+
+                            'productions.index' => [
+                                'productions.*',
+                            ],
+
+                            'bapps.index' => [
+                                'bapps.*',
+                            ],
+
+                            'documents.index' => [
+                                'documents.*',
+                            ],
+
+                            'client.tracking.index' => [
+                                'client.tracking.*',
+                            ],
+
+                            'admin.invoices.index' => [
+                                'admin.invoices.*',
+                            ],
+
+                            'client.invoices.index' => [
+                                'client.invoices.*',
+                            ],
+
+                            'admin.vendors.index' => [
+                                'admin.vendors.*',
+                            ],
+
+                            'admin.reports.index' => [
+                                'admin.reports.*',
+                            ],
+
+                            'direktur.reports.index' => [
+                                'direktur.reports.*',
+                            ],
+
+                            'admin.users.index' => [
+                                'admin.users.*',
+                            ],
+
+                            'client.ratings.index' => [
+                                'client.ratings.*',
+                            ],
+
+                            default => [$routeName],
+                        };
+
+                        $active = request()->routeIs(...$patterns);
                     @endphp
 
                     @if ($routeExists)
-                        <a href="{{ route($routeName) }}"
-                           aria-current="{{ $active ? 'page' : 'false' }}"
-                           class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition
-                           {{ $active
-                               ? 'bg-blue-600 font-semibold text-white shadow-sm'
-                               : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-
+                        <a
+                            href="{{ route($routeName) }}"
+                            class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition
+                            {{ $active
+                                ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }}"
+                            @if ($active)
+                                aria-current="page"
+                            @endif
+                        >
                             <span class="w-5 text-center" aria-hidden="true">
                                 {{ $icon }}
                             </span>
@@ -152,7 +230,6 @@
                         </a>
                     @else
                         <div class="flex cursor-not-allowed items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-500">
-
                             <span class="w-5 text-center" aria-hidden="true">
                                 {{ $icon }}
                             </span>
@@ -170,9 +247,10 @@
             </nav>
 
             <div class="border-t border-slate-700 px-3 py-4">
-                <a href="{{ route('dashboard') }}"
-                   class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white">
-
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                >
                     <span class="w-5 text-center" aria-hidden="true">
                         ?
                     </span>
@@ -182,15 +260,17 @@
                     </span>
                 </a>
 
-                <form method="POST"
-                      action="{{ route('logout') }}"
-                      class="mt-1">
-
+                <form
+                    method="POST"
+                    action="{{ route('logout') }}"
+                    class="mt-1"
+                >
                     @csrf
 
-                    <button type="submit"
-                            class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm text-red-300 transition hover:bg-slate-800 hover:text-red-200">
-
+                    <button
+                        type="submit"
+                        class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm text-red-300 transition hover:bg-slate-800 hover:text-red-200"
+                    >
                         <span class="w-5 text-center" aria-hidden="true">
                             ↪
                         </span>
@@ -205,7 +285,6 @@
 
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-10">
-
                 <div>
                     <p class="text-xs font-medium uppercase tracking-wider text-blue-600">
                         Sistem Informasi Manajemen Operasional
@@ -234,6 +313,18 @@
             </header>
 
             <main class="flex-1 p-5 sm:p-6 lg:p-10">
+                @if (session('success'))
+                    <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
 

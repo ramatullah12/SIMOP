@@ -19,15 +19,15 @@ class DocumentController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'petugas-lapangan'],
+                ['admin', 'petugas-lapangan', 'client'],
                 true
             ),
             403
         );
 
         $documents = Document::with([
-            'project',
             'project.assignedUser',
+            'project.workEstimate.order',
             'uploader',
         ])
             ->when(
@@ -39,6 +39,18 @@ class DocumentController extends Controller
                         $user->id
                     )
                 )
+            )
+            ->when(
+                $role === 'client',
+                fn ($query) => $query
+                    ->where('client_access', true)
+                    ->whereHas(
+                        'project.workEstimate.order',
+                        fn ($orderQuery) => $orderQuery->where(
+                            'client_id',
+                            $user->id
+                        )
+                    )
             )
             ->latest()
             ->paginate(10);
@@ -137,7 +149,8 @@ class DocumentController extends Controller
                     $validated,
                     $project,
                     $file,
-                    $storedPath
+                    $storedPath,
+                    $request
                 ) {
                     return Document::create([
                         'project_id' =>
@@ -192,7 +205,7 @@ class DocumentController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'petugas-lapangan'],
+                ['admin', 'petugas-lapangan', 'client'],
                 true
             ),
             403
@@ -204,12 +217,11 @@ class DocumentController extends Controller
             'uploader',
         ]);
 
-        if (
-            $role === 'petugas-lapangan'
-            && $document->project->assigned_to !== $user->id
-        ) {
-            abort(403);
-        }
+        $this->authorizeDocumentAccess(
+            $document,
+            $user->id,
+            $role
+        );
 
         return view(
             'documents.show',
@@ -225,20 +237,21 @@ class DocumentController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'petugas-lapangan'],
+                ['admin', 'petugas-lapangan', 'client'],
                 true
             ),
             403
         );
 
-        $document->load('project');
+        $document->load([
+            'project.workEstimate.order',
+        ]);
 
-        if (
-            $role === 'petugas-lapangan'
-            && $document->project->assigned_to !== $user->id
-        ) {
-            abort(403);
-        }
+        $this->authorizeDocumentAccess(
+            $document,
+            $user->id,
+            $role
+        );
 
         abort_unless(
             Storage::disk('local')->exists(
@@ -285,6 +298,37 @@ class DocumentController extends Controller
                 'success',
                 'Dokumen berhasil dihapus.'
             );
+    }
+
+    private function authorizeDocumentAccess(
+        Document $document,
+        int $userId,
+        string $role
+    ): void {
+        if ($role === 'admin') {
+            return;
+        }
+
+        if ($role === 'petugas-lapangan') {
+            abort_unless(
+                $document->project->assigned_to === $userId,
+                403
+            );
+
+            return;
+        }
+
+        if ($role === 'client') {
+            abort_unless(
+                $document->client_access
+                && $document->project->workEstimate?->order?->client_id === $userId,
+                403
+            );
+
+            return;
+        }
+
+        abort(403);
     }
 
     private function generateDocumentNumber(): string
