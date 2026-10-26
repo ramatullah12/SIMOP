@@ -17,7 +17,11 @@ class ProjectController extends Controller
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'direktur', 'ceo', 'petugas-lapangan'], true),
+            in_array(
+                $role,
+                ['admin', 'direktur', 'petugas-lapangan'],
+                true
+            ),
             403
         );
 
@@ -28,12 +32,18 @@ class ProjectController extends Controller
         ])
             ->when(
                 $role === 'petugas-lapangan',
-                fn ($query) => $query->where('assigned_to', $user->id)
+                fn ($query) => $query->where(
+                    'assigned_to',
+                    $user->id
+                )
             )
             ->latest()
             ->paginate(10);
 
-        return view('projects.index', compact('projects'));
+        return view(
+            'projects.index',
+            compact('projects')
+        );
     }
 
     public function create()
@@ -49,15 +59,24 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        $fieldOfficers = User::whereHas('role', function ($query) {
-            $query->where('slug', 'petugas-lapangan');
-        })
+        $fieldOfficers = User::whereHas(
+            'role',
+            function ($query) {
+                $query->where(
+                    'slug',
+                    'petugas-lapangan'
+                );
+            }
+        )
             ->orderBy('name')
             ->get();
 
         return view(
             'projects.create',
-            compact('workEstimates', 'fieldOfficers')
+            compact(
+                'workEstimates',
+                'fieldOfficers'
+            )
         );
     }
 
@@ -108,41 +127,59 @@ class ProjectController extends Controller
         abort_unless(
             $workEstimate->status === 'approved',
             422,
-            'Hanya Work Estimate yang sudah mendapatkan persetujuan final yang dapat dijadikan Project.'
+            'Hanya Work Estimate yang sudah mendapatkan persetujuan final Direktur yang dapat dijadikan Project.'
         );
 
         if (!empty($validated['assigned_to'])) {
-            $fieldOfficer = User::with('role')->findOrFail(
-                $validated['assigned_to']
-            );
+            $fieldOfficer = User::with('role')
+                ->findOrFail(
+                    $validated['assigned_to']
+                );
 
             abort_unless(
-                $fieldOfficer->role?->slug === 'petugas-lapangan',
+                $fieldOfficer->role?->slug
+                    === 'petugas-lapangan',
                 422,
                 'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
             );
         }
 
-        $project = DB::transaction(function () use ($validated) {
-            $project = Project::create([
-                'work_estimate_id' => $validated['work_estimate_id'],
-                'created_by' => auth()->id(),
-                'assigned_to' => $validated['assigned_to'] ?? null,
-                'project_number' => $this->generateProjectNumber(),
-                'title' => $validated['title'],
-                'start_date' => $validated['start_date'] ?? null,
-                'deadline' => $validated['deadline'] ?? null,
-                'status' => 'planning',
-                'progress' => 0,
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            return $project;
-        });
+        $project = DB::transaction(
+            function () use ($validated) {
+                return Project::create([
+                    'work_estimate_id' =>
+                        $validated['work_estimate_id'],
+                    'created_by' =>
+                        auth()->id(),
+                    'assigned_to' =>
+                        $validated['assigned_to'] ?? null,
+                    'project_number' =>
+                        $this->generateProjectNumber(),
+                    'title' =>
+                        $validated['title'],
+                    'start_date' =>
+                        $validated['start_date'] ?? null,
+                    'deadline' =>
+                        $validated['deadline'] ?? null,
+                    'status' =>
+                        'planning',
+                    'progress' =>
+                        0,
+                    'notes' =>
+                        $validated['notes'] ?? null,
+                ]);
+            }
+        );
 
         return redirect()
-            ->route('projects.show', $project)
-            ->with('success', 'Project berhasil dibuat.');
+            ->route(
+                'projects.show',
+                $project
+            )
+            ->with(
+                'success',
+                'Project berhasil dibuat.'
+            );
     }
 
     public function show(Project $project)
@@ -151,7 +188,11 @@ class ProjectController extends Controller
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'direktur', 'ceo', 'petugas-lapangan'], true),
+            in_array(
+                $role,
+                ['admin', 'direktur', 'petugas-lapangan'],
+                true
+            ),
             403
         );
 
@@ -169,16 +210,25 @@ class ProjectController extends Controller
             'assignedUser',
         ]);
 
-        return view('projects.show', compact('project'));
+        return view(
+            'projects.show',
+            compact('project')
+        );
     }
 
-    public function updateProgress(Request $request, Project $project)
-    {
+    public function updateProgress(
+        Request $request,
+        Project $project
+    ) {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'petugas-lapangan'], true),
+            in_array(
+                $role,
+                ['admin', 'petugas-lapangan'],
+                true
+            ),
             403
         );
 
@@ -212,12 +262,20 @@ class ProjectController extends Controller
         ]);
 
         return redirect()
-            ->route('projects.show', $project)
-            ->with('success', 'Progress Project berhasil diperbarui.');
+            ->route(
+                'projects.show',
+                $project
+            )
+            ->with(
+                'success',
+                'Progress Project berhasil diperbarui.'
+            );
     }
 
-    public function updateStatus(Request $request, Project $project)
-    {
+    public function updateStatus(
+        Request $request,
+        Project $project
+    ) {
         abort_unless(
             auth()->user()?->role?->slug === 'admin',
             403
@@ -235,19 +293,31 @@ class ProjectController extends Controller
             ],
         ]);
 
+        $status = $validated['status'];
+
         $data = [
-            'status' => $validated['status'],
+            'status' => $status,
         ];
 
-        if ($validated['status'] === 'completed') {
+        if ($status === 'completed') {
             $data['progress'] = 100;
+        }
+
+        if ($status === 'planning') {
+            $data['progress'] = 0;
         }
 
         $project->update($data);
 
         return redirect()
-            ->route('projects.show', $project)
-            ->with('success', 'Status Project berhasil diperbarui.');
+            ->route(
+                'projects.show',
+                $project
+            )
+            ->with(
+                'success',
+                'Status Project berhasil diperbarui.'
+            );
     }
 
     private function generateProjectNumber(): string
@@ -256,9 +326,17 @@ class ProjectController extends Controller
             $number = 'PRJ-'
                 . now()->format('YmdHis')
                 . '-'
-                . strtoupper(substr(uniqid(), -4));
+                . strtoupper(
+                    substr(
+                        uniqid(),
+                        -4
+                    )
+                );
         } while (
-            Project::where('project_number', $number)->exists()
+            Project::where(
+                'project_number',
+                $number
+            )->exists()
         );
 
         return $number;

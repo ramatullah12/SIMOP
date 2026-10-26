@@ -17,7 +17,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-slate-500">
-            Project hanya dapat dibuat dari Work Estimate yang telah mendapatkan persetujuan final.
+            Project hanya dapat dibuat dari Work Estimate yang telah mendapatkan persetujuan final dari Direktur.
         </p>
     </div>
 
@@ -38,7 +38,7 @@
             </h3>
 
             <p class="mt-2 text-sm text-amber-700">
-                Work Estimate harus mendapatkan persetujuan final dari CEO sebelum dapat dibuat menjadi Project.
+                Work Estimate harus mendapatkan persetujuan final dari Direktur sebelum dapat dibuat menjadi Project.
             </p>
 
             <a href="{{ route('admin.work-estimates.index') }}"
@@ -80,6 +80,12 @@
                         @endforeach
 
                     </select>
+
+                    @error('work_estimate_id')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -95,6 +101,12 @@
                            required
                            placeholder="Contoh: Instalasi Peralatan Kantor"
                            class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                    @error('title')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div>
@@ -120,6 +132,12 @@
 
                     </select>
 
+                    @error('assigned_to')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
                     @if ($fieldOfficers->isEmpty())
                         <p class="mt-2 text-xs text-amber-600">
                             Belum ada pengguna dengan role Petugas Lapangan.
@@ -140,6 +158,12 @@
                                name="start_date"
                                value="{{ old('start_date') }}"
                                class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        @error('start_date')
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
 
                     <div>
@@ -153,6 +177,12 @@
                                name="deadline"
                                value="{{ old('deadline') }}"
                                class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        @error('deadline')
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
 
                 </div>
@@ -168,6 +198,12 @@
                               rows="4"
                               placeholder="Catatan Project (opsional)"
                               class="w-full rounded-lg border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+
+                    @error('notes')
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <div class="flex justify-end gap-3 border-t border-slate-200 pt-5">

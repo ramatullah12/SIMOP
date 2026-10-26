@@ -85,6 +85,7 @@
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Nomor Project
                     </p>
+
                     <p class="mt-1 text-sm font-medium text-slate-800">
                         {{ $project->project_number }}
                     </p>
@@ -94,6 +95,7 @@
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Petugas Lapangan
                     </p>
+
                     <p class="mt-1 text-sm font-medium text-slate-800">
                         {{ $project->assignedUser->name ?? 'Belum ditentukan' }}
                     </p>
@@ -103,6 +105,7 @@
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Tanggal Mulai
                     </p>
+
                     <p class="mt-1 text-sm font-medium text-slate-800">
                         {{ $project->start_date?->format('d/m/Y') ?? '-' }}
                     </p>
@@ -112,6 +115,7 @@
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Deadline
                     </p>
+
                     <p class="mt-1 text-sm font-medium text-slate-800">
                         {{ $project->deadline?->format('d/m/Y') ?? '-' }}
                     </p>
@@ -121,6 +125,7 @@
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Dibuat Oleh
                     </p>
+
                     <p class="mt-1 text-sm font-medium text-slate-800">
                         {{ $project->creator->name ?? '-' }}
                     </p>
@@ -130,6 +135,7 @@
                     <p class="text-xs font-semibold uppercase text-slate-400">
                         Catatan
                     </p>
+
                     <p class="mt-1 whitespace-pre-line text-sm text-slate-700">
                         {{ $project->notes ?: '-' }}
                     </p>
@@ -267,6 +273,10 @@
             Riwayat Persetujuan
         </h3>
 
+        <p class="mt-1 text-sm text-slate-500">
+            Persetujuan final Work Estimate dilakukan oleh Direktur.
+        </p>
+
         <div class="mt-5 overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200">
 
@@ -295,11 +305,15 @@
                 </thead>
 
                 <tbody class="divide-y divide-slate-100">
-                    @forelse ($project->workEstimate->approvals as $approval)
+                    @forelse (
+                        $project->workEstimate->approvals
+                            ->where('stage', 'direktur')
+                        as $approval
+                    )
 
                         <tr>
                             <td class="px-4 py-3 text-sm font-medium text-slate-700">
-                                {{ $approval->stage === 'direktur' ? 'Direktur' : 'CEO' }}
+                                Direktur
                             </td>
 
                             <td class="px-4 py-3">
@@ -336,7 +350,7 @@
                         <tr>
                             <td colspan="5"
                                 class="px-4 py-8 text-center text-sm text-slate-500">
-                                Belum ada riwayat persetujuan.
+                                Belum ada riwayat persetujuan Direktur.
                             </td>
                         </tr>
 

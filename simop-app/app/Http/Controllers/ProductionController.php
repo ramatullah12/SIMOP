@@ -19,7 +19,7 @@ class ProductionController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'direktur', 'ceo', 'petugas-lapangan'],
+                ['admin', 'direktur', 'petugas-lapangan'],
                 true
             ),
             403
@@ -33,12 +33,18 @@ class ProductionController extends Controller
         ])
             ->when(
                 $role === 'petugas-lapangan',
-                fn ($query) => $query->where('assigned_to', $user->id)
+                fn ($query) => $query->where(
+                    'assigned_to',
+                    $user->id
+                )
             )
             ->latest()
             ->paginate(10);
 
-        return view('productions.index', compact('productions'));
+        return view(
+            'productions.index',
+            compact('productions')
+        );
     }
 
     public function create()
@@ -60,15 +66,24 @@ class ProductionController extends Controller
             ->latest()
             ->get();
 
-        $fieldOfficers = User::whereHas('role', function ($query) {
-            $query->where('slug', 'petugas-lapangan');
-        })
+        $fieldOfficers = User::whereHas(
+            'role',
+            function ($query) {
+                $query->where(
+                    'slug',
+                    'petugas-lapangan'
+                );
+            }
+        )
             ->orderBy('name')
             ->get();
 
         return view(
             'productions.create',
-            compact('plannings', 'fieldOfficers')
+            compact(
+                'plannings',
+                'fieldOfficers'
+            )
         );
     }
 
@@ -118,12 +133,18 @@ class ProductionController extends Controller
         ]);
 
         $planning = Planning::with('project')
-            ->findOrFail($validated['planning_id']);
+            ->findOrFail(
+                $validated['planning_id']
+            );
 
         abort_unless(
             in_array(
                 $planning->status,
-                ['ready', 'in_progress', 'completed'],
+                [
+                    'ready',
+                    'in_progress',
+                    'completed',
+                ],
                 true
             ),
             422,
@@ -131,43 +152,62 @@ class ProductionController extends Controller
         );
 
         $fieldOfficer = User::with('role')
-            ->findOrFail($validated['assigned_to']);
+            ->findOrFail(
+                $validated['assigned_to']
+            );
 
         abort_unless(
-            $fieldOfficer->role?->slug === 'petugas-lapangan',
+            $fieldOfficer->role?->slug
+                === 'petugas-lapangan',
             422,
             'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
         );
 
-        $production = DB::transaction(function () use (
-            $validated,
-            $planning
-        ) {
-            $production = Production::create([
-                'planning_id' => $planning->id,
-                'created_by' => auth()->id(),
-                'assigned_to' => $validated['assigned_to'],
-                'production_number' => $this->generateProductionNumber(),
-                'title' => $validated['title'],
-                'start_date' => $validated['start_date'] ?? null,
-                'end_date' => $validated['end_date'] ?? null,
-                'status' => 'pending',
-                'progress' => 0,
-                'description' => $validated['description'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            if ($planning->status === 'ready') {
-                $planning->update([
-                    'status' => 'in_progress',
+        $production = DB::transaction(
+            function () use (
+                $validated,
+                $planning
+            ) {
+                $production = Production::create([
+                    'planning_id' =>
+                        $planning->id,
+                    'created_by' =>
+                        auth()->id(),
+                    'assigned_to' =>
+                        $validated['assigned_to'],
+                    'production_number' =>
+                        $this->generateProductionNumber(),
+                    'title' =>
+                        $validated['title'],
+                    'start_date' =>
+                        $validated['start_date'] ?? null,
+                    'end_date' =>
+                        $validated['end_date'] ?? null,
+                    'status' =>
+                        'pending',
+                    'progress' =>
+                        0,
+                    'description' =>
+                        $validated['description'] ?? null,
+                    'notes' =>
+                        $validated['notes'] ?? null,
                 ]);
-            }
 
-            return $production;
-        });
+                if ($planning->status === 'ready') {
+                    $planning->update([
+                        'status' => 'in_progress',
+                    ]);
+                }
+
+                return $production;
+            }
+        );
 
         return redirect()
-            ->route('productions.show', $production)
+            ->route(
+                'productions.show',
+                $production
+            )
             ->with(
                 'success',
                 'Produksi & Instalasi berhasil dibuat.'
@@ -182,7 +222,11 @@ class ProductionController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'direktur', 'ceo', 'petugas-lapangan'],
+                [
+                    'admin',
+                    'direktur',
+                    'petugas-lapangan',
+                ],
                 true
             ),
             403
@@ -218,7 +262,10 @@ class ProductionController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'petugas-lapangan'],
+                [
+                    'admin',
+                    'petugas-lapangan',
+                ],
                 true
             ),
             403
@@ -248,31 +295,40 @@ class ProductionController extends Controller
             default => 'pending',
         };
 
-        DB::transaction(function () use (
-            $production,
-            $progress,
-            $status
-        ) {
-            $production->update([
-                'progress' => $progress,
-                'status' => $status,
-            ]);
-
-            if ($status === 'in_progress') {
-                $production->planning()->update([
-                    'status' => 'in_progress',
+        DB::transaction(
+            function () use (
+                $production,
+                $progress,
+                $status
+            ) {
+                $production->update([
+                    'progress' => $progress,
+                    'status' => $status,
                 ]);
-            }
 
-            if ($status === 'completed') {
-                $production->planning()->update([
-                    'status' => 'completed',
-                ]);
+                if ($status === 'in_progress') {
+                    $production
+                        ->planning()
+                        ->update([
+                            'status' => 'in_progress',
+                        ]);
+                }
+
+                if ($status === 'completed') {
+                    $production
+                        ->planning()
+                        ->update([
+                            'status' => 'completed',
+                        ]);
+                }
             }
-        });
+        );
 
         return redirect()
-            ->route('productions.show', $production)
+            ->route(
+                'productions.show',
+                $production
+            )
             ->with(
                 'success',
                 'Progress Produksi & Instalasi berhasil diperbarui.'
@@ -300,39 +356,50 @@ class ProductionController extends Controller
             ],
         ]);
 
-        DB::transaction(function () use (
-            $production,
-            $validated
-        ) {
-            $data = [
-                'status' => $validated['status'],
-            ];
+        DB::transaction(
+            function () use (
+                $production,
+                $validated
+            ) {
+                $status = $validated['status'];
 
-            if ($validated['status'] === 'completed') {
-                $data['progress'] = 100;
+                $data = [
+                    'status' => $status,
+                ];
+
+                if ($status === 'completed') {
+                    $data['progress'] = 100;
+                }
+
+                if ($status === 'pending') {
+                    $data['progress'] = 0;
+                }
+
+                $production->update($data);
+
+                if ($status === 'in_progress') {
+                    $production
+                        ->planning()
+                        ->update([
+                            'status' => 'in_progress',
+                        ]);
+                }
+
+                if ($status === 'completed') {
+                    $production
+                        ->planning()
+                        ->update([
+                            'status' => 'completed',
+                        ]);
+                }
             }
-
-            if ($validated['status'] === 'pending') {
-                $data['progress'] = 0;
-            }
-
-            $production->update($data);
-
-            if ($validated['status'] === 'in_progress') {
-                $production->planning()->update([
-                    'status' => 'in_progress',
-                ]);
-            }
-
-            if ($validated['status'] === 'completed') {
-                $production->planning()->update([
-                    'status' => 'completed',
-                ]);
-            }
-        });
+        );
 
         return redirect()
-            ->route('productions.show', $production)
+            ->route(
+                'productions.show',
+                $production
+            )
             ->with(
                 'success',
                 'Status Produksi & Instalasi berhasil diperbarui.'
@@ -345,7 +412,12 @@ class ProductionController extends Controller
             $number = 'PROD-'
                 . now()->format('YmdHis')
                 . '-'
-                . strtoupper(substr(uniqid(), -4));
+                . strtoupper(
+                    substr(
+                        uniqid(),
+                        -4
+                    )
+                );
         } while (
             Production::where(
                 'production_number',

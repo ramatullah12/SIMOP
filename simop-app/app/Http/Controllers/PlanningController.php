@@ -16,7 +16,11 @@ class PlanningController extends Controller
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'direktur', 'ceo', 'petugas-lapangan'], true),
+            in_array(
+                $role,
+                ['admin', 'direktur', 'petugas-lapangan'],
+                true
+            ),
             403
         );
 
@@ -38,7 +42,10 @@ class PlanningController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('plannings.index', compact('plannings'));
+        return view(
+            'plannings.index',
+            compact('plannings')
+        );
     }
 
     public function create()
@@ -53,11 +60,17 @@ class PlanningController extends Controller
             'workEstimate',
         ])
             ->whereDoesntHave('planning')
-            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereNotIn(
+                'status',
+                ['completed', 'cancelled']
+            )
             ->latest()
             ->get();
 
-        return view('plannings.create', compact('projects'));
+        return view(
+            'plannings.create',
+            compact('projects')
+        );
     }
 
     public function store(Request $request)
@@ -100,31 +113,54 @@ class PlanningController extends Controller
             ],
         ]);
 
-        $project = Project::findOrFail($validated['project_id']);
+        $project = Project::findOrFail(
+            $validated['project_id']
+        );
 
         abort_if(
-            in_array($project->status, ['completed', 'cancelled'], true),
+            in_array(
+                $project->status,
+                ['completed', 'cancelled'],
+                true
+            ),
             422,
             'Project yang sudah selesai atau dibatalkan tidak dapat dibuatkan Planning.'
         );
 
-        $planning = DB::transaction(function () use ($validated) {
-            return Planning::create([
-                'project_id' => $validated['project_id'],
-                'created_by' => auth()->id(),
-                'planning_number' => $this->generatePlanningNumber(),
-                'title' => $validated['title'],
-                'description' => $validated['description'] ?? null,
-                'planned_start_date' => $validated['planned_start_date'] ?? null,
-                'planned_end_date' => $validated['planned_end_date'] ?? null,
-                'status' => 'draft',
-                'notes' => $validated['notes'] ?? null,
-            ]);
-        });
+        $planning = DB::transaction(
+            function () use ($validated) {
+                return Planning::create([
+                    'project_id' =>
+                        $validated['project_id'],
+                    'created_by' =>
+                        auth()->id(),
+                    'planning_number' =>
+                        $this->generatePlanningNumber(),
+                    'title' =>
+                        $validated['title'],
+                    'description' =>
+                        $validated['description'] ?? null,
+                    'planned_start_date' =>
+                        $validated['planned_start_date'] ?? null,
+                    'planned_end_date' =>
+                        $validated['planned_end_date'] ?? null,
+                    'status' =>
+                        'draft',
+                    'notes' =>
+                        $validated['notes'] ?? null,
+                ]);
+            }
+        );
 
         return redirect()
-            ->route('plannings.show', $planning)
-            ->with('success', 'Planning berhasil dibuat.');
+            ->route(
+                'plannings.show',
+                $planning
+            )
+            ->with(
+                'success',
+                'Planning berhasil dibuat.'
+            );
     }
 
     public function show(Planning $planning)
@@ -133,7 +169,11 @@ class PlanningController extends Controller
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'direktur', 'ceo', 'petugas-lapangan'], true),
+            in_array(
+                $role,
+                ['admin', 'direktur', 'petugas-lapangan'],
+                true
+            ),
             403
         );
 
@@ -151,16 +191,25 @@ class PlanningController extends Controller
             abort(403);
         }
 
-        return view('plannings.show', compact('planning'));
+        return view(
+            'plannings.show',
+            compact('planning')
+        );
     }
 
-    public function updateStatus(Request $request, Planning $planning)
-    {
+    public function updateStatus(
+        Request $request,
+        Planning $planning
+    ) {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'petugas-lapangan'], true),
+            in_array(
+                $role,
+                ['admin', 'petugas-lapangan'],
+                true
+            ),
             403
         );
 
@@ -188,7 +237,11 @@ class PlanningController extends Controller
 
         if (
             $role === 'petugas-lapangan'
-            && in_array($validated['status'], ['draft', 'cancelled'], true)
+            && in_array(
+                $validated['status'],
+                ['draft', 'cancelled'],
+                true
+            )
         ) {
             abort(
                 403,
@@ -201,8 +254,14 @@ class PlanningController extends Controller
         ]);
 
         return redirect()
-            ->route('plannings.show', $planning)
-            ->with('success', 'Status Planning berhasil diperbarui.');
+            ->route(
+                'plannings.show',
+                $planning
+            )
+            ->with(
+                'success',
+                'Status Planning berhasil diperbarui.'
+            );
     }
 
     private function generatePlanningNumber(): string
@@ -211,9 +270,17 @@ class PlanningController extends Controller
             $number = 'PLN-'
                 . now()->format('YmdHis')
                 . '-'
-                . strtoupper(substr(uniqid(), -4));
+                . strtoupper(
+                    substr(
+                        uniqid(),
+                        -4
+                    )
+                );
         } while (
-            Planning::where('planning_number', $number)->exists()
+            Planning::where(
+                'planning_number',
+                $number
+            )->exists()
         );
 
         return $number;

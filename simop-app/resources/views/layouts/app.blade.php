@@ -40,14 +40,6 @@
                 ['Laporan', 'direktur.reports.index', '▥'],
             ],
 
-            'ceo' => [
-                ['Dashboard', 'dashboard', '▦'],
-                ['Approval', 'approvals.index', '✓'],
-                ['Project', 'projects.index', '▤'],
-                ['Invoice', 'ceo.invoices.index', '▤'],
-                ['Laporan', 'ceo.reports.index', '▥'],
-            ],
-
             'petugas-lapangan' => [
                 ['Dashboard', 'dashboard', '▦'],
                 ['Survey', 'petugas-lapangan.surveys.index', '◎'],
@@ -73,7 +65,6 @@
         $roleLabels = [
             'admin' => 'Administrator',
             'direktur' => 'Direktur',
-            'ceo' => 'Chief Executive Officer',
             'petugas-lapangan' => 'Petugas Lapangan',
             'client' => 'Client',
         ];
@@ -144,8 +135,8 @@
                            aria-current="{{ $active ? 'page' : 'false' }}"
                            class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition
                            {{ $active
-                                ? 'bg-blue-600 font-semibold text-white shadow-sm'
-                                : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                               ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                               : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
 
                             <span class="w-5 text-center" aria-hidden="true">
                                 {{ $icon }}

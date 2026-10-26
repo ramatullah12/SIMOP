@@ -74,9 +74,10 @@
 
                         @php
                             $role = auth()->user()?->role?->slug;
+
                             $canDecide = $approval->status === 'pending'
-                                && $approval->stage === $role
-                                && in_array($role, ['direktur', 'ceo'], true);
+                                && $approval->stage === 'direktur'
+                                && $role === 'direktur';
                         @endphp
 
                         <tr class="hover:bg-slate-50">
@@ -103,19 +104,9 @@
                             </td>
 
                             <td class="whitespace-nowrap px-5 py-4">
-                                @if ($approval->stage === 'direktur')
-                                    <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                                        Direktur
-                                    </span>
-                                @elseif ($approval->stage === 'ceo')
-                                    <span class="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                                        CEO
-                                    </span>
-                                @else
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                        -
-                                    </span>
-                                @endif
+                                <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                                    Direktur
+                                </span>
                             </td>
 
                             <td class="whitespace-nowrap px-5 py-4">
@@ -193,13 +184,7 @@
                                 @elseif ($approval->status === 'pending')
 
                                     <div class="text-sm text-slate-500">
-                                        @if ($approval->stage === 'direktur')
-                                            Menunggu keputusan Direktur
-                                        @elseif ($approval->stage === 'ceo')
-                                            Menunggu keputusan CEO
-                                        @else
-                                            Menunggu persetujuan
-                                        @endif
+                                        Menunggu keputusan Direktur
                                     </div>
 
                                 @else

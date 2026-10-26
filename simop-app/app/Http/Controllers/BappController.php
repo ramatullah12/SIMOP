@@ -18,7 +18,7 @@ class BappController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'direktur', 'ceo', 'petugas-lapangan'],
+                ['admin', 'direktur', 'petugas-lapangan'],
                 true
             ),
             403
@@ -42,7 +42,10 @@ class BappController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('bapps.index', compact('bapps'));
+        return view(
+            'bapps.index',
+            compact('bapps')
+        );
     }
 
     public function create()
@@ -62,7 +65,10 @@ class BappController extends Controller
             ->latest()
             ->get();
 
-        return view('bapps.create', compact('productions'));
+        return view(
+            'bapps.create',
+            compact('productions')
+        );
     }
 
     public function store(Request $request)
@@ -111,24 +117,37 @@ class BappController extends Controller
             'BAPP hanya dapat dibuat dari pekerjaan yang sudah selesai 100%.'
         );
 
-        $bapp = DB::transaction(function () use (
-            $validated,
-            $production
-        ) {
-            return Bapp::create([
-                'production_id' => $production->id,
-                'created_by' => auth()->id(),
-                'bapp_number' => $this->generateBappNumber(),
-                'completion_date' => $validated['completion_date'],
-                'location' => $validated['location'] ?? null,
-                'work_result' => $validated['work_result'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-                'status' => 'draft',
-            ]);
-        });
+        $bapp = DB::transaction(
+            function () use (
+                $validated,
+                $production
+            ) {
+                return Bapp::create([
+                    'production_id' =>
+                        $production->id,
+                    'created_by' =>
+                        auth()->id(),
+                    'bapp_number' =>
+                        $this->generateBappNumber(),
+                    'completion_date' =>
+                        $validated['completion_date'],
+                    'location' =>
+                        $validated['location'] ?? null,
+                    'work_result' =>
+                        $validated['work_result'] ?? null,
+                    'notes' =>
+                        $validated['notes'] ?? null,
+                    'status' =>
+                        'draft',
+                ]);
+            }
+        );
 
         return redirect()
-            ->route('bapps.show', $bapp)
+            ->route(
+                'bapps.show',
+                $bapp
+            )
             ->with(
                 'success',
                 'BAPP berhasil dibuat.'
@@ -143,7 +162,7 @@ class BappController extends Controller
         abort_unless(
             in_array(
                 $role,
-                ['admin', 'direktur', 'ceo', 'petugas-lapangan'],
+                ['admin', 'direktur', 'petugas-lapangan'],
                 true
             ),
             403
@@ -163,11 +182,16 @@ class BappController extends Controller
             abort(403);
         }
 
-        return view('bapps.show', compact('bapp'));
+        return view(
+            'bapps.show',
+            compact('bapp')
+        );
     }
 
-    public function updateStatus(Request $request, Bapp $bapp)
-    {
+    public function updateStatus(
+        Request $request,
+        Bapp $bapp
+    ) {
         abort_unless(
             auth()->user()?->role?->slug === 'admin',
             403
@@ -189,7 +213,10 @@ class BappController extends Controller
         ]);
 
         return redirect()
-            ->route('bapps.show', $bapp)
+            ->route(
+                'bapps.show',
+                $bapp
+            )
             ->with(
                 'success',
                 'Status BAPP berhasil diperbarui.'
@@ -202,9 +229,17 @@ class BappController extends Controller
             $number = 'BAPP-'
                 . now()->format('YmdHis')
                 . '-'
-                . strtoupper(substr(uniqid(), -4));
+                . strtoupper(
+                    substr(
+                        uniqid(),
+                        -4
+                    )
+                );
         } while (
-            Bapp::where('bapp_number', $number)->exists()
+            Bapp::where(
+                'bapp_number',
+                $number
+            )->exists()
         );
 
         return $number;

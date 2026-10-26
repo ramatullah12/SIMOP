@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use App\Models\Role;
 use Illuminate\Database\Seeder;
 
@@ -17,12 +18,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Direktur',
                 'slug' => 'direktur',
-                'description' => 'Mengevaluasi Work Estimate, harga, dan approval tingkat Direktur.',
-            ],
-            [
-                'name' => 'CEO',
-                'slug' => 'ceo',
-                'description' => 'Memberikan approval tertinggi dan memantau performa perusahaan.',
+                'description' => 'Mengevaluasi Work Estimate, harga, memberikan persetujuan final, dan memantau project.',
             ],
             [
                 'name' => 'Petugas Lapangan',
@@ -44,6 +40,3 @@ class RoleSeeder extends Seeder
         }
     }
 }
-
-
-
