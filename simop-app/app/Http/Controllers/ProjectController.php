@@ -29,13 +29,16 @@ class ProjectController extends Controller
             'workEstimate.order',
             'creator',
             'assignedUser',
+            'planning.production.bapp',
         ])
             ->when(
                 $role === 'petugas-lapangan',
-                fn ($query) => $query->where(
-                    'assigned_to',
-                    $user->id
-                )
+                function ($query) use ($user) {
+                    $query->where(
+                        'assigned_to',
+                        $user->id
+                    );
+                }
             )
             ->latest()
             ->paginate(10);
@@ -53,21 +56,25 @@ class ProjectController extends Controller
             403
         );
 
-        $workEstimates = WorkEstimate::with('order')
+        $workEstimates = WorkEstimate::with([
+            'order',
+            'survey',
+        ])
             ->where('status', 'approved')
             ->whereDoesntHave('project')
             ->latest()
             ->get();
 
-        $fieldOfficers = User::whereHas(
-            'role',
-            function ($query) {
-                $query->where(
-                    'slug',
-                    'petugas-lapangan'
-                );
-            }
-        )
+        $fieldOfficers = User::with('role')
+            ->whereHas(
+                'role',
+                function ($query) {
+                    $query->where(
+                        'slug',
+                        'petugas-lapangan'
+                    );
+                }
+            )
             ->orderBy('name')
             ->get();
 
@@ -120,16 +127,6 @@ class ProjectController extends Controller
             ],
         ]);
 
-        $workEstimate = WorkEstimate::findOrFail(
-            $validated['work_estimate_id']
-        );
-
-        abort_unless(
-            $workEstimate->status === 'approved',
-            422,
-            'Hanya Work Estimate yang sudah mendapatkan persetujuan final Direktur yang dapat dijadikan Project.'
-        );
-
         if (!empty($validated['assigned_to'])) {
             $fieldOfficer = User::with('role')
                 ->findOrFail(
@@ -145,27 +142,42 @@ class ProjectController extends Controller
 
         $project = DB::transaction(
             function () use ($validated) {
+                $workEstimate = WorkEstimate::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $validated['work_estimate_id']
+                    );
+
+                abort_unless(
+                    $workEstimate->status === 'approved',
+                    422,
+                    'Hanya Work Estimate yang sudah mendapatkan persetujuan final Direktur yang dapat dijadikan Project.'
+                );
+
+                $projectExists = Project::query()
+                    ->where(
+                        'work_estimate_id',
+                        $workEstimate->id
+                    )
+                    ->exists();
+
+                abort_if(
+                    $projectExists,
+                    422,
+                    'Work Estimate ini sudah memiliki Project.'
+                );
+
                 return Project::create([
-                    'work_estimate_id' =>
-                        $validated['work_estimate_id'],
-                    'created_by' =>
-                        auth()->id(),
-                    'assigned_to' =>
-                        $validated['assigned_to'] ?? null,
-                    'project_number' =>
-                        $this->generateProjectNumber(),
-                    'title' =>
-                        $validated['title'],
-                    'start_date' =>
-                        $validated['start_date'] ?? null,
-                    'deadline' =>
-                        $validated['deadline'] ?? null,
-                    'status' =>
-                        'planning',
-                    'progress' =>
-                        0,
-                    'notes' =>
-                        $validated['notes'] ?? null,
+                    'work_estimate_id' => $workEstimate->id,
+                    'created_by' => auth()->id(),
+                    'assigned_to' => $validated['assigned_to'] ?? null,
+                    'project_number' => $this->generateProjectNumber(),
+                    'title' => $validated['title'],
+                    'start_date' => $validated['start_date'] ?? null,
+                    'deadline' => $validated['deadline'] ?? null,
+                    'status' => 'planning',
+                    'progress' => 0,
+                    'notes' => $validated['notes'] ?? null,
                 ]);
             }
         );
@@ -177,7 +189,7 @@ class ProjectController extends Controller
             )
             ->with(
                 'success',
-                'Project berhasil dibuat.'
+                'Project berhasil dibuat dari Work Estimate yang telah disetujui Direktur.'
             );
     }
 
@@ -204,6 +216,7 @@ class ProjectController extends Controller
 
         $project->load([
             'workEstimate.order',
+            'workEstimate.survey.assignedUser',
             'workEstimate.approvals.approver',
             'creator',
             'assignedUser',
@@ -281,7 +294,7 @@ class ProjectController extends Controller
             ->with(
                 'success',
                 $progress === 100
-                    ? 'Progress Project mencapai 100%. Project tetap berjalan sampai BAPP disetujui.'
+                    ? 'Progress Project mencapai 100%. Project tetap berstatus berjalan sampai BAPP disetujui.'
                     : 'Progress Project berhasil diperbarui.'
             );
     }
@@ -331,7 +344,9 @@ class ProjectController extends Controller
             )
             ->with(
                 'success',
-                'Status Project berhasil diperbarui.'
+                $status === 'cancelled'
+                    ? 'Project berhasil dibatalkan.'
+                    : 'Status Project berhasil diperbarui.'
             );
     }
 

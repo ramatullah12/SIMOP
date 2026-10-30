@@ -12,12 +12,10 @@ class ApprovalController extends Controller
 {
     public function index()
     {
+        $role = auth()->user()?->role?->slug;
+
         abort_unless(
-            in_array(
-                auth()->user()?->role?->slug,
-                ['admin', 'direktur'],
-                true
-            ),
+            in_array($role, ['admin', 'direktur'], true),
             403
         );
 
@@ -30,11 +28,16 @@ class ApprovalController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('approvals.index', compact('approvals'));
+        return view(
+            'approvals.index',
+            compact('approvals')
+        );
     }
 
-    public function store(Request $request, WorkEstimate $workEstimate)
-    {
+    public function store(
+        Request $request,
+        WorkEstimate $workEstimate
+    ) {
         abort_unless(
             auth()->user()?->role?->slug === 'admin',
             403
@@ -48,22 +51,38 @@ class ApprovalController extends Controller
             ],
         ]);
 
-        abort_unless(
-            $workEstimate->status === 'draft',
-            422,
-            'Hanya estimasi berstatus draft yang dapat diajukan.'
-        );
-
         DB::transaction(function () use (
             $workEstimate,
             $validated
         ) {
-            $workEstimate->update([
+            $estimate = WorkEstimate::query()
+                ->lockForUpdate()
+                ->findOrFail($workEstimate->id);
+
+            abort_unless(
+                $estimate->status === 'draft',
+                422,
+                'Hanya Work Estimate berstatus Draft yang dapat diajukan.'
+            );
+
+            $pendingApprovalExists = Approval::query()
+                ->where('work_estimate_id', $estimate->id)
+                ->where('stage', 'direktur')
+                ->where('status', 'pending')
+                ->exists();
+
+            abort_if(
+                $pendingApprovalExists,
+                422,
+                'Work Estimate ini sudah memiliki pengajuan Approval Direktur yang masih menunggu keputusan.'
+            );
+
+            $estimate->update([
                 'status' => 'pending',
             ]);
 
             Approval::create([
-                'work_estimate_id' => $workEstimate->id,
+                'work_estimate_id' => $estimate->id,
                 'stage' => 'direktur',
                 'approver_id' => null,
                 'status' => 'pending',
@@ -79,7 +98,7 @@ class ApprovalController extends Controller
             )
             ->with(
                 'success',
-                'Work Estimate berhasil diajukan dan menunggu persetujuan Direktur.'
+                'Work Estimate berhasil diajukan dan sedang menunggu persetujuan Direktur.'
             );
     }
 
@@ -88,10 +107,9 @@ class ApprovalController extends Controller
         Approval $approval
     ) {
         $user = auth()->user();
-        $role = $user?->role?->slug;
 
         abort_unless(
-            $role === 'direktur',
+            $user?->role?->slug === 'direktur',
             403
         );
 
@@ -110,50 +128,61 @@ class ApprovalController extends Controller
             ],
         ]);
 
-        abort_unless(
-            $approval->status === 'pending',
-            422,
-            'Pengajuan ini sudah diproses sebelumnya.'
-        );
-
-        abort_unless(
-            $approval->stage === 'direktur',
-            403,
-            'Pengajuan ini bukan tahap persetujuan Direktur.'
-        );
-
         DB::transaction(function () use (
             $approval,
             $validated,
             $user
         ) {
-            $approval->update([
+            $currentApproval = Approval::query()
+                ->with('workEstimate')
+                ->lockForUpdate()
+                ->findOrFail($approval->id);
+
+            abort_unless(
+                $currentApproval->stage === 'direktur',
+                403,
+                'Pengajuan ini bukan tahap persetujuan Direktur.'
+            );
+
+            abort_unless(
+                $currentApproval->status === 'pending',
+                422,
+                'Pengajuan ini sudah diproses sebelumnya.'
+            );
+
+            $estimate = WorkEstimate::query()
+                ->lockForUpdate()
+                ->findOrFail(
+                    $currentApproval->work_estimate_id
+                );
+
+            abort_unless(
+                $estimate->status === 'pending',
+                422,
+                'Work Estimate ini tidak sedang menunggu persetujuan Direktur.'
+            );
+
+            $currentApproval->update([
                 'approver_id' => $user->id,
                 'status' => $validated['status'],
                 'notes' => $validated['notes']
-                    ?? $approval->notes,
+                    ?? $currentApproval->notes,
                 'approved_at' => now(),
             ]);
 
-            if ($validated['status'] === 'rejected') {
-                $approval->workEstimate()->update([
-                    'status' => 'rejected',
-                ]);
-
-                return;
-            }
-
-            $approval->workEstimate()->update([
-                'status' => 'approved',
+            $estimate->update([
+                'status' => $validated['status'] === 'approved'
+                    ? 'approved'
+                    : 'rejected',
             ]);
         });
 
-        if ($validated['status'] === 'rejected') {
+        if ($validated['status'] === 'approved') {
             return redirect()
                 ->route('approvals.index')
                 ->with(
                     'success',
-                    'Work Estimate berhasil ditolak oleh Direktur.'
+                    'Work Estimate berhasil disetujui oleh Direktur dan mendapatkan persetujuan final.'
                 );
         }
 
@@ -161,7 +190,7 @@ class ApprovalController extends Controller
             ->route('approvals.index')
             ->with(
                 'success',
-                'Work Estimate berhasil disetujui oleh Direktur dan mendapatkan persetujuan final.'
+                'Work Estimate berhasil ditolak oleh Direktur.'
             );
     }
 }

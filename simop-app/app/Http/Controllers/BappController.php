@@ -57,11 +57,18 @@ class BappController extends Controller
 
         $productions = Production::with([
             'assignedUser',
-            'planning.project',
+            'planning.project.workEstimate.order',
         ])
             ->where('status', 'completed')
             ->where('progress', 100)
             ->whereDoesntHave('bapp')
+            ->whereHas(
+                'planning.project',
+                fn ($query) => $query->whereNotIn(
+                    'status',
+                    ['completed', 'cancelled']
+                )
+            )
             ->latest()
             ->get();
 
@@ -106,39 +113,61 @@ class BappController extends Controller
             ],
         ]);
 
-        $production = Production::findOrFail(
-            $validated['production_id']
-        );
-
-        abort_unless(
-            $production->status === 'completed'
-            && (int) $production->progress === 100,
-            422,
-            'BAPP hanya dapat dibuat dari pekerjaan yang sudah selesai 100%.'
-        );
-
         $bapp = DB::transaction(
-            function () use (
-                $validated,
-                $production
-            ) {
+            function () use ($validated) {
+                $production = Production::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $validated['production_id']
+                    );
+
+                abort_unless(
+                    $production->status === 'completed'
+                    && (int) $production->progress === 100,
+                    422,
+                    'BAPP hanya dapat dibuat dari Produksi & Instalasi yang sudah selesai 100%.'
+                );
+
+                $planning = $production->planning()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $project = $planning->project()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                abort_if(
+                    in_array(
+                        $project->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'BAPP tidak dapat dibuat karena Project sudah selesai atau dibatalkan.'
+                );
+
+                $bappExists = Bapp::query()
+                    ->where(
+                        'production_id',
+                        $production->id
+                    )
+                    ->exists();
+
+                abort_if(
+                    $bappExists,
+                    422,
+                    'Produksi & Instalasi ini sudah memiliki BAPP.'
+                );
+
                 return Bapp::create([
-                    'production_id' =>
-                        $production->id,
-                    'created_by' =>
-                        auth()->id(),
-                    'bapp_number' =>
-                        $this->generateBappNumber(),
-                    'completion_date' =>
-                        $validated['completion_date'],
-                    'location' =>
-                        $validated['location'] ?? null,
-                    'work_result' =>
-                        $validated['work_result'] ?? null,
-                    'notes' =>
-                        $validated['notes'] ?? null,
-                    'status' =>
-                        'draft',
+                    'production_id' => $production->id,
+                    'created_by' => auth()->id(),
+                    'bapp_number' => $this->generateBappNumber(),
+                    'completion_date' => $validated['completion_date'],
+                    'location' => $validated['location'] ?? null,
+                    'work_result' => $validated['work_result'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'status' => 'draft',
                 ]);
             }
         );
@@ -150,7 +179,7 @@ class BappController extends Controller
             )
             ->with(
                 'success',
-                'BAPP berhasil dibuat.'
+                'BAPP berhasil dibuat dengan status Draft.'
             );
     }
 
@@ -172,6 +201,7 @@ class BappController extends Controller
             'production.assignedUser',
             'production.creator',
             'production.planning.project.workEstimate.order',
+            'production.planning.project.assignedUser',
             'creator',
         ]);
 
@@ -197,12 +227,6 @@ class BappController extends Controller
             403
         );
 
-        abort_if(
-            $bapp->status === 'approved',
-            422,
-            'BAPP yang sudah disetujui tidak dapat diubah kembali.'
-        );
-
         $validated = $request->validate([
             'status' => [
                 'required',
@@ -215,41 +239,89 @@ class BappController extends Controller
 
         $newStatus = $validated['status'];
 
-        if ($bapp->status === 'draft') {
-            abort_unless(
-                $newStatus === 'submitted',
-                422,
-                'BAPP berstatus Draft hanya dapat diajukan menjadi Submitted.'
-            );
-        }
-
-        if ($bapp->status === 'submitted') {
-            abort_unless(
-                $newStatus === 'approved',
-                422,
-                'BAPP yang sudah diajukan hanya dapat disetujui.'
-            );
-        }
-
         DB::transaction(
             function () use (
                 $bapp,
                 $newStatus
             ) {
-                $bapp->update([
+                $currentBapp = Bapp::query()
+                    ->lockForUpdate()
+                    ->findOrFail($bapp->id);
+
+                abort_if(
+                    $currentBapp->status === 'approved',
+                    422,
+                    'BAPP yang sudah disetujui tidak dapat diubah kembali.'
+                );
+
+                abort_unless(
+                    in_array(
+                        $currentBapp->status,
+                        ['draft', 'submitted'],
+                        true
+                    ),
+                    422,
+                    'Status BAPP saat ini tidak valid untuk diproses.'
+                );
+
+                if ($currentBapp->status === 'draft') {
+                    abort_unless(
+                        $newStatus === 'submitted',
+                        422,
+                        'BAPP berstatus Draft hanya dapat diajukan.'
+                    );
+                }
+
+                if ($currentBapp->status === 'submitted') {
+                    abort_unless(
+                        $newStatus === 'approved',
+                        422,
+                        'BAPP yang sudah diajukan hanya dapat disetujui.'
+                    );
+                }
+
+                $production = Production::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $currentBapp->production_id
+                    );
+
+                abort_unless(
+                    $production->status === 'completed'
+                    && (int) $production->progress === 100,
+                    422,
+                    'BAPP tidak dapat diproses karena Produksi & Instalasi belum selesai 100%.'
+                );
+
+                $planning = $production->planning()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $project = $planning->project()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                abort_if(
+                    $project->status === 'cancelled',
+                    422,
+                    'BAPP tidak dapat diproses karena Project telah dibatalkan.'
+                );
+
+                if (
+                    $newStatus !== 'approved'
+                    && $project->status === 'completed'
+                ) {
+                    abort(
+                        422,
+                        'BAPP tidak dapat diproses karena Project sudah selesai.'
+                    );
+                }
+
+                $currentBapp->update([
                     'status' => $newStatus,
                 ]);
 
                 if ($newStatus === 'approved') {
-                    $bapp->load(
-                        'production.planning.project'
-                    );
-
-                    $project = $bapp
-                        ->production
-                        ->planning
-                        ->project;
-
                     $project->update([
                         'status' => 'completed',
                         'progress' => 100,
@@ -266,8 +338,8 @@ class BappController extends Controller
             ->with(
                 'success',
                 $newStatus === 'approved'
-                    ? 'BAPP berhasil disetujui dan Project telah diselesaikan.'
-                    : 'BAPP berhasil diajukan.'
+                    ? 'BAPP berhasil disetujui. Project telah dinyatakan selesai.'
+                    : 'BAPP berhasil diajukan dan menunggu persetujuan.'
             );
     }
 

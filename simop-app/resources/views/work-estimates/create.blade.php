@@ -4,6 +4,32 @@
 @section('page-title', 'Buat Work Estimate')
 
 @section('content')
+    @php
+        $surveyData = $surveys->map(function ($survey) {
+            $orderNumber = $survey->order?->order_number ?? 'Order #'.$survey->order_id;
+            $surveyDate = $survey->scheduled_at
+                ? $survey->scheduled_at->format('d/m/Y H:i')
+                : 'Belum dijadwalkan';
+
+            $surveyLabel = $orderNumber.' — '.$survey->location;
+
+            if ($survey->scheduled_at) {
+                $surveyLabel .= ' — '.$survey->scheduled_at->format('d/m/Y');
+            }
+
+            return [
+                'id' => $survey->id,
+                'order_id' => $survey->order_id,
+                'label' => $surveyLabel,
+                'location' => $survey->location,
+                'date' => $surveyDate,
+                'officer' => $survey->assignedUser?->name ?? 'Belum ditugaskan',
+            ];
+        })->values();
+
+        $oldSurveyId = (string) old('survey_id', '');
+    @endphp
+
     <div class="mx-auto max-w-5xl space-y-6">
         <div>
             <a
@@ -128,25 +154,12 @@
                         id="survey_id"
                         name="survey_id"
                         required
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        disabled
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                     >
                         <option value="">
                             -- Pilih Order terlebih dahulu --
                         </option>
-
-                        @foreach ($surveys as $survey)
-                            <option
-                                value="{{ $survey->id }}"
-                                data-order-id="{{ $survey->order_id }}"
-                                @selected(old('survey_id') == $survey->id)
-                            >
-                                {{ $survey->order?->order_number ?? 'Order #'.$survey->order_id }}
-                                — {{ $survey->location }}
-                                @if ($survey->scheduled_at)
-                                    — {{ $survey->scheduled_at->format('d/m/Y') }}
-                                @endif
-                            </option>
-                        @endforeach
                     </select>
 
                     <p class="mt-2 text-xs text-slate-500">
@@ -158,14 +171,26 @@
                     id="survey-info"
                     class="hidden rounded-xl border border-green-200 bg-green-50 p-4"
                 >
-                    <p class="text-sm font-semibold text-green-800">
-                        Survey Selesai
-                    </p>
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-green-800">
+                                Survey Selesai
+                            </p>
 
-                    <div class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                            <p class="mt-1 text-xs text-green-700">
+                                Survey ini dapat digunakan sebagai dasar pembuatan Work Estimate.
+                            </p>
+                        </div>
+
+                        <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                            Selesai
+                        </span>
+                    </div>
+
+                    <div class="mt-4 grid gap-4 text-sm sm:grid-cols-3">
                         <div>
                             <span class="text-green-700">
-                                Lokasi:
+                                Lokasi
                             </span>
 
                             <p
@@ -178,7 +203,7 @@
 
                         <div>
                             <span class="text-green-700">
-                                Jadwal:
+                                Jadwal
                             </span>
 
                             <p
@@ -191,7 +216,7 @@
 
                         <div>
                             <span class="text-green-700">
-                                Petugas:
+                                Petugas
                             </span>
 
                             <p
@@ -199,16 +224,6 @@
                                 class="mt-1 font-semibold text-green-900"
                             >
                                 -
-                            </p>
-                        </div>
-
-                        <div>
-                            <span class="text-green-700">
-                                Status:
-                            </span>
-
-                            <p class="mt-1 font-semibold text-green-900">
-                                Selesai
                             </p>
                         </div>
                     </div>
@@ -502,31 +517,19 @@
             const surveyDate = document.getElementById('survey-date');
             const surveyOfficer = document.getElementById('survey-officer');
 
-            const surveys = @json(
-                $surveys->map(fn ($survey) => [
-                    'id' => $survey->id,
-                    'order_id' => $survey->order_id,
-                    'label' => ($survey->order?->order_number ?? 'Order #'.$survey->order_id)
-                        .' — '.$survey->location
-                        .($survey->scheduled_at ? ' — '.$survey->scheduled_at->format('d/m/Y') : ''),
-                    'location' => $survey->location,
-                    'date' => $survey->scheduled_at?->format('d/m/Y H:i') ?? 'Belum dijadwalkan',
-                    'officer' => $survey->assignedUser?->name ?? 'Belum ditugaskan',
-                ])->values()
-            );
+            const surveys = @json($surveyData);
+            const oldSurveyId = @json($oldSurveyId);
 
-            const oldSurveyId = @json((string) old('survey_id', ''));
-
-            const rupiah = value => {
+            const rupiah = function (value) {
                 return 'Rp' + new Intl.NumberFormat('id-ID', {
                     maximumFractionDigits: 2
                 }).format(value);
             };
 
             function updateSurveyInfo() {
-                const selectedSurvey = surveys.find(
-                    survey => String(survey.id) === String(surveySelect.value)
-                );
+                const selectedSurvey = surveys.find(function (survey) {
+                    return String(survey.id) === String(surveySelect.value);
+                });
 
                 if (!selectedSurvey) {
                     surveyInfo.classList.add('hidden');
@@ -543,9 +546,8 @@
                 surveyInfo.classList.remove('hidden');
             }
 
-            function filterSurveys() {
+            function filterSurveys(preserveOldValue) {
                 const orderId = String(orderSelect.value);
-                const currentSurveyId = String(surveySelect.value);
 
                 surveySelect.innerHTML = '';
 
@@ -556,29 +558,44 @@
                     placeholder.textContent = '-- Pilih Order terlebih dahulu --';
                     surveySelect.appendChild(placeholder);
                     surveySelect.disabled = true;
+
                     surveyInfo.classList.add('hidden');
+                    surveyLocation.textContent = '-';
+                    surveyDate.textContent = '-';
+                    surveyOfficer.textContent = '-';
+
                     return;
                 }
 
-                const availableSurveys = surveys.filter(
-                    survey => String(survey.order_id) === orderId
-                );
+                const availableSurveys = surveys.filter(function (survey) {
+                    return String(survey.order_id) === orderId;
+                });
 
-                placeholder.textContent = availableSurveys.length
-                    ? '-- Pilih Survey --'
-                    : '-- Tidak ada Survey tersedia --';
+                if (availableSurveys.length === 0) {
+                    placeholder.textContent = '-- Tidak ada Survey tersedia --';
+                    surveySelect.appendChild(placeholder);
+                    surveySelect.disabled = true;
 
+                    surveyInfo.classList.add('hidden');
+                    surveyLocation.textContent = '-';
+                    surveyDate.textContent = '-';
+                    surveyOfficer.textContent = '-';
+
+                    return;
+                }
+
+                placeholder.textContent = '-- Pilih Survey --';
                 surveySelect.appendChild(placeholder);
 
-                availableSurveys.forEach(survey => {
+                availableSurveys.forEach(function (survey) {
                     const option = document.createElement('option');
 
-                    option.value = survey.id;
+                    option.value = String(survey.id);
                     option.textContent = survey.label;
 
                     if (
-                        String(survey.id) === currentSurveyId
-                        || String(survey.id) === oldSurveyId
+                        preserveOldValue &&
+                        String(survey.id) === String(oldSurveyId)
                     ) {
                         option.selected = true;
                     }
@@ -586,16 +603,22 @@
                     surveySelect.appendChild(option);
                 });
 
-                surveySelect.disabled = availableSurveys.length === 0;
+                surveySelect.disabled = false;
 
                 updateSurveyInfo();
             }
 
             function renumberItems() {
-                container.querySelectorAll('.estimate-item').forEach((card, index) => {
-                    card.querySelector('.item-title').textContent = 'Item ' + (index + 1);
+                const cards = container.querySelectorAll('.estimate-item');
 
-                    card.querySelectorAll('[name]').forEach(input => {
+                cards.forEach(function (card, index) {
+                    const title = card.querySelector('.item-title');
+
+                    if (title) {
+                        title.textContent = 'Item ' + (index + 1);
+                    }
+
+                    card.querySelectorAll('[name]').forEach(function (input) {
                         input.name = input.name.replace(
                             /items\[\d+\]/,
                             'items[' + index + ']'
@@ -607,7 +630,7 @@
             function calculateTotals() {
                 let subtotal = 0;
 
-                container.querySelectorAll('.estimate-item').forEach(card => {
+                container.querySelectorAll('.estimate-item').forEach(function (card) {
                     const quantityInput = card.querySelector('.item-quantity');
                     const priceInput = card.querySelector('.item-price');
                     const totalElement = card.querySelector('.item-total');
@@ -617,17 +640,17 @@
                     const total = quantity * price;
 
                     totalElement.textContent = rupiah(total);
+
                     subtotal += total;
                 });
 
                 const taxRate = parseFloat(taxInput.value) || 0;
                 const tax = subtotal * taxRate / 100;
+                const grandTotal = subtotal + tax;
 
                 document.getElementById('subtotal').textContent = rupiah(subtotal);
                 document.getElementById('tax-amount').textContent = rupiah(tax);
-                document.getElementById('grand-total').textContent = rupiah(
-                    subtotal + tax
-                );
+                document.getElementById('grand-total').textContent = rupiah(grandTotal);
             }
 
             addButton.addEventListener('click', function () {
@@ -659,7 +682,7 @@
                             <input
                                 name="items[${index}][item_name]"
                                 required
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 placeholder="Contoh: Material instalasi"
                             >
                         </div>
@@ -671,7 +694,7 @@
 
                             <input
                                 name="items[${index}][description]"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 placeholder="Keterangan item"
                             >
                         </div>
@@ -688,7 +711,7 @@
                                 name="items[${index}][quantity]"
                                 required
                                 value="1"
-                                class="item-quantity w-full rounded-lg border border-slate-300 px-3 py-2"
+                                class="item-quantity w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                             >
                         </div>
 
@@ -701,7 +724,7 @@
                                 name="items[${index}][unit]"
                                 required
                                 value="unit"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 placeholder="unit, meter, hari"
                             >
                         </div>
@@ -718,7 +741,7 @@
                                 name="items[${index}][unit_price]"
                                 required
                                 value="0"
-                                class="item-price w-full rounded-lg border border-slate-300 px-3 py-2"
+                                class="item-price w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                             >
                         </div>
 
@@ -761,30 +784,26 @@
 
             container.addEventListener('input', function (event) {
                 if (
-                    event.target.matches(
-                        '.item-quantity, .item-price'
-                    )
+                    event.target.matches('.item-quantity') ||
+                    event.target.matches('.item-price')
                 ) {
                     calculateTotals();
                 }
             });
 
             orderSelect.addEventListener('change', function () {
-                surveySelect.value = '';
-                filterSurveys();
+                filterSurveys(false);
             });
 
-            surveySelect.addEventListener(
-                'change',
-                updateSurveyInfo
-            );
+            surveySelect.addEventListener('change', function () {
+                updateSurveyInfo();
+            });
 
-            taxInput.addEventListener(
-                'input',
-                calculateTotals
-            );
+            taxInput.addEventListener('input', function () {
+                calculateTotals();
+            });
 
-            filterSurveys();
+            filterSurveys(true);
             calculateTotals();
         });
     </script>

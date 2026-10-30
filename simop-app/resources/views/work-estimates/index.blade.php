@@ -20,12 +20,32 @@
             'approved' => 'bg-green-100 text-green-700',
             'rejected' => 'bg-red-100 text-red-700',
         ];
+
+        $surveyStatusLabels = [
+            'dijadwalkan' => 'Dijadwalkan',
+            'berlangsung' => 'Berlangsung',
+            'selesai' => 'Selesai',
+            'dibatalkan' => 'Dibatalkan',
+        ];
+
+        $surveyStatusColors = [
+            'dijadwalkan' => 'text-blue-600',
+            'berlangsung' => 'text-amber-600',
+            'selesai' => 'text-green-600',
+            'dibatalkan' => 'text-red-600',
+        ];
     @endphp
 
     <div class="space-y-6">
         @if (session('success'))
             <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
                 {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+                {{ session('error') }}
             </div>
         @endif
 
@@ -75,8 +95,16 @@
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
-                    Direktur dapat melihat rincian Work Estimate untuk proses evaluasi dan approval. Pembuatan Work Estimate dilakukan oleh Admin.
+                    Direktur dapat melihat rincian Work Estimate untuk proses evaluasi dan approval.
+                    Pembuatan Work Estimate hanya dilakukan oleh Admin.
                 </p>
+
+                <a
+                    href="{{ route('approvals.index') }}"
+                    class="mt-3 inline-flex text-sm font-semibold text-blue-700 underline hover:text-blue-900"
+                >
+                    Buka Modul Approval
+                </a>
             </div>
         @endif
 
@@ -127,6 +155,14 @@
 
                                 $statusClass = $statusColors[$estimate->status]
                                     ?? 'bg-slate-100 text-slate-700';
+
+                                $surveyStatus = $estimate->survey?->status;
+
+                                $surveyStatusLabel = $surveyStatusLabels[$surveyStatus]
+                                    ?? ucfirst(str_replace('_', ' ', $surveyStatus ?? ''));
+
+                                $surveyStatusClass = $surveyStatusColors[$surveyStatus]
+                                    ?? 'text-slate-500';
                             @endphp
 
                             <tr class="transition hover:bg-slate-50">
@@ -164,8 +200,8 @@
                                             {{ $estimate->survey->location }}
                                         </p>
 
-                                        <p class="mt-1 text-xs text-green-600">
-                                            Survey selesai
+                                        <p class="mt-1 text-xs font-medium {{ $surveyStatusClass }}">
+                                            {{ $surveyStatusLabel }}
                                         </p>
                                     @else
                                         <span class="text-sm text-slate-400">
@@ -176,7 +212,12 @@
 
                                 <td class="whitespace-nowrap px-5 py-4">
                                     <p class="text-sm font-bold text-slate-900">
-                                        Rp{{ number_format((float) $estimate->total_amount, 0, ',', '.') }}
+                                        Rp{{ number_format(
+                                            (float) $estimate->total_amount,
+                                            0,
+                                            ',',
+                                            '.'
+                                        ) }}
                                     </p>
                                 </td>
 
@@ -201,7 +242,10 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-5 py-14 text-center">
+                                <td
+                                    colspan="8"
+                                    class="px-5 py-14 text-center"
+                                >
                                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500">
                                         ≡
                                     </div>

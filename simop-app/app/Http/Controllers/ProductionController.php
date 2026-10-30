@@ -30,6 +30,7 @@ class ProductionController extends Controller
             'planning.project.assignedUser',
             'creator',
             'assignedUser',
+            'bapp',
         ])
             ->when(
                 $role === 'petugas-lapangan',
@@ -56,9 +57,17 @@ class ProductionController extends Controller
 
         $plannings = Planning::with([
             'project.assignedUser',
+            'project.workEstimate.order',
         ])
             ->where('status', 'completed')
             ->whereDoesntHave('production')
+            ->whereHas(
+                'project',
+                fn ($query) => $query->whereNotIn(
+                    'status',
+                    ['completed', 'cancelled']
+                )
+            )
             ->latest()
             ->get();
 
@@ -128,56 +137,70 @@ class ProductionController extends Controller
             ],
         ]);
 
-        $planning = Planning::with('project')
-            ->findOrFail(
-                $validated['planning_id']
-            );
-
-        abort_unless(
-            $planning->status === 'completed',
-            422,
-            'Planning harus berstatus Selesai sebelum Produksi & Instalasi dapat dibuat.'
-        );
-
-        $fieldOfficer = User::with('role')
-            ->findOrFail(
-                $validated['assigned_to']
-            );
-
-        abort_unless(
-            $fieldOfficer->role?->slug === 'petugas-lapangan',
-            422,
-            'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
-        );
-
         $production = DB::transaction(
-            function () use (
-                $validated,
-                $planning
-            ) {
+            function () use ($validated) {
+                $planning = Planning::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $validated['planning_id']
+                    );
+
+                abort_unless(
+                    $planning->status === 'completed',
+                    422,
+                    'Planning harus berstatus Selesai sebelum Produksi & Instalasi dapat dibuat.'
+                );
+
+                $project = $planning->project()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                abort_if(
+                    in_array(
+                        $project->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Produksi & Instalasi tidak dapat dibuat karena Project sudah selesai atau dibatalkan.'
+                );
+
+                $productionExists = Production::query()
+                    ->where(
+                        'planning_id',
+                        $planning->id
+                    )
+                    ->exists();
+
+                abort_if(
+                    $productionExists,
+                    422,
+                    'Planning ini sudah memiliki Produksi & Instalasi.'
+                );
+
+                $fieldOfficer = User::with('role')
+                    ->findOrFail(
+                        $validated['assigned_to']
+                    );
+
+                abort_unless(
+                    $fieldOfficer->role?->slug === 'petugas-lapangan',
+                    422,
+                    'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
+                );
+
                 return Production::create([
-                    'planning_id' =>
-                        $planning->id,
-                    'created_by' =>
-                        auth()->id(),
-                    'assigned_to' =>
-                        $validated['assigned_to'],
-                    'production_number' =>
-                        $this->generateProductionNumber(),
-                    'title' =>
-                        $validated['title'],
-                    'start_date' =>
-                        $validated['start_date'] ?? null,
-                    'end_date' =>
-                        $validated['end_date'] ?? null,
-                    'status' =>
-                        'pending',
-                    'progress' =>
-                        0,
-                    'description' =>
-                        $validated['description'] ?? null,
-                    'notes' =>
-                        $validated['notes'] ?? null,
+                    'planning_id' => $planning->id,
+                    'created_by' => auth()->id(),
+                    'assigned_to' => $fieldOfficer->id,
+                    'production_number' => $this->generateProductionNumber(),
+                    'title' => $validated['title'],
+                    'start_date' => $validated['start_date'] ?? null,
+                    'end_date' => $validated['end_date'] ?? null,
+                    'status' => 'pending',
+                    'progress' => 0,
+                    'description' => $validated['description'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
                 ]);
             }
         );
@@ -201,11 +224,7 @@ class ProductionController extends Controller
         abort_unless(
             in_array(
                 $role,
-                [
-                    'admin',
-                    'direktur',
-                    'petugas-lapangan',
-                ],
+                ['admin', 'direktur', 'petugas-lapangan'],
                 true
             ),
             403
@@ -223,6 +242,7 @@ class ProductionController extends Controller
             'planning.project.assignedUser',
             'creator',
             'assignedUser',
+            'bapp',
         ]);
 
         return view(
@@ -241,26 +261,10 @@ class ProductionController extends Controller
         abort_unless(
             in_array(
                 $role,
-                [
-                    'admin',
-                    'petugas-lapangan',
-                ],
+                ['admin', 'petugas-lapangan'],
                 true
             ),
             403
-        );
-
-        if (
-            $role === 'petugas-lapangan'
-            && $production->assigned_to !== $user->id
-        ) {
-            abort(403);
-        }
-
-        abort_if(
-            $production->status === 'cancelled',
-            422,
-            'Produksi & Instalasi yang dibatalkan tidak dapat diperbarui.'
         );
 
         $validated = $request->validate([
@@ -274,31 +278,88 @@ class ProductionController extends Controller
 
         $progress = (int) $validated['progress'];
 
-        $status = match (true) {
-            $progress === 100 => 'completed',
-            $progress > 0 => 'in_progress',
-            default => 'pending',
-        };
-
         DB::transaction(
             function () use (
                 $production,
                 $progress,
-                $status
+                $user,
+                $role
             ) {
-                $production->update([
+                $currentProduction = Production::query()
+                    ->lockForUpdate()
+                    ->findOrFail($production->id);
+
+                if (
+                    $role === 'petugas-lapangan'
+                    && $currentProduction->assigned_to !== $user->id
+                ) {
+                    abort(403);
+                }
+
+                abort_if(
+                    $currentProduction->status === 'cancelled',
+                    422,
+                    'Produksi & Instalasi yang dibatalkan tidak dapat diperbarui.'
+                );
+
+                abort_if(
+                    $currentProduction->status === 'completed',
+                    422,
+                    'Produksi & Instalasi yang sudah selesai tidak dapat diperbarui.'
+                );
+
+                $planning = Planning::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $currentProduction->planning_id
+                    );
+
+                abort_unless(
+                    $planning->status === 'completed',
+                    422,
+                    'Planning harus berstatus Selesai.'
+                );
+
+                $project = $planning->project()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                abort_if(
+                    in_array(
+                        $project->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Progress tidak dapat diperbarui karena Project sudah selesai atau dibatalkan.'
+                );
+
+                $status = match (true) {
+                    $progress === 100 => 'completed',
+                    $progress > 0 => 'in_progress',
+                    default => 'pending',
+                };
+
+                $currentProduction->update([
                     'progress' => $progress,
                     'status' => $status,
                 ]);
 
-                if ($status === 'in_progress') {
-                    $production->planning->project->update([
+                if (
+                    in_array(
+                        $status,
+                        ['in_progress', 'completed'],
+                        true
+                    )
+                    && $project->status === 'planning'
+                ) {
+                    $project->update([
                         'status' => 'ongoing',
                     ]);
                 }
 
                 if ($status === 'completed') {
-                    $production->planning->project->update([
+                    $project->update([
                         'progress' => 100,
                     ]);
                 }
@@ -312,7 +373,9 @@ class ProductionController extends Controller
             )
             ->with(
                 'success',
-                'Progress Produksi & Instalasi berhasil diperbarui.'
+                $progress === 100
+                    ? 'Produksi & Instalasi telah mencapai 100% dan dinyatakan selesai. Tahap berikutnya adalah BAPP.'
+                    : 'Progress Produksi & Instalasi berhasil diperbarui.'
             );
     }
 
@@ -331,7 +394,6 @@ class ProductionController extends Controller
                 Rule::in([
                     'pending',
                     'in_progress',
-                    'completed',
                     'cancelled',
                 ]),
             ],
@@ -342,31 +404,86 @@ class ProductionController extends Controller
                 $production,
                 $validated
             ) {
+                $currentProduction = Production::query()
+                    ->lockForUpdate()
+                    ->findOrFail($production->id);
+
+                abort_if(
+                    in_array(
+                        $currentProduction->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Produksi & Instalasi yang sudah selesai atau dibatalkan tidak dapat diubah statusnya.'
+                );
+
+                $planning = Planning::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $currentProduction->planning_id
+                    );
+
+                $project = $planning->project()
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                abort_if(
+                    in_array(
+                        $project->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Status tidak dapat diperbarui karena Project sudah selesai atau dibatalkan.'
+                );
+
                 $status = $validated['status'];
 
-                $data = [
-                    'status' => $status,
-                ];
-
-                if ($status === 'completed') {
-                    $data['progress'] = 100;
-                }
-
                 if ($status === 'pending') {
-                    $data['progress'] = 0;
+                    abort_unless(
+                        $currentProduction->status === 'pending',
+                        422,
+                        'Produksi & Instalasi yang sudah berjalan tidak dapat dikembalikan ke status Menunggu.'
+                    );
                 }
-
-                $production->update($data);
 
                 if ($status === 'in_progress') {
-                    $production->planning->project->update([
-                        'status' => 'ongoing',
+                    abort_unless(
+                        in_array(
+                            $currentProduction->status,
+                            ['pending', 'in_progress'],
+                            true
+                        ),
+                        422,
+                        'Status Produksi & Instalasi tidak dapat diubah ke Dalam Pengerjaan.'
+                    );
+
+                    $progress = max(
+                        1,
+                        min(
+                            99,
+                            (int) $currentProduction->progress
+                        )
+                    );
+
+                    $currentProduction->update([
+                        'status' => 'in_progress',
+                        'progress' => $progress,
                     ]);
+
+                    if ($project->status === 'planning') {
+                        $project->update([
+                            'status' => 'ongoing',
+                        ]);
+                    }
+
+                    return;
                 }
 
-                if ($status === 'completed') {
-                    $production->planning->project->update([
-                        'progress' => 100,
+                if ($status === 'cancelled') {
+                    $currentProduction->update([
+                        'status' => 'cancelled',
                     ]);
                 }
             }
@@ -379,7 +496,9 @@ class ProductionController extends Controller
             )
             ->with(
                 'success',
-                'Status Produksi & Instalasi berhasil diperbarui.'
+                $validated['status'] === 'cancelled'
+                    ? 'Produksi & Instalasi berhasil dibatalkan.'
+                    : 'Status Produksi & Instalasi berhasil diperbarui.'
             );
     }
 

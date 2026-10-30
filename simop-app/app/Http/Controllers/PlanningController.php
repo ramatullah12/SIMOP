@@ -28,16 +28,21 @@ class PlanningController extends Controller
             'project.assignedUser',
             'project.workEstimate.order',
             'creator',
+            'production',
         ])
             ->when(
                 $role === 'petugas-lapangan',
-                fn ($query) => $query->whereHas(
-                    'project',
-                    fn ($projectQuery) => $projectQuery->where(
-                        'assigned_to',
-                        $user->id
-                    )
-                )
+                function ($query) use ($user) {
+                    $query->whereHas(
+                        'project',
+                        function ($projectQuery) use ($user) {
+                            $projectQuery->where(
+                                'assigned_to',
+                                $user->id
+                            );
+                        }
+                    );
+                }
             )
             ->latest()
             ->paginate(10);
@@ -57,7 +62,7 @@ class PlanningController extends Controller
 
         $projects = Project::with([
             'assignedUser',
-            'workEstimate',
+            'workEstimate.order',
         ])
             ->whereDoesntHave('planning')
             ->whereNotIn(
@@ -113,41 +118,47 @@ class PlanningController extends Controller
             ],
         ]);
 
-        $project = Project::findOrFail(
-            $validated['project_id']
-        );
-
-        abort_if(
-            in_array(
-                $project->status,
-                ['completed', 'cancelled'],
-                true
-            ),
-            422,
-            'Project yang sudah selesai atau dibatalkan tidak dapat dibuatkan Planning.'
-        );
-
         $planning = DB::transaction(
             function () use ($validated) {
+                $project = Project::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $validated['project_id']
+                    );
+
+                abort_if(
+                    in_array(
+                        $project->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Project yang sudah selesai atau dibatalkan tidak dapat dibuatkan Planning.'
+                );
+
+                $planningExists = Planning::query()
+                    ->where(
+                        'project_id',
+                        $project->id
+                    )
+                    ->exists();
+
+                abort_if(
+                    $planningExists,
+                    422,
+                    'Project ini sudah memiliki Planning.'
+                );
+
                 return Planning::create([
-                    'project_id' =>
-                        $validated['project_id'],
-                    'created_by' =>
-                        auth()->id(),
-                    'planning_number' =>
-                        $this->generatePlanningNumber(),
-                    'title' =>
-                        $validated['title'],
-                    'description' =>
-                        $validated['description'] ?? null,
-                    'planned_start_date' =>
-                        $validated['planned_start_date'] ?? null,
-                    'planned_end_date' =>
-                        $validated['planned_end_date'] ?? null,
-                    'status' =>
-                        'draft',
-                    'notes' =>
-                        $validated['notes'] ?? null,
+                    'project_id' => $project->id,
+                    'created_by' => auth()->id(),
+                    'planning_number' => $this->generatePlanningNumber(),
+                    'title' => $validated['title'],
+                    'description' => $validated['description'] ?? null,
+                    'planned_start_date' => $validated['planned_start_date'] ?? null,
+                    'planned_end_date' => $validated['planned_end_date'] ?? null,
+                    'status' => 'draft',
+                    'notes' => $validated['notes'] ?? null,
                 ]);
             }
         );
@@ -182,6 +193,7 @@ class PlanningController extends Controller
             'project.creator',
             'project.workEstimate.order',
             'creator',
+            'production.bapp',
         ]);
 
         if (
@@ -213,15 +225,6 @@ class PlanningController extends Controller
             403
         );
 
-        $planning->load('project');
-
-        if (
-            $role === 'petugas-lapangan'
-            && $planning->project->assigned_to !== $user->id
-        ) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'status' => [
                 'required',
@@ -235,38 +238,111 @@ class PlanningController extends Controller
             ],
         ]);
 
-        if (
-            $role === 'petugas-lapangan'
-            && in_array(
-                $validated['status'],
-                ['draft', 'cancelled'],
-                true
-            )
-        ) {
-            abort(
-                403,
-                'Petugas Lapangan tidak dapat mengubah Planning ke status tersebut.'
-            );
-        }
-
-        DB::transaction(function () use ($planning, $validated) {
-            $planning->update([
-                'status' => $validated['status'],
-            ]);
-
-            if (
-                in_array(
-                    $validated['status'],
-                    ['ready', 'in_progress', 'completed'],
-                    true
-                )
-                && $planning->project->status === 'planning'
+        DB::transaction(
+            function () use (
+                $planning,
+                $validated,
+                $user,
+                $role
             ) {
-                $planning->project->update([
-                    'status' => 'ongoing',
+                $currentPlanning = Planning::query()
+                    ->lockForUpdate()
+                    ->findOrFail($planning->id);
+
+                $project = Project::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $currentPlanning->project_id
+                    );
+
+                if (
+                    $role === 'petugas-lapangan'
+                    && $project->assigned_to !== $user->id
+                ) {
+                    abort(403);
+                }
+
+                abort_if(
+                    in_array(
+                        $project->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Planning tidak dapat diubah karena Project sudah selesai atau dibatalkan.'
+                );
+
+                abort_if(
+                    in_array(
+                        $currentPlanning->status,
+                        ['completed', 'cancelled'],
+                        true
+                    ),
+                    422,
+                    'Planning yang sudah selesai atau dibatalkan tidak dapat diubah kembali.'
+                );
+
+                if (
+                    $role === 'petugas-lapangan'
+                    && in_array(
+                        $validated['status'],
+                        ['draft', 'cancelled'],
+                        true
+                    )
+                ) {
+                    abort(
+                        403,
+                        'Petugas Lapangan tidak dapat mengubah Planning ke status tersebut.'
+                    );
+                }
+
+                $allowedTransitions = [
+                    'draft' => [
+                        'ready',
+                        'cancelled',
+                    ],
+                    'ready' => [
+                        'in_progress',
+                        'cancelled',
+                    ],
+                    'in_progress' => [
+                        'completed',
+                        'cancelled',
+                    ],
+                ];
+
+                $currentStatus = $currentPlanning->status;
+                $newStatus = $validated['status'];
+
+                abort_unless(
+                    isset($allowedTransitions[$currentStatus])
+                    && in_array(
+                        $newStatus,
+                        $allowedTransitions[$currentStatus],
+                        true
+                    ),
+                    422,
+                    'Perubahan status Planning tidak sesuai urutan proses.'
+                );
+
+                $currentPlanning->update([
+                    'status' => $newStatus,
                 ]);
+
+                if (
+                    in_array(
+                        $newStatus,
+                        ['ready', 'in_progress', 'completed'],
+                        true
+                    )
+                    && $project->status === 'planning'
+                ) {
+                    $project->update([
+                        'status' => 'ongoing',
+                    ]);
+                }
             }
-        });
+        );
 
         return redirect()
             ->route(
