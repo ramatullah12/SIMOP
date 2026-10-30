@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="mb-6">
-        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/15 border border-blue-500/20">
+        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/15 border border-blue-500/25">
             <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -13,10 +13,8 @@
     <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
         @csrf
 
-        <!-- Password Reset Token -->
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-        <!-- Email Address -->
         <div>
             <label for="email" class="auth-label">Alamat Email</label>
             <input
@@ -35,7 +33,6 @@
             @enderror
         </div>
 
-        <!-- Password -->
         <div>
             <label for="password" class="auth-label">Password Baru</label>
             <input
@@ -52,7 +49,6 @@
             @enderror
         </div>
 
-        <!-- Confirm Password -->
         <div>
             <label for="password_confirmation" class="auth-label">Konfirmasi Password Baru</label>
             <input

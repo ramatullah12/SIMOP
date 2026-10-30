@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="mb-6">
-        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/15 border border-blue-500/20">
+        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/15 border border-blue-500/25">
             <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
@@ -12,9 +12,8 @@
         </p>
     </div>
 
-    <!-- Session Status -->
     @if (session('status'))
-        <div class="mb-5 flex gap-3 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3">
+        <div class="mb-5 flex gap-3 rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-3">
             <svg class="w-4 h-4 text-green-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
@@ -25,7 +24,6 @@
     <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
         @csrf
 
-        <!-- Email Address -->
         <div>
             <label for="email" class="auth-label">Alamat Email</label>
             <input
@@ -48,7 +46,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
-            Kirim Tautan Reset Password
+            Kirim Tautan Reset
         </button>
     </form>
 

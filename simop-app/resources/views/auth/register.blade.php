@@ -4,8 +4,7 @@
         <p class="mt-1 text-sm text-slate-400">Daftarkan diri Anda untuk mengakses SIMOP</p>
     </div>
 
-    <!-- Info verifikasi -->
-    <div class="mb-5 flex gap-3 rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-3">
+    <div class="mb-5 flex gap-3 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3">
         <svg class="w-4 h-4 text-amber-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -18,7 +17,6 @@
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf
 
-        <!-- Name -->
         <div>
             <label for="name" class="auth-label">Nama Lengkap</label>
             <input
@@ -37,7 +35,6 @@
             @enderror
         </div>
 
-        <!-- Email Address -->
         <div>
             <label for="email" class="auth-label">Alamat Email</label>
             <input
@@ -55,7 +52,6 @@
             @enderror
         </div>
 
-        <!-- Password -->
         <div>
             <label for="password" class="auth-label">Password</label>
             <input
@@ -72,7 +68,6 @@
             @enderror
         </div>
 
-        <!-- Confirm Password -->
         <div>
             <label for="password_confirmation" class="auth-label">Konfirmasi Password</label>
             <input
@@ -89,7 +84,6 @@
             @enderror
         </div>
 
-        <!-- Submit -->
         <button type="submit" class="auth-btn-primary w-full mt-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
