@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Survey extends Model
 {
@@ -34,6 +35,13 @@ class Survey extends Model
         return $this->belongsTo(
             User::class,
             'assigned_to'
+        );
+    }
+
+    public function workEstimate(): HasOne
+    {
+        return $this->hasOne(
+            WorkEstimate::class
         );
     }
 }

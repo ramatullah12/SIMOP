@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('project_id')
+                ->unique()
                 ->constrained('projects')
                 ->cascadeOnDelete();
 

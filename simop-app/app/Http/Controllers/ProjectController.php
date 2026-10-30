@@ -137,8 +137,7 @@ class ProjectController extends Controller
                 );
 
             abort_unless(
-                $fieldOfficer->role?->slug
-                    === 'petugas-lapangan',
+                $fieldOfficer->role?->slug === 'petugas-lapangan',
                 422,
                 'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
             );
@@ -208,6 +207,9 @@ class ProjectController extends Controller
             'workEstimate.approvals.approver',
             'creator',
             'assignedUser',
+            'planning.production.bapp',
+            'invoice',
+            'rating',
         ]);
 
         return view(
@@ -239,6 +241,18 @@ class ProjectController extends Controller
             abort(403);
         }
 
+        abort_if(
+            $project->status === 'completed',
+            422,
+            'Project yang sudah selesai tidak dapat diubah progress-nya.'
+        );
+
+        abort_if(
+            $project->status === 'cancelled',
+            422,
+            'Project yang dibatalkan tidak dapat diubah progress-nya.'
+        );
+
         $validated = $request->validate([
             'progress' => [
                 'required',
@@ -250,11 +264,9 @@ class ProjectController extends Controller
 
         $progress = (int) $validated['progress'];
 
-        $status = match (true) {
-            $progress === 100 => 'completed',
-            $progress > 0 => 'ongoing',
-            default => 'planning',
-        };
+        $status = $progress > 0
+            ? 'ongoing'
+            : 'planning';
 
         $project->update([
             'progress' => $progress,
@@ -268,7 +280,9 @@ class ProjectController extends Controller
             )
             ->with(
                 'success',
-                'Progress Project berhasil diperbarui.'
+                $progress === 100
+                    ? 'Progress Project mencapai 100%. Project tetap berjalan sampai BAPP disetujui.'
+                    : 'Progress Project berhasil diperbarui.'
             );
     }
 
@@ -281,13 +295,18 @@ class ProjectController extends Controller
             403
         );
 
+        abort_if(
+            $project->status === 'completed',
+            422,
+            'Project yang sudah selesai tidak dapat diubah statusnya.'
+        );
+
         $validated = $request->validate([
             'status' => [
                 'required',
                 Rule::in([
                     'planning',
                     'ongoing',
-                    'completed',
                     'cancelled',
                 ]),
             ],
@@ -298,10 +317,6 @@ class ProjectController extends Controller
         $data = [
             'status' => $status,
         ];
-
-        if ($status === 'completed') {
-            $data['progress'] = 100;
-        }
 
         if ($status === 'planning') {
             $data['progress'] = 0;

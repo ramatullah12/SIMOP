@@ -207,45 +207,53 @@ class BappController extends Controller
             'status' => [
                 'required',
                 Rule::in([
-                    'draft',
                     'submitted',
                     'approved',
                 ]),
             ],
         ]);
 
-        if (
-            $validated['status'] === 'approved'
-            && $bapp->status !== 'submitted'
-        ) {
-            abort(
+        $newStatus = $validated['status'];
+
+        if ($bapp->status === 'draft') {
+            abort_unless(
+                $newStatus === 'submitted',
                 422,
-                'BAPP harus diajukan terlebih dahulu sebelum disetujui.'
+                'BAPP berstatus Draft hanya dapat diajukan menjadi Submitted.'
+            );
+        }
+
+        if ($bapp->status === 'submitted') {
+            abort_unless(
+                $newStatus === 'approved',
+                422,
+                'BAPP yang sudah diajukan hanya dapat disetujui.'
             );
         }
 
         DB::transaction(
             function () use (
                 $bapp,
-                $validated
+                $newStatus
             ) {
                 $bapp->update([
-                    'status' => $validated['status'],
+                    'status' => $newStatus,
                 ]);
 
-                if ($validated['status'] === 'approved') {
+                if ($newStatus === 'approved') {
                     $bapp->load(
                         'production.planning.project'
                     );
 
-                    $bapp
+                    $project = $bapp
                         ->production
                         ->planning
-                        ->project
-                        ->update([
-                            'status' => 'completed',
-                            'progress' => 100,
-                        ]);
+                        ->project;
+
+                    $project->update([
+                        'status' => 'completed',
+                        'progress' => 100,
+                    ]);
                 }
             }
         );
@@ -257,9 +265,9 @@ class BappController extends Controller
             )
             ->with(
                 'success',
-                $validated['status'] === 'approved'
+                $newStatus === 'approved'
                     ? 'BAPP berhasil disetujui dan Project telah diselesaikan.'
-                    : 'Status BAPP berhasil diperbarui.'
+                    : 'BAPP berhasil diajukan.'
             );
     }
 

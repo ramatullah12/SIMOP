@@ -55,4 +55,14 @@ class Project extends Model
     {
         return $this->hasMany(Document::class);
     }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+    public function rating(): HasOne
+    {
+        return $this->hasOne(Rating::class);
+    }
 }

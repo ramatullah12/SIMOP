@@ -7,6 +7,7 @@
     <title>@yield('title', 'SIMOP')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
     @php
         $user = auth()->user();
@@ -25,7 +26,8 @@
                 ['Produksi & Instalasi', 'productions.index', '◈'],
                 ['BAPP', 'bapps.index', '☑'],
                 ['Dokumen', 'documents.index', '▧'],
-                ['Invoice', 'admin.invoices.index', '▤'],
+                ['Invoice', 'invoices.index', '▤'],
+                ['Rating', 'admin.ratings.index', '☆'],
                 ['Vendor', 'admin.vendors.index', '▥'],
                 ['Laporan', 'admin.reports.index', '▥'],
                 ['Pengguna', 'admin.users.index', '⚙'],
@@ -54,7 +56,7 @@
                 ['Order & RFQ', 'client.orders.index', '☷'],
                 ['Tracking', 'client.tracking.index', '◎'],
                 ['Dokumen', 'documents.index', '▧'],
-                ['Invoice', 'client.invoices.index', '▤'],
+                ['Invoice', 'invoices.index', '▤'],
                 ['Rating', 'client.ratings.index', '☆'],
             ],
         ];
@@ -112,14 +114,18 @@
                         $routeExists = \Illuminate\Support\Facades\Route::has($routeName);
 
                         $patterns = match ($routeName) {
-                            'dashboard' => ['dashboard'],
+                            'dashboard' => [
+                                'dashboard',
+                            ],
 
                             'admin.orders.index' => [
                                 'admin.orders.*',
+                                'orders.show',
                             ],
 
                             'client.orders.index' => [
                                 'client.orders.*',
+                                'orders.show',
                             ],
 
                             'admin.clients.index' => [
@@ -174,12 +180,18 @@
                                 'client.tracking.*',
                             ],
 
-                            'admin.invoices.index' => [
-                                'admin.invoices.*',
+                            'invoices.index' => [
+                                'invoices.*',
                             ],
 
-                            'client.invoices.index' => [
-                                'client.invoices.*',
+                            'admin.ratings.index' => [
+                                'admin.ratings.*',
+                                'ratings.show',
+                            ],
+
+                            'client.ratings.index' => [
+                                'client.ratings.*',
+                                'ratings.show',
                             ],
 
                             'admin.vendors.index' => [
@@ -198,11 +210,9 @@
                                 'admin.users.*',
                             ],
 
-                            'client.ratings.index' => [
-                                'client.ratings.*',
+                            default => [
+                                $routeName,
                             ],
-
-                            default => [$routeName],
                         };
 
                         $active = request()->routeIs(...$patterns);
