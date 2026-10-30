@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Production;
+use App\Models\Survey;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -17,14 +19,19 @@ class DashboardController extends Controller
             'Role pengguna belum diatur.'
         );
 
+        $role = $user->role->slug;
+
+        if ($role === 'petugas-lapangan') {
+            return $this->petugasLapanganDashboard($user->id);
+        }
+
         $dashboards = [
             'admin' => 'dashboard.admin',
             'direktur' => 'dashboard.direktur',
-            'petugas-lapangan' => 'dashboard.petugas-lapangan',
             'client' => 'dashboard.client',
         ];
 
-        $view = $dashboards[$user->role->slug] ?? null;
+        $view = $dashboards[$role] ?? null;
 
         abort_unless(
             $view,
@@ -33,5 +40,85 @@ class DashboardController extends Controller
         );
 
         return view($view);
+    }
+
+    private function petugasLapanganDashboard(int $userId): View
+    {
+        $surveyHariIni = Survey::where(
+            'assigned_to',
+            $userId
+        )
+            ->whereDate(
+                'scheduled_at',
+                today()
+            )
+            ->whereNotIn(
+                'status',
+                ['selesai', 'dibatalkan']
+            )
+            ->count();
+
+        $belumDilaporkan = Survey::where(
+            'assigned_to',
+            $userId
+        )
+            ->whereIn(
+                'status',
+                ['dijadwalkan', 'berlangsung']
+            )
+            ->count();
+
+        $tugasAktif = Production::where(
+            'assigned_to',
+            $userId
+        )
+            ->whereIn(
+                'status',
+                ['pending', 'in_progress']
+            )
+            ->count();
+
+        $progressRataRata = Production::where(
+            'assigned_to',
+            $userId
+        )
+            ->whereNotIn(
+                'status',
+                ['cancelled']
+            )
+            ->avg('progress');
+
+        $progressRataRata = (int) round(
+            $progressRataRata ?? 0
+        );
+
+        $jadwalHariIni = Survey::with([
+            'order',
+        ])
+            ->where(
+                'assigned_to',
+                $userId
+            )
+            ->whereDate(
+                'scheduled_at',
+                today()
+            )
+            ->whereNotIn(
+                'status',
+                ['dibatalkan']
+            )
+            ->orderBy('scheduled_at')
+            ->get();
+
+        return view(
+            'dashboard.petugas-lapangan',
+            compact(
+                'surveyHariIni',
+                'belumDilaporkan',
+                'tugasAktif',
+                'progressRataRata',
+                'jadwalHariIni'
+            )
+        );
     }
 }

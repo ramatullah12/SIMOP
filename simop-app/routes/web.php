@@ -14,6 +14,8 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VendorController;
 use App\Http\Controllers\WorkEstimateController;
 use Illuminate\Support\Facades\Route;
 
@@ -199,6 +201,30 @@ Route::middleware('auth')->group(function () {
             ->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('/{project}', 'show')->name('show');
+            });
+
+        Route::prefix('admin/vendors')
+            ->name('admin.vendors.')
+            ->controller(VendorController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{vendor}', 'show')->name('show');
+                Route::get('/{vendor}/edit', 'edit')->name('edit');
+                Route::put('/{vendor}', 'update')->name('update');
+            });
+
+        Route::prefix('admin/users')
+            ->name('admin.users.')
+            ->controller(UserController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{user}', 'show')->name('show');
+                Route::get('/{user}/edit', 'edit')->name('edit');
+                Route::put('/{user}', 'update')->name('update');
             });
     });
 });
