@@ -34,14 +34,7 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $roles = Role::whereIn('slug', [
-            'admin',
-            'direktur',
-            'petugas-lapangan',
-            'client',
-        ])
-            ->orderBy('name')
-            ->get();
+        $roles = $this->availableRoles();
 
         return view(
             'users.index',
@@ -58,14 +51,7 @@ class UserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $roles = Role::whereIn('slug', [
-            'admin',
-            'direktur',
-            'petugas-lapangan',
-            'client',
-        ])
-            ->orderBy('name')
-            ->get();
+        $roles = $this->availableRoles();
 
         return view(
             'users.create',
@@ -77,12 +63,9 @@ class UserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $allowedRoleIds = Role::whereIn('slug', [
-            'admin',
-            'direktur',
-            'petugas-lapangan',
-            'client',
-        ])->pluck('id')->all();
+        $allowedRoleIds = $this->availableRoles()
+            ->pluck('id')
+            ->all();
 
         $validated = $request->validate([
             'name' => [
@@ -113,8 +96,11 @@ class UserController extends Controller
             'email' => $validated['email'],
             'role_id' => $validated['role_id'],
             'password' => Hash::make($validated['password']),
-            'email_verified_at' => now(),
         ]);
+
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
 
         return redirect()
             ->route('admin.users.show', $user)
@@ -137,14 +123,7 @@ class UserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $roles = Role::whereIn('slug', [
-            'admin',
-            'direktur',
-            'petugas-lapangan',
-            'client',
-        ])
-            ->orderBy('name')
-            ->get();
+        $roles = $this->availableRoles();
 
         return view(
             'users.edit',
@@ -158,12 +137,9 @@ class UserController extends Controller
     ): RedirectResponse {
         $this->authorizeAdmin($request);
 
-        $allowedRoleIds = Role::whereIn('slug', [
-            'admin',
-            'direktur',
-            'petugas-lapangan',
-            'client',
-        ])->pluck('id')->all();
+        $allowedRoleIds = $this->availableRoles()
+            ->pluck('id')
+            ->all();
 
         $validated = $request->validate([
             'name' => [
@@ -189,6 +165,17 @@ class UserController extends Controller
             ],
         ]);
 
+        if (
+            $request->user()->is($user)
+            && (int) $validated['role_id'] !== (int) $user->role_id
+        ) {
+            return back()
+                ->withErrors([
+                    'role_id' => 'Role akun yang sedang digunakan tidak dapat diubah.',
+                ])
+                ->withInput();
+        }
+
         $data = [
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -204,6 +191,52 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.show', $user)
             ->with('success', 'Data pengguna berhasil diperbarui.');
+    }
+
+    public function updateVerification(
+        Request $request,
+        User $user
+    ): RedirectResponse {
+        $this->authorizeAdmin($request);
+
+        if ($request->user()->is($user)) {
+            return back()
+                ->withErrors([
+                    'verification' => 'Akun yang sedang digunakan tidak dapat diubah status verifikasinya.',
+                ]);
+        }
+
+        if ($user->email_verified_at) {
+            $user->forceFill([
+                'email_verified_at' => null,
+            ])->save();
+
+            return back()->with(
+                'success',
+                'Verifikasi pengguna berhasil dibatalkan.'
+            );
+        }
+
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
+
+        return back()->with(
+            'success',
+            'Pengguna berhasil diverifikasi.'
+        );
+    }
+
+    private function availableRoles()
+    {
+        return Role::whereIn('slug', [
+            'admin',
+            'direktur',
+            'petugas-lapangan',
+            'client',
+        ])
+            ->orderBy('name')
+            ->get();
     }
 
     private function authorizeAdmin(Request $request): void

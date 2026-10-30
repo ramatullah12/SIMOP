@@ -17,6 +17,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
+    Route::get('register/pending', function () {
+        return view('auth.pending-verification');
+    })->name('register.pending');
+
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

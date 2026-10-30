@@ -18,7 +18,7 @@ class ReportController extends Controller
 
         $validated = $request->validate([
             'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'end_date' => ['nullable', 'date'],
         ]);
 
         $startDate = isset($validated['start_date'])
@@ -29,85 +29,96 @@ class ReportController extends Controller
             ? Carbon::parse($validated['end_date'])->endOfDay()
             : now()->endOfMonth();
 
-        $totalOrders = Order::whereBetween(
-            'created_at',
-            [$startDate, $endDate]
-        )->count();
+        if ($startDate->gt($endDate)) {
+            return back()
+                ->withErrors([
+                    'end_date' => 'Tanggal akhir harus sama atau setelah tanggal mulai.',
+                ])
+                ->withInput();
+        }
 
-        $totalProjects = Project::whereBetween(
-            'created_at',
-            [$startDate, $endDate]
-        )->count();
-
-        $completedProjects = Project::where('status', 'completed')
-            ->whereBetween(
-                'updated_at',
-                [$startDate, $endDate]
-            )
+        $totalOrders = Order::query()
+            ->whereBetween('created_at', [
+                $startDate,
+                $endDate,
+            ])
             ->count();
 
-        $totalInvoiceValue = Invoice::whereIn(
-            'status',
-            ['issued', 'paid']
-        )
-            ->whereBetween(
-                'invoice_date',
-                [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ]
-            )
+        $totalProjects = Project::query()
+            ->whereBetween('created_at', [
+                $startDate,
+                $endDate,
+            ])
+            ->count();
+
+        $completedProjects = Project::query()
+            ->where('status', 'completed')
+            ->whereBetween('updated_at', [
+                $startDate,
+                $endDate,
+            ])
+            ->count();
+
+        $totalInvoiceValue = Invoice::query()
+            ->whereIn('status', [
+                'issued',
+                'paid',
+            ])
+            ->whereBetween('invoice_date', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
             ->sum('total_amount');
 
-        $paidInvoiceValue = Invoice::where('status', 'paid')
-            ->whereBetween(
-                'invoice_date',
-                [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ]
-            )
+        $paidInvoiceValue = Invoice::query()
+            ->where('status', 'paid')
+            ->whereBetween('invoice_date', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
             ->sum('total_amount');
 
-        $outstandingInvoiceValue = Invoice::where('status', 'issued')
-            ->whereBetween(
-                'invoice_date',
-                [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ]
-            )
+        $outstandingInvoiceValue = Invoice::query()
+            ->where('status', 'issued')
+            ->whereBetween('invoice_date', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
             ->sum('total_amount');
 
-        $averageRating = Rating::whereBetween(
-            'created_at',
-            [$startDate, $endDate]
-        )->avg('rating');
+        $averageRating = Rating::query()
+            ->whereBetween('created_at', [
+                $startDate,
+                $endDate,
+            ])
+            ->avg('rating');
 
-        $averageRating = round((float) ($averageRating ?? 0), 1);
+        $averageRating = round(
+            (float) ($averageRating ?? 0),
+            1
+        );
 
-        $recentProjects = Project::with([
-            'workEstimate.order',
-            'invoice',
-        ])
-            ->whereBetween(
-                'created_at',
-                [$startDate, $endDate]
-            )
+        $recentProjects = Project::query()
+            ->with([
+                'workEstimate.order',
+                'invoice',
+            ])
+            ->whereBetween('created_at', [
+                $startDate,
+                $endDate,
+            ])
             ->latest()
             ->limit(10)
             ->get();
 
-        $recentInvoices = Invoice::with([
-            'project.workEstimate.order',
-        ])
-            ->whereBetween(
-                'invoice_date',
-                [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ]
-            )
+        $recentInvoices = Invoice::query()
+            ->with([
+                'project.workEstimate.order',
+            ])
+            ->whereBetween('invoice_date', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
             ->latest('invoice_date')
             ->limit(10)
             ->get();
@@ -135,7 +146,10 @@ class ReportController extends Controller
         abort_unless(
             in_array(
                 $request->user()?->role?->slug,
-                ['admin', 'direktur'],
+                [
+                    'admin',
+                    'direktur',
+                ],
                 true
             ),
             403

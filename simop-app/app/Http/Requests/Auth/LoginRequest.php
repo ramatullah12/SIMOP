@@ -50,6 +50,16 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Cek verifikasi admin: jika email_verified_at masih null, tolak login
+        if (! Auth::user()->email_verified_at) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda belum diverifikasi oleh administrator. Silakan hubungi admin untuk aktivasi akun.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

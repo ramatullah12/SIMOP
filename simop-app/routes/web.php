@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\UserController;
@@ -93,10 +94,16 @@ Route::middleware('auth')->group(function () {
             ->controller(ApprovalController::class)
             ->group(function () {
                 Route::get('/', 'index')->name('index');
-                Route::post('/work-estimates/{workEstimate}', 'store')
-                    ->name('store');
-                Route::patch('/{approval}/decide', 'decide')
-                    ->name('decide');
+
+                Route::post(
+                    '/work-estimates/{workEstimate}',
+                    'store'
+                )->name('store');
+
+                Route::patch(
+                    '/{approval}/decide',
+                    'decide'
+                )->name('decide');
             });
 
         Route::prefix('projects')
@@ -107,10 +114,16 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
                 Route::get('/{project}', 'show')->name('show');
-                Route::patch('/{project}/progress', 'updateProgress')
-                    ->name('progress');
-                Route::patch('/{project}/status', 'updateStatus')
-                    ->name('status');
+
+                Route::patch(
+                    '/{project}/progress',
+                    'updateProgress'
+                )->name('progress');
+
+                Route::patch(
+                    '/{project}/status',
+                    'updateStatus'
+                )->name('status');
             });
 
         Route::prefix('plannings')
@@ -121,8 +134,11 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
                 Route::get('/{planning}', 'show')->name('show');
-                Route::patch('/{planning}/status', 'updateStatus')
-                    ->name('status');
+
+                Route::patch(
+                    '/{planning}/status',
+                    'updateStatus'
+                )->name('status');
             });
 
         Route::prefix('productions')
@@ -133,10 +149,16 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
                 Route::get('/{production}', 'show')->name('show');
-                Route::patch('/{production}/progress', 'updateProgress')
-                    ->name('progress');
-                Route::patch('/{production}/status', 'updateStatus')
-                    ->name('status');
+
+                Route::patch(
+                    '/{production}/progress',
+                    'updateProgress'
+                )->name('progress');
+
+                Route::patch(
+                    '/{production}/status',
+                    'updateStatus'
+                )->name('status');
             });
 
         Route::prefix('bapps')
@@ -147,8 +169,11 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
                 Route::get('/{bapp}', 'show')->name('show');
-                Route::patch('/{bapp}/status', 'updateStatus')
-                    ->name('status');
+
+                Route::patch(
+                    '/{bapp}/status',
+                    'updateStatus'
+                )->name('status');
             });
 
         Route::prefix('documents')
@@ -158,12 +183,21 @@ Route::middleware('auth')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
-                Route::get('/{document}/download', 'download')
-                    ->name('download');
-                Route::get('/{document}', 'show')
-                    ->name('show');
-                Route::delete('/{document}', 'destroy')
-                    ->name('destroy');
+
+                Route::get(
+                    '/{document}/download',
+                    'download'
+                )->name('download');
+
+                Route::get(
+                    '/{document}',
+                    'show'
+                )->name('show');
+
+                Route::delete(
+                    '/{document}',
+                    'destroy'
+                )->name('destroy');
             });
 
         Route::prefix('invoices')
@@ -174,26 +208,39 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
                 Route::get('/{invoice}', 'show')->name('show');
-                Route::patch('/{invoice}/status', 'updateStatus')
-                    ->name('status');
+
+                Route::patch(
+                    '/{invoice}/status',
+                    'updateStatus'
+                )->name('status');
             });
 
-        Route::get('/admin/ratings', [RatingController::class, 'index'])
-            ->name('admin.ratings.index');
+        Route::get(
+            '/admin/ratings',
+            [RatingController::class, 'index']
+        )->name('admin.ratings.index');
 
         Route::prefix('client/ratings')
             ->name('client.ratings.')
             ->controller(RatingController::class)
             ->group(function () {
                 Route::get('/', 'index')->name('index');
-                Route::get('/projects/{project}/create', 'create')
-                    ->name('create');
-                Route::post('/projects/{project}', 'store')
-                    ->name('store');
+
+                Route::get(
+                    '/projects/{project}/create',
+                    'create'
+                )->name('create');
+
+                Route::post(
+                    '/projects/{project}',
+                    'store'
+                )->name('store');
             });
 
-        Route::get('/ratings/{rating}', [RatingController::class, 'show'])
-            ->name('ratings.show');
+        Route::get(
+            '/ratings/{rating}',
+            [RatingController::class, 'show']
+        )->name('ratings.show');
 
         Route::prefix('client/tracking')
             ->name('client.tracking.')
@@ -202,6 +249,16 @@ Route::middleware('auth')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('/{project}', 'show')->name('show');
             });
+
+        Route::get(
+            '/admin/reports',
+            [ReportController::class, 'index']
+        )->name('admin.reports.index');
+
+        Route::get(
+            '/direktur/reports',
+            [ReportController::class, 'index']
+        )->name('direktur.reports.index');
 
         Route::prefix('admin/vendors')
             ->name('admin.vendors.')
@@ -220,11 +277,36 @@ Route::middleware('auth')->group(function () {
             ->controller(UserController::class)
             ->group(function () {
                 Route::get('/', 'index')->name('index');
-                Route::get('/create', 'create')->name('create');
-                Route::post('/', 'store')->name('store');
-                Route::get('/{user}', 'show')->name('show');
-                Route::get('/{user}/edit', 'edit')->name('edit');
-                Route::put('/{user}', 'update')->name('update');
+
+                Route::get(
+                    '/create',
+                    'create'
+                )->name('create');
+
+                Route::post(
+                    '/',
+                    'store'
+                )->name('store');
+
+                Route::patch(
+                    '/{user}/verification',
+                    'updateVerification'
+                )->name('verification');
+
+                Route::get(
+                    '/{user}',
+                    'show'
+                )->name('show');
+
+                Route::get(
+                    '/{user}/edit',
+                    'edit'
+                )->name('edit');
+
+                Route::put(
+                    '/{user}',
+                    'update'
+                )->name('update');
             });
     });
 });

@@ -30,6 +30,16 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                <ul class="list-disc space-y-1 pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <form
                 method="GET"
@@ -174,15 +184,47 @@
                                     </td>
 
                                     <td class="px-6 py-4">
-                                        @if ($user->email_verified_at)
-                                            <span class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                                                Terverifikasi
-                                            </span>
-                                        @else
-                                            <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                                Belum Terverifikasi
-                                            </span>
-                                        @endif
+                                        <div class="flex flex-col items-start gap-2">
+                                            @if ($user->email_verified_at)
+                                                <span class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                                                    Terverifikasi
+                                                </span>
+                                            @else
+                                                <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                                    Belum Terverifikasi
+                                                </span>
+                                            @endif
+
+                                            @if (auth()->id() !== $user->id)
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('admin.users.verification', $user) }}"
+                                                >
+                                                    @csrf
+                                                    @method('PATCH')
+
+                                                    @if ($user->email_verified_at)
+                                                        <button
+                                                            type="submit"
+                                                            class="text-xs font-semibold text-red-600 transition hover:text-red-700"
+                                                        >
+                                                            Batalkan Verifikasi
+                                                        </button>
+                                                    @else
+                                                        <button
+                                                            type="submit"
+                                                            class="text-xs font-semibold text-blue-600 transition hover:text-blue-700"
+                                                        >
+                                                            Verifikasi
+                                                        </button>
+                                                    @endif
+                                                </form>
+                                            @else
+                                                <span class="text-xs text-slate-400">
+                                                    Akun saat ini
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600">
