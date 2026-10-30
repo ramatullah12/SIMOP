@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Rating;
 use Illuminate\Http\Request;
@@ -16,13 +17,17 @@ class RatingController extends Controller
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'client'], true),
+            in_array(
+                $role,
+                ['admin', 'client'],
+                true
+            ),
             403
         );
 
         if ($role === 'admin') {
             $ratings = Rating::with([
-                'project.workEstimate.order',
+                'project.workEstimate.order.client',
                 'project.invoice',
                 'client',
             ])
@@ -95,7 +100,7 @@ class RatingController extends Controller
 
         abort_unless(
             $project->invoice
-                && $project->invoice->status === 'paid',
+            && $project->invoice->status === 'paid',
             422,
             'Rating hanya dapat diberikan setelah Invoice lunas.'
         );
@@ -123,39 +128,6 @@ class RatingController extends Controller
             403
         );
 
-        $project->load([
-            'workEstimate.order',
-            'invoice',
-            'rating',
-        ]);
-
-        abort_unless(
-            $project
-                ->workEstimate
-                ?->order
-                ?->client_id === $user->id,
-            403
-        );
-
-        abort_unless(
-            $project->status === 'completed',
-            422,
-            'Rating hanya dapat diberikan setelah Project selesai.'
-        );
-
-        abort_unless(
-            $project->invoice
-                && $project->invoice->status === 'paid',
-            422,
-            'Rating hanya dapat diberikan setelah Invoice lunas.'
-        );
-
-        abort_if(
-            $project->rating,
-            422,
-            'Project ini sudah memiliki Rating.'
-        );
-
         $validated = $request->validate([
             'rating' => [
                 'required',
@@ -181,24 +153,76 @@ class RatingController extends Controller
                 $user,
                 $validated
             ) {
-                abort_if(
-                    Rating::where(
-                        'project_id',
+                $currentProject = Project::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
                         $project->id
-                    )->exists(),
+                    );
+
+                abort_unless(
+                    $currentProject->status === 'completed',
+                    422,
+                    'Rating hanya dapat diberikan setelah Project selesai.'
+                );
+
+                $workEstimate = $currentProject
+                    ->workEstimate()
+                    ->first();
+
+                abort_unless(
+                    $workEstimate,
+                    422,
+                    'Work Estimate Project tidak ditemukan.'
+                );
+
+                $order = $workEstimate
+                    ->order()
+                    ->first();
+
+                abort_unless(
+                    $order,
+                    422,
+                    'Order Project tidak ditemukan.'
+                );
+
+                abort_unless(
+                    $order->client_id === $user->id,
+                    403
+                );
+
+                $invoice = Invoice::query()
+                    ->where(
+                        'project_id',
+                        $currentProject->id
+                    )
+                    ->lockForUpdate()
+                    ->first();
+
+                abort_unless(
+                    $invoice
+                    && $invoice->status === 'paid',
+                    422,
+                    'Rating hanya dapat diberikan setelah Invoice lunas.'
+                );
+
+                $ratingExists = Rating::query()
+                    ->where(
+                        'project_id',
+                        $currentProject->id
+                    )
+                    ->exists();
+
+                abort_if(
+                    $ratingExists,
                     422,
                     'Project ini sudah memiliki Rating.'
                 );
 
                 return Rating::create([
-                    'project_id' =>
-                        $project->id,
-                    'client_id' =>
-                        $user->id,
-                    'rating' =>
-                        $validated['rating'],
-                    'review' =>
-                        $validated['review'] ?? null,
+                    'project_id' => $currentProject->id,
+                    'client_id' => $user->id,
+                    'rating' => $validated['rating'],
+                    'review' => $validated['review'] ?? null,
                 ]);
             }
         );
@@ -229,7 +253,7 @@ class RatingController extends Controller
         );
 
         $rating->load([
-            'project.workEstimate.order',
+            'project.workEstimate.order.client',
             'project.invoice',
             'client',
         ]);

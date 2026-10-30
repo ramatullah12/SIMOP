@@ -35,8 +35,8 @@
 
             'direktur' => [
                 ['Dashboard', 'dashboard', '▦'],
-                ['Survey', 'direktur.surveys.index', '◎'],
-                ['Work Estimate', 'direktur.work-estimates.index', '∑'],
+                ['Survey', 'admin.surveys.index', '◎'],
+                ['Work Estimate', 'admin.work-estimates.index', '∑'],
                 ['Approval', 'approvals.index', '✓'],
                 ['Project', 'projects.index', '▤'],
                 ['Laporan', 'direktur.reports.index', '▥'],
@@ -44,7 +44,7 @@
 
             'petugas-lapangan' => [
                 ['Dashboard', 'dashboard', '▦'],
-                ['Survey', 'petugas-lapangan.surveys.index', '◎'],
+                ['Survey', 'admin.surveys.index', '◎'],
                 ['Produksi & Instalasi', 'productions.index', '◈'],
                 ['BAPP', 'bapps.index', '☑'],
                 ['Project', 'projects.index', '▤'],
@@ -136,20 +136,8 @@
                                 'admin.surveys.*',
                             ],
 
-                            'direktur.surveys.index' => [
-                                'direktur.surveys.*',
-                            ],
-
-                            'petugas-lapangan.surveys.index' => [
-                                'petugas-lapangan.surveys.*',
-                            ],
-
                             'admin.work-estimates.index' => [
                                 'admin.work-estimates.*',
-                            ],
-
-                            'direktur.work-estimates.index' => [
-                                'direktur.work-estimates.*',
                             ],
 
                             'approvals.index' => [

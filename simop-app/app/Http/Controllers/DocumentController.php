@@ -132,8 +132,15 @@ class DocumentController extends Controller
             ],
         ]);
 
-        $project = Project::findOrFail(
-            $validated['project_id']
+        $project = Project::query()
+            ->findOrFail(
+                $validated['project_id']
+            );
+
+        abort_if(
+            $project->status === 'cancelled',
+            422,
+            'Dokumen tidak dapat diunggah ke Project yang telah dibatalkan.'
         );
 
         $file = $request->file('file');
@@ -152,36 +159,45 @@ class DocumentController extends Controller
                     $storedPath,
                     $request
                 ) {
+                    $currentProject = Project::query()
+                        ->lockForUpdate()
+                        ->findOrFail(
+                            $project->id
+                        );
+
+                    abort_if(
+                        $currentProject->status === 'cancelled',
+                        422,
+                        'Dokumen tidak dapat diunggah ke Project yang telah dibatalkan.'
+                    );
+
                     return Document::create([
-                        'project_id' =>
-                            $project->id,
-                        'uploaded_by' =>
-                            auth()->id(),
-                        'document_number' =>
-                            $this->generateDocumentNumber(),
-                        'title' =>
-                            $validated['title'],
-                        'document_type' =>
-                            $validated['document_type'],
-                        'file_name' =>
-                            $file->getClientOriginalName(),
-                        'file_path' =>
-                            $storedPath,
-                        'mime_type' =>
-                            $file->getMimeType(),
-                        'file_size' =>
-                            $file->getSize(),
-                        'description' =>
-                            $validated['description'] ?? null,
-                        'client_access' =>
-                            $request->boolean('client_access'),
+                        'project_id' => $currentProject->id,
+                        'uploaded_by' => auth()->id(),
+                        'document_number' => $this->generateDocumentNumber(),
+                        'title' => $validated['title'],
+                        'document_type' => $validated['document_type'],
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $storedPath,
+                        'mime_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
+                        'description' => $validated['description'] ?? null,
+                        'client_access' => $request->boolean(
+                            'client_access'
+                        ),
                     ]);
                 }
             );
         } catch (\Throwable $exception) {
-            Storage::disk('local')->delete(
-                $storedPath
-            );
+            if (
+                Storage::disk('local')->exists(
+                    $storedPath
+                )
+            ) {
+                Storage::disk('local')->delete(
+                    $storedPath
+                );
+            }
 
             throw $exception;
         }
@@ -274,23 +290,29 @@ class DocumentController extends Controller
             403
         );
 
+        $filePath = $document->file_path;
+
         DB::transaction(
             function () use ($document) {
-                $filePath = $document->file_path;
-
-                $document->delete();
-
-                if (
-                    Storage::disk('local')->exists(
-                        $filePath
-                    )
-                ) {
-                    Storage::disk('local')->delete(
-                        $filePath
+                $currentDocument = Document::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $document->id
                     );
-                }
+
+                $currentDocument->delete();
             }
         );
+
+        if (
+            Storage::disk('local')->exists(
+                $filePath
+            )
+        ) {
+            Storage::disk('local')->delete(
+                $filePath
+            );
+        }
 
         return redirect()
             ->route('documents.index')
@@ -311,7 +333,7 @@ class DocumentController extends Controller
 
         if ($role === 'petugas-lapangan') {
             abort_unless(
-                $document->project->assigned_to === $userId,
+                $document->project?->assigned_to === $userId,
                 403
             );
 
@@ -321,7 +343,7 @@ class DocumentController extends Controller
         if ($role === 'client') {
             abort_unless(
                 $document->client_access
-                && $document->project->workEstimate?->order?->client_id === $userId,
+                && $document->project?->workEstimate?->order?->client_id === $userId,
                 403
             );
 

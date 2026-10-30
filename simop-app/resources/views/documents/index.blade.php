@@ -4,198 +4,343 @@
 @section('page-title', 'Dokumen')
 
 @section('content')
-<div class="space-y-6">
+    @php
+        $role = auth()->user()?->role?->slug;
 
-    @if (session('success'))
-        <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
-            {{ session('success') }}
-        </div>
-    @endif
+        $typeLabels = [
+            'po_spk' => 'PO / SPK',
+            'survey' => 'Survey',
+            'work_estimate' => 'Work Estimate',
+            'production' => 'Produksi & Instalasi',
+            'bapp' => 'BAPP',
+            'invoice' => 'Invoice',
+            'other' => 'Lainnya',
+        ];
 
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-xl font-bold text-slate-900">
-                Dokumen
-            </h2>
+        $typeColors = [
+            'po_spk' => 'bg-purple-100 text-purple-700',
+            'survey' => 'bg-cyan-100 text-cyan-700',
+            'work_estimate' => 'bg-amber-100 text-amber-700',
+            'production' => 'bg-blue-100 text-blue-700',
+            'bapp' => 'bg-green-100 text-green-700',
+            'invoice' => 'bg-indigo-100 text-indigo-700',
+            'other' => 'bg-slate-100 text-slate-700',
+        ];
+    @endphp
 
-            <p class="mt-1 text-sm text-slate-500">
-                Kelola dan akses dokumen yang berkaitan dengan Project.
-            </p>
-        </div>
-
-        @if (auth()->user()?->role?->slug === 'admin')
-            <a href="{{ route('documents.create') }}"
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-                Upload Dokumen
-            </a>
+    <div class="space-y-6">
+        @if (session('success'))
+            <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
+                {{ session('success') }}
+            </div>
         @endif
-    </div>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
+        @if (session('error'))
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+                {{ session('error') }}
+            </div>
+        @endif
 
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            No.
-                        </th>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-slate-900">
+                    Dokumen
+                </h2>
 
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            Nomor Dokumen
-                        </th>
+                @if ($role === 'admin')
+                    <p class="mt-1 text-sm text-slate-500">
+                        Kelola seluruh dokumen yang berkaitan dengan Project SIMOP.
+                    </p>
+                @elseif ($role === 'petugas-lapangan')
+                    <p class="mt-1 text-sm text-slate-500">
+                        Akses dokumen dari Project yang ditugaskan kepada Anda.
+                    </p>
+                @elseif ($role === 'client')
+                    <p class="mt-1 text-sm text-slate-500">
+                        Akses dokumen Project yang telah tersedia untuk Anda.
+                    </p>
+                @endif
+            </div>
 
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            Dokumen
-                        </th>
-
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            Project
-                        </th>
-
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            Jenis
-                        </th>
-
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            Akses Client
-                        </th>
-
-                        <th class="px-5 py-4 text-left text-xs font-semibold uppercase text-slate-500">
-                            Aksi
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody class="divide-y divide-slate-100">
-                    @forelse ($documents as $document)
-                        <tr class="hover:bg-slate-50">
-
-                            <td class="px-5 py-4 text-sm text-slate-600">
-                                {{ $documents->firstItem() + $loop->index }}
-                            </td>
-
-                            <td class="whitespace-nowrap px-5 py-4">
-                                <p class="text-sm font-semibold text-slate-900">
-                                    {{ $document->document_number }}
-                                </p>
-                            </td>
-
-                            <td class="px-5 py-4">
-                                <p class="text-sm font-medium text-slate-900">
-                                    {{ $document->title }}
-                                </p>
-
-                                <p class="mt-1 max-w-xs truncate text-xs text-slate-500">
-                                    {{ $document->file_name }}
-                                </p>
-                            </td>
-
-                            <td class="px-5 py-4">
-                                <p class="text-sm font-medium text-slate-800">
-                                    {{ $document->project->title ?? '-' }}
-                                </p>
-
-                                <p class="mt-1 text-xs text-slate-500">
-                                    {{ $document->project->project_number ?? '-' }}
-                                </p>
-                            </td>
-
-                            <td class="whitespace-nowrap px-5 py-4">
-                                @if ($document->document_type === 'po_spk')
-                                    <span class="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                                        PO / SPK
-                                    </span>
-                                @elseif ($document->document_type === 'survey')
-                                    <span class="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
-                                        Survey
-                                    </span>
-                                @elseif ($document->document_type === 'work_estimate')
-                                    <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                        Work Estimate
-                                    </span>
-                                @elseif ($document->document_type === 'production')
-                                    <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                                        Produksi & Instalasi
-                                    </span>
-                                @elseif ($document->document_type === 'bapp')
-                                    <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                                        BAPP
-                                    </span>
-                                @elseif ($document->document_type === 'invoice')
-                                    <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-                                        Invoice
-                                    </span>
-                                @else
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                                        Lainnya
-                                    </span>
-                                @endif
-                            </td>
-
-                            <td class="whitespace-nowrap px-5 py-4">
-                                @if ($document->client_access)
-                                    <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                                        Dapat Diakses
-                                    </span>
-                                @else
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                        Internal
-                                    </span>
-                                @endif
-                            </td>
-
-                            <td class="whitespace-nowrap px-5 py-4">
-                                <div class="flex items-center gap-3">
-
-                                    <a href="{{ route('documents.show', $document) }}"
-                                       class="text-sm font-semibold text-blue-600 hover:text-blue-800">
-                                        Detail
-                                    </a>
-
-                                    <a href="{{ route('documents.download', $document) }}"
-                                       class="text-sm font-semibold text-green-600 hover:text-green-800">
-                                        Download
-                                    </a>
-
-                                </div>
-                            </td>
-
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-5 py-12 text-center">
-                                <p class="font-medium text-slate-700">
-                                    Belum ada dokumen.
-                                </p>
-
-                                @if (auth()->user()?->role?->slug === 'admin')
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        Upload dokumen Project untuk mulai mengelola dokumen.
-                                    </p>
-                                @elseif (auth()->user()?->role?->slug === 'client')
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        Belum ada dokumen Project yang tersedia untuk Anda.
-                                    </p>
-                                @else
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        Belum ada dokumen dari Project yang ditugaskan kepada Anda.
-                                    </p>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-
-            </table>
+            @if ($role === 'admin')
+                <a
+                    href="{{ route('documents.create') }}"
+                    class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                    + Upload Dokumen
+                </a>
+            @endif
         </div>
 
-        @if ($documents->hasPages())
-            <div class="border-t border-slate-200 px-5 py-4">
-                {{ $documents->links() }}
+        @if ($role === 'petugas-lapangan')
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
+                <p class="text-sm font-semibold text-blue-800">
+                    Dokumen Project Saya
+                </p>
+
+                <p class="mt-1 text-sm leading-6 text-blue-700">
+                    Daftar ini hanya menampilkan dokumen dari Project yang ditugaskan kepada Anda.
+                </p>
+            </div>
+        @elseif ($role === 'client')
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
+                <p class="text-sm font-semibold text-blue-800">
+                    Dokumen Project Anda
+                </p>
+
+                <p class="mt-1 text-sm leading-6 text-blue-700">
+                    Hanya dokumen yang telah diberikan akses oleh Administrator yang dapat Anda lihat dan unduh.
+                </p>
+            </div>
+        @endif
+
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                No.
+                            </th>
+
+                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Dokumen
+                            </th>
+
+                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Project
+                            </th>
+
+                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Jenis
+                            </th>
+
+                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                File
+                            </th>
+
+                            @if ($role === 'admin')
+                                <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    Akses Client
+                                </th>
+                            @endif
+
+                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Aksi
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse ($documents as $document)
+                            @php
+                                $project = $document->project;
+                                $order = $project?->workEstimate?->order;
+
+                                $typeLabel = $typeLabels[$document->document_type]
+                                    ?? 'Lainnya';
+
+                                $typeColor = $typeColors[$document->document_type]
+                                    ?? 'bg-slate-100 text-slate-700';
+
+                                $fileSize = (int) ($document->file_size ?? 0);
+
+                                if ($fileSize >= 1048576) {
+                                    $formattedFileSize = number_format(
+                                        $fileSize / 1048576,
+                                        2
+                                    ) . ' MB';
+                                } elseif ($fileSize >= 1024) {
+                                    $formattedFileSize = number_format(
+                                        $fileSize / 1024,
+                                        2
+                                    ) . ' KB';
+                                } elseif ($fileSize > 0) {
+                                    $formattedFileSize = $fileSize . ' B';
+                                } else {
+                                    $formattedFileSize = '-';
+                                }
+                            @endphp
+
+                            <tr class="hover:bg-slate-50">
+                                <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
+                                    {{ $documents->firstItem() + $loop->index }}
+                                </td>
+
+                                <td class="min-w-64 px-5 py-4">
+                                    <p class="text-sm font-semibold text-slate-900">
+                                        {{ $document->title }}
+                                    </p>
+
+                                    <p class="mt-1 text-xs font-medium text-slate-500">
+                                        {{ $document->document_number }}
+                                    </p>
+
+                                    @if ($role === 'admin')
+                                        <p class="mt-1 text-xs text-slate-400">
+                                            Upload:
+                                            {{ $document->uploader?->name ?? '-' }}
+                                        </p>
+                                    @endif
+                                </td>
+
+                                <td class="min-w-56 px-5 py-4">
+                                    <p class="text-sm font-semibold text-slate-800">
+                                        {{ $project?->title ?? '-' }}
+                                    </p>
+
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        {{ $project?->project_number ?? '-' }}
+                                    </p>
+
+                                    @if ($order?->order_number)
+                                        <p class="mt-1 text-xs text-slate-400">
+                                            Order: {{ $order->order_number }}
+                                        </p>
+                                    @endif
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $typeColor }}">
+                                        {{ $typeLabel }}
+                                    </span>
+                                </td>
+
+                                <td class="min-w-48 px-5 py-4">
+                                    <p
+                                        class="max-w-48 truncate text-sm font-medium text-slate-700"
+                                        title="{{ $document->file_name }}"
+                                    >
+                                        {{ $document->file_name }}
+                                    </p>
+
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        {{ $formattedFileSize }}
+                                    </p>
+                                </td>
+
+                                @if ($role === 'admin')
+                                    <td class="whitespace-nowrap px-5 py-4">
+                                        @if ($document->client_access)
+                                            <span class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                                                Dapat Diakses
+                                            </span>
+
+                                            <p class="mt-2 text-xs text-green-600">
+                                                Terlihat oleh Client
+                                            </p>
+                                        @else
+                                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                                Internal
+                                            </span>
+
+                                            <p class="mt-2 text-xs text-slate-400">
+                                                Tidak terlihat Client
+                                            </p>
+                                        @endif
+                                    </td>
+                                @endif
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <a
+                                            href="{{ route('documents.show', $document) }}"
+                                            class="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                                        >
+                                            Detail
+                                        </a>
+
+                                        <a
+                                            href="{{ route('documents.download', $document) }}"
+                                            class="text-sm font-semibold text-green-600 hover:text-green-800"
+                                        >
+                                            Download
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td
+                                    colspan="{{ $role === 'admin' ? 7 : 6 }}"
+                                    class="px-5 py-12 text-center"
+                                >
+                                    <p class="font-semibold text-slate-700">
+                                        Belum Ada Dokumen
+                                    </p>
+
+                                    @if ($role === 'admin')
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Upload dokumen Project untuk mulai mengelola dokumen.
+                                        </p>
+
+                                        <a
+                                            href="{{ route('documents.create') }}"
+                                            class="mt-4 inline-flex rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                                        >
+                                            + Upload Dokumen
+                                        </a>
+                                    @elseif ($role === 'client')
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Belum ada dokumen Project yang tersedia untuk Anda.
+                                        </p>
+                                    @else
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Belum ada dokumen dari Project yang ditugaskan kepada Anda.
+                                        </p>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($documents->hasPages())
+                <div class="border-t border-slate-200 px-5 py-4">
+                    {{ $documents->links() }}
+                </div>
+            @endif
+        </div>
+
+        @if ($role === 'admin')
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600">
+                            I
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800">
+                                Dokumen Internal
+                            </p>
+
+                            <p class="mt-1 text-sm leading-6 text-slate-500">
+                                Dokumen tanpa akses Client hanya dapat diakses oleh pihak internal yang memiliki hak akses terhadap Project.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-green-200 bg-green-50 p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
+                            ✓
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-semibold text-green-800">
+                                Akses Client
+                            </p>
+
+                            <p class="mt-1 text-sm leading-6 text-green-700">
+                                Dokumen dengan akses Client dapat dilihat dan diunduh oleh Client pemilik Project.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         @endif
     </div>
-
-</div>
 @endsection

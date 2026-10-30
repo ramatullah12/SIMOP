@@ -16,7 +16,11 @@ class InvoiceController extends Controller
         $role = $user?->role?->slug;
 
         abort_unless(
-            in_array($role, ['admin', 'client'], true),
+            in_array(
+                $role,
+                ['admin', 'client'],
+                true
+            ),
             403
         );
 
@@ -27,7 +31,10 @@ class InvoiceController extends Controller
             ->when(
                 $role === 'client',
                 fn ($query) => $query
-                    ->whereIn('status', ['issued', 'paid'])
+                    ->whereIn(
+                        'status',
+                        ['issued', 'paid']
+                    )
                     ->whereHas(
                         'project.workEstimate.order',
                         fn ($orderQuery) => $orderQuery->where(
@@ -53,7 +60,8 @@ class InvoiceController extends Controller
         );
 
         $projects = Project::with([
-            'workEstimate.order',
+            'assignedUser',
+            'workEstimate.order.client',
             'planning.production.bapp',
         ])
             ->where('status', 'completed')
@@ -114,74 +122,101 @@ class InvoiceController extends Controller
             ],
         ]);
 
-        $project = Project::with([
-            'planning.production.bapp',
-            'invoice',
-        ])->findOrFail(
-            $validated['project_id']
+        $subtotal = round(
+            (float) $validated['subtotal'],
+            2
         );
 
-        abort_unless(
-            $project->status === 'completed',
-            422,
-            'Invoice hanya dapat dibuat untuk Project yang sudah selesai.'
+        $taxAmount = round(
+            (float) ($validated['tax_amount'] ?? 0),
+            2
         );
 
-        $bapp = $project
-            ->planning
-            ?->production
-            ?->bapp;
-
-        abort_unless(
-            $bapp
-            && $bapp->status === 'approved',
-            422,
-            'Invoice hanya dapat dibuat setelah BAPP disetujui.'
+        $totalAmount = round(
+            $subtotal + $taxAmount,
+            2
         );
-
-        abort_if(
-            $project->invoice,
-            422,
-            'Project ini sudah memiliki Invoice.'
-        );
-
-        $subtotal = (float) $validated['subtotal'];
-        $taxAmount = (float) ($validated['tax_amount'] ?? 0);
-        $totalAmount = $subtotal + $taxAmount;
 
         $invoice = DB::transaction(
             function () use (
                 $validated,
-                $project,
                 $subtotal,
                 $taxAmount,
                 $totalAmount
             ) {
+                $project = Project::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $validated['project_id']
+                    );
+
+                abort_unless(
+                    $project->status === 'completed',
+                    422,
+                    'Invoice hanya dapat dibuat untuk Project yang sudah selesai.'
+                );
+
+                $planning = $project->planning()
+                    ->first();
+
+                abort_unless(
+                    $planning,
+                    422,
+                    'Project ini belum memiliki Planning.'
+                );
+
+                $production = $planning->production()
+                    ->first();
+
+                abort_unless(
+                    $production,
+                    422,
+                    'Project ini belum memiliki Produksi & Instalasi.'
+                );
+
+                abort_unless(
+                    $production->status === 'completed'
+                    && (int) $production->progress === 100,
+                    422,
+                    'Produksi & Instalasi harus selesai 100% sebelum Invoice dapat dibuat.'
+                );
+
+                $bapp = $production->bapp()
+                    ->first();
+
+                abort_unless(
+                    $bapp
+                    && $bapp->status === 'approved',
+                    422,
+                    'Invoice hanya dapat dibuat setelah BAPP disetujui.'
+                );
+
+                $invoiceExists = Invoice::query()
+                    ->where(
+                        'project_id',
+                        $project->id
+                    )
+                    ->exists();
+
+                abort_if(
+                    $invoiceExists,
+                    422,
+                    'Project ini sudah memiliki Invoice.'
+                );
+
                 return Invoice::create([
-                    'project_id' =>
-                        $project->id,
-                    'created_by' =>
-                        auth()->id(),
-                    'invoice_number' =>
-                        $this->generateInvoiceNumber(),
-                    'invoice_date' =>
-                        $validated['invoice_date'],
-                    'due_date' =>
-                        $validated['due_date'] ?? null,
-                    'subtotal' =>
-                        $subtotal,
-                    'tax_amount' =>
-                        $taxAmount,
-                    'total_amount' =>
-                        $totalAmount,
-                    'status' =>
-                        'draft',
-                    'issued_at' =>
-                        null,
-                    'paid_at' =>
-                        null,
-                    'notes' =>
-                        $validated['notes'] ?? null,
+                    'project_id' => $project->id,
+                    'created_by' => auth()->id(),
+                    'invoice_number' => $this->generateInvoiceNumber(),
+                    'invoice_date' => $validated['invoice_date'],
+                    'due_date' => $validated['due_date'] ?? null,
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $taxAmount,
+                    'total_amount' => $totalAmount,
+                    'status' => 'draft',
+                    'issued_at' => null,
+                    'paid_at' => null,
+                    'notes' => $validated['notes'] ?? null,
                 ]);
             }
         );
@@ -193,7 +228,7 @@ class InvoiceController extends Controller
             )
             ->with(
                 'success',
-                'Invoice berhasil dibuat.'
+                'Invoice berhasil dibuat dengan status Draft.'
             );
     }
 
@@ -212,7 +247,7 @@ class InvoiceController extends Controller
         );
 
         $invoice->load([
-            'project.workEstimate.order',
+            'project.workEstimate.order.client',
             'project.planning.production.bapp',
             'project.rating',
             'creator',
@@ -264,46 +299,95 @@ class InvoiceController extends Controller
             ],
         ]);
 
-        $currentStatus = $invoice->status;
         $newStatus = $validated['status'];
-
-        $allowedTransitions = [
-            'draft' => [
-                'issued',
-                'cancelled',
-            ],
-            'issued' => [
-                'paid',
-                'cancelled',
-            ],
-            'paid' => [],
-            'cancelled' => [],
-        ];
-
-        abort_unless(
-            array_key_exists(
-                $currentStatus,
-                $allowedTransitions
-            ),
-            422,
-            'Status Invoice saat ini tidak valid.'
-        );
-
-        abort_unless(
-            in_array(
-                $newStatus,
-                $allowedTransitions[$currentStatus],
-                true
-            ),
-            422,
-            'Perubahan status Invoice tidak diizinkan.'
-        );
 
         DB::transaction(
             function () use (
                 $invoice,
                 $newStatus
             ) {
+                $currentInvoice = Invoice::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $invoice->id
+                    );
+
+                $allowedTransitions = [
+                    'draft' => [
+                        'issued',
+                        'cancelled',
+                    ],
+                    'issued' => [
+                        'paid',
+                        'cancelled',
+                    ],
+                    'paid' => [],
+                    'cancelled' => [],
+                ];
+
+                abort_unless(
+                    array_key_exists(
+                        $currentInvoice->status,
+                        $allowedTransitions
+                    ),
+                    422,
+                    'Status Invoice saat ini tidak valid.'
+                );
+
+                abort_unless(
+                    in_array(
+                        $newStatus,
+                        $allowedTransitions[
+                            $currentInvoice->status
+                        ],
+                        true
+                    ),
+                    422,
+                    'Perubahan status Invoice tidak diizinkan.'
+                );
+
+                $project = Project::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $currentInvoice->project_id
+                    );
+
+                abort_unless(
+                    $project->status === 'completed',
+                    422,
+                    'Invoice tidak dapat diproses karena Project belum selesai.'
+                );
+
+                $planning = $project->planning()
+                    ->first();
+
+                abort_unless(
+                    $planning,
+                    422,
+                    'Project ini belum memiliki Planning.'
+                );
+
+                $production = $planning->production()
+                    ->first();
+
+                abort_unless(
+                    $production
+                    && $production->status === 'completed'
+                    && (int) $production->progress === 100,
+                    422,
+                    'Invoice tidak dapat diproses karena Produksi & Instalasi belum selesai 100%.'
+                );
+
+                $bapp = $production->bapp()
+                    ->first();
+
+                abort_unless(
+                    $bapp
+                    && $bapp->status === 'approved',
+                    422,
+                    'Invoice tidak dapat diproses karena BAPP belum disetujui.'
+                );
+
                 $data = [
                     'status' => $newStatus,
                 ];
@@ -321,7 +405,7 @@ class InvoiceController extends Controller
                     $data['paid_at'] = null;
                 }
 
-                $invoice->update($data);
+                $currentInvoice->update($data);
             }
         );
 
