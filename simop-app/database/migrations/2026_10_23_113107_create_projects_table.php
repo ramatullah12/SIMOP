@@ -11,10 +11,15 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('work_estimate_id')
-                ->constrained('work_estimates')
-                ->cascadeOnUpdate()
-                ->restrictOnDelete();
+            $table->foreignId('order_id')
+                ->nullable()
+                ->constrained('orders')
+                ->cascadeOnDelete();
+
+            $table->foreignId('survey_id')
+                ->nullable()
+                ->constrained('surveys')
+                ->nullOnDelete();
 
             $table->foreignId('created_by')
                 ->nullable()
@@ -35,8 +40,6 @@ return new class extends Migration
             $table->text('notes')->nullable();
 
             $table->timestamps();
-
-            $table->unique('work_estimate_id');
         });
     }
 
