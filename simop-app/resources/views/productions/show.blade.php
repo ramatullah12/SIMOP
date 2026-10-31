@@ -2,12 +2,12 @@
     <x-slot name="header">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Detail Production — {{ $production->production_number }}
+                Detail Produksi & Instalasi — {{ $production->production_number }}
             </h2>
 
             <div class="flex flex-wrap items-center gap-2">
-                @if ($production->planning?->project?->workEstimate?->order)
-                    <a href="{{ route('tracking.show', $production->planning->project->workEstimate->order) }}"
+                @if ($production->planning?->project?->order)
+                    <a href="{{ route('tracking.show', $production->planning->project->order) }}"
                        class="inline-flex items-center px-4 py-2 bg-emerald-600 rounded-md text-white text-sm font-medium hover:bg-emerald-700">
                         Status Pekerjaan
                     </a>
@@ -16,14 +16,14 @@
                 @if (auth()->user()?->role?->slug === 'petugas-lapangan')
                     <a href="{{ route('field-documentations.create', ['project_id' => $production->planning?->project_id]) }}"
                        class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                        + Input Dokumentasi Lapangan
+                        + Unggah Dokumentasi Lapangan
                     </a>
                 @endif
 
                 @if (auth()->user()?->role?->slug === 'admin')
                     <a href="{{ route('productions.edit', $production) }}"
                        class="inline-flex items-center px-4 py-2 bg-yellow-500 rounded-md text-white text-sm font-medium hover:bg-yellow-600">
-                        Edit Production
+                        Ubah Produksi
                     </a>
                 @endif
 
@@ -43,27 +43,37 @@
                 </div>
             @endif
 
+            @php
+                $statusLabel = match ($production->status) {
+                    'pending' => 'Menunggu',
+                    'in_progress' => 'Sedang Dikerjakan',
+                    'completed' => 'Selesai',
+                    'cancelled' => 'Dibatalkan',
+                    default => strtoupper(str_replace('_', ' ', $production->status)),
+                };
+            @endphp
+
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div>
-                        <p class="text-gray-500">Nomor Production</p>
+                        <p class="text-gray-500">Nomor Produksi</p>
                         <p class="font-semibold text-gray-900">{{ $production->production_number }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Judul Production</p>
+                        <p class="text-gray-500">Judul Produksi</p>
                         <p class="font-semibold text-gray-900">{{ $production->title }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Planning</p>
+                        <p class="text-gray-500">Perencanaan</p>
                         <p class="font-semibold text-gray-900">
                             {{ $production->planning?->planning_number ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Project</p>
+                        <p class="text-gray-500">Proyek</p>
                         <p class="font-semibold text-gray-900">
                             <a href="{{ route('projects.show', $production->planning?->project) }}" class="text-blue-600 hover:underline">
                                 {{ $production->planning?->project?->project_number ?? '-' }}
@@ -72,9 +82,9 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Client & Event</p>
+                        <p class="text-gray-500">Klien & Kegiatan</p>
                         <p class="font-semibold text-gray-900">
-                            {{ $production->planning?->project?->workEstimate?->order?->company_name ?? '-' }} — {{ $production->planning?->project?->workEstimate?->order?->event_name ?? '-' }}
+                            {{ $production->planning?->project?->order?->company_name ?? '-' }} — {{ $production->planning?->project?->order?->event_name ?? '-' }}
                         </p>
                     </div>
 
@@ -102,12 +112,12 @@
                     <div>
                         <p class="text-gray-500">Status</p>
                         <p class="font-semibold text-gray-900">
-                            {{ strtoupper(str_replace('_', ' ', $production->status)) }}
+                            {{ $statusLabel }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Progress</p>
+                        <p class="text-gray-500">Kemajuan</p>
                         <p class="font-semibold text-gray-900">{{ $production->progress }}%</p>
                     </div>
 
@@ -133,10 +143,10 @@
             )
                 <div class="bg-white shadow-sm sm:rounded-lg p-6 border-2 border-blue-200">
                     <h3 class="font-semibold text-lg text-gray-800 mb-1">
-                        Update Progress Lapangan (Petugas Lapangan)
+                        Perbarui Kemajuan Lapangan (Petugas Lapangan)
                     </h3>
                     <p class="text-xs text-gray-500 mb-4">
-                        Saat progress mencapai 100% (Completed), status event/proyek otomatis selesai dan seluruh stok barang yang dibawa otomatis kembali ke stok awal.
+                        Saat kemajuan mencapai 100% (Selesai), status kegiatan/proyek otomatis selesai dan seluruh stok barang yang dibawa otomatis kembali ke stok awal.
                     </p>
 
                     <form method="POST"
@@ -148,7 +158,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Progress (%)
+                                    Kemajuan (%)
                                 </label>
                                 <input type="number"
                                        name="progress"
@@ -169,9 +179,9 @@
                                 <select name="status"
                                         required
                                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="pending" @selected(old('status', $production->status) === 'pending')>Pending</option>
-                                    <option value="in_progress" @selected(old('status', $production->status) === 'in_progress')>In Progress</option>
-                                    <option value="completed" @selected(old('status', $production->status) === 'completed')>Completed (100% - Selesai & Kembalikan Stok)</option>
+                                    <option value="pending" @selected(old('status', $production->status) === 'pending')>Menunggu</option>
+                                    <option value="in_progress" @selected(old('status', $production->status) === 'in_progress')>Sedang Dikerjakan</option>
+                                    <option value="completed" @selected(old('status', $production->status) === 'completed')>Selesai (100% - Selesai & Kembalikan Stok)</option>
                                 </select>
                                 @error('status')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -193,7 +203,7 @@
 
                         <button type="submit"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                            Update Progress
+                            Simpan Kemajuan
                         </button>
                     </form>
                 </div>

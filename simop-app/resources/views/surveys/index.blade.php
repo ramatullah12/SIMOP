@@ -4,29 +4,29 @@
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     @if ($role === 'direktur')
-                        Approval Survey & Penerbitan Surat Perintah Survey (SPS)
+                        Persetujuan Survei & Penerbitan Surat Perintah Survei (SPS)
                     @elseif ($role === 'petugas-lapangan')
-                        Surat Perintah Survey (SPS) Lapangan
+                        Surat Perintah Survei (SPS) Lapangan
                     @elseif ($role === 'client')
-                        Pengajuan Survey Saya
+                        Pengajuan Survei Saya
                     @else
-                        Manajemen Pengajuan Survey & Surat Perintah Survey (SPS)
+                        Manajemen Pengajuan Survei & Surat Perintah Survei (SPS)
                     @endif
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Daftar pengajuan survey lokasi dan penerbitan Surat Perintah Survey (SPS) untuk petugas lapangan.
+                    Daftar pengajuan survei lokasi dan penerbitan Surat Perintah Survei (SPS) untuk petugas lapangan.
                 </p>
             </div>
 
             @if ($role === 'client')
                 <a href="{{ route('surveys.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                    + Ajukan Survey ke Admin
+                    + Ajukan Survei ke Admin
                 </a>
             @elseif ($role === 'admin')
                 <a href="{{ route('surveys.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                    + Buat & Kirim Survey ke Direktur
+                    + Buat & Kirim Survei ke Direktur
                 </a>
             @endif
         </div>
@@ -52,11 +52,11 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">No. SPS / Status Alur</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Order & Event</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Client</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Pesanan & Kegiatan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Klien</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Jadwal & Lokasi</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Approval Direktur</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Persetujuan Direktur</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>
@@ -64,12 +64,12 @@
                             @forelse ($surveys as $survey)
                                 @php
                                     $statusBadge = match ($survey->status) {
-                                        'diajukan_client' => ['bg-amber-100 text-amber-800', 'Diajukan Client (Di Admin)'],
-                                        'menunggu_persetujuan_direktur' => ['bg-purple-100 text-purple-800', 'Menunggu Approval Direktur'],
+                                        'diajukan_client' => ['bg-amber-100 text-amber-800', 'Diajukan Klien (Di Admin)'],
+                                        'menunggu_persetujuan_direktur' => ['bg-purple-100 text-purple-800', 'Menunggu Persetujuan Direktur'],
                                         'ditolak_direktur' => ['bg-red-100 text-red-800', 'Ditolak / Revisi Direktur'],
                                         'dijadwalkan' => ['bg-blue-100 text-blue-800', 'SPS Terkirim ke Petugas'],
-                                        'berlangsung' => ['bg-indigo-100 text-indigo-800', 'Survey Sedang Berlangsung'],
-                                        'selesai' => ['bg-emerald-100 text-emerald-800', 'Survey Lapangan Selesai'],
+                                        'berlangsung' => ['bg-indigo-100 text-indigo-800', 'Survei Sedang Berlangsung'],
+                                        'selesai' => ['bg-emerald-100 text-emerald-800', 'Survei Lapangan Selesai'],
                                         default => ['bg-gray-100 text-gray-700', strtoupper($survey->status)],
                                     };
                                 @endphp
@@ -111,7 +111,7 @@
                                             <p class="text-xs text-gray-500 mt-0.5">{{ $survey->approved_at->format('d M Y H:i') }}</p>
                                         @elseif ($survey->status === 'menunggu_persetujuan_direktur')
                                             <span class="inline-flex px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-semibold">
-                                                Menunggu Approval Direktur
+                                                Menunggu Persetujuan Direktur
                                             </span>
                                         @elseif ($survey->status === 'ditolak_direktur')
                                             <span class="inline-flex px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold">
@@ -126,11 +126,11 @@
                                             <a href="{{ route('surveys.show', $survey) }}"
                                                class="text-blue-600 hover:underline font-semibold">
                                                 @if ($role === 'direktur' && $survey->status === 'menunggu_persetujuan_direktur')
-                                                    Proses Approval SPS
+                                                    Proses Persetujuan SPS
                                                 @elseif ($role === 'admin' && $survey->status === 'diajukan_client')
                                                     Teruskan ke Direktur
                                                 @elseif ($role === 'petugas-lapangan')
-                                                    Buka SPS & Input Hasil
+                                                    Buka SPS & Catat Hasil
                                                 @else
                                                     Detail
                                                 @endif
@@ -147,7 +147,7 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada data pengajuan survey / Surat Perintah Survey.
+                                        Belum ada data pengajuan survei / Surat Perintah Survei.
                                     </td>
                                 </tr>
                             @endforelse

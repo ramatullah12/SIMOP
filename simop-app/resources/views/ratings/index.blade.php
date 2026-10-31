@@ -3,17 +3,17 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Rating & Ulasan Pekerjaan
+                    Penilaian & Ulasan Pekerjaan
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Penilaian dan ulasan Client terhadap proyek/event yang telah selesai.
+                    Penilaian dan ulasan Klien terhadap proyek/kegiatan yang telah selesai.
                 </p>
             </div>
 
             @if (auth()->user()?->role?->slug === 'client')
                 <a href="{{ route('ratings.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                    + Beri Rating Pekerjaan
+                    + Beri Penilaian Pekerjaan
                 </a>
             @endif
         </div>
@@ -32,9 +32,9 @@
                     <table class="min-w-full border border-gray-200 divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Project & Event</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Client</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Rating</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Proyek & Kegiatan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Klien</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Penilaian</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Ulasan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Tanggal</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
@@ -45,7 +45,7 @@
                                 <tr>
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-gray-900">{{ $rating->project?->project_number }}</p>
-                                        <p class="text-xs text-gray-500">{{ $rating->project?->workEstimate?->order?->event_name ?? $rating->project?->title }}</p>
+                                        <p class="text-xs text-gray-500">{{ $rating->project?->order?->event_name ?? $rating->project?->title }}</p>
                                     </td>
                                     <td class="px-4 py-3">{{ $rating->client?->name ?? '-' }}</td>
                                     <td class="px-4 py-3 font-semibold text-amber-600">
@@ -63,7 +63,7 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada data rating dan ulasan.
+                                        Belum ada data penilaian dan ulasan.
                                     </td>
                                 </tr>
                             @endforelse

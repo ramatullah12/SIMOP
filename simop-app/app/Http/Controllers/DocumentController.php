@@ -116,7 +116,7 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        if ($role === 'client' && $document->project->workEstimate->order->client_id !== $user->id) {
+        if ($role === 'client' && $document->project?->order?->client_id !== $user->id) {
             abort(403);
         }
 
@@ -139,7 +139,7 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        if ($role === 'client' && $document->project->workEstimate->order->client_id !== $user->id) {
+        if ($role === 'client' && $document->project?->order?->client_id !== $user->id) {
             abort(403);
         }
 

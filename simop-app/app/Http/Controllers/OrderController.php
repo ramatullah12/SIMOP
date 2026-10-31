@@ -70,18 +70,17 @@ class OrderController extends Controller
             'status' => 'menunggu_survey',
         ]);
 
-        // Otomatis membuat pengajuan survey dari Client ke Admin
         Survey::create([
             'order_id' => $order->id,
             'requested_by' => $user->id,
             'location' => $validated['event_location'],
             'status' => 'diajukan_client',
-            'notes' => 'Pengajuan survey awal dari Client: ' . $validated['description'],
+            'notes' => 'Pengajuan survei awal dari Klien: ' . $validated['description'],
         ]);
 
         return redirect()
             ->route('orders.index')
-            ->with('success', 'Order & Pengajuan Survey berhasil dikirim ke Admin untuk diteruskan ke Direktur.');
+            ->with('success', 'Pesanan dan pengajuan survei berhasil dikirim ke Admin untuk diteruskan ke Direktur.');
     }
 
     public function show(Order $order): View
@@ -141,7 +140,7 @@ class OrderController extends Controller
 
             return redirect()
                 ->route('orders.show', $order)
-                ->with('success', 'Order berhasil diperbarui.');
+                ->with('success', 'Data pesanan berhasil diperbarui.');
         }
 
         $validated = $request->validate([
@@ -161,7 +160,7 @@ class OrderController extends Controller
 
         return redirect()
             ->route('orders.show', $order)
-            ->with('success', 'Order berhasil diperbarui oleh admin.');
+            ->with('success', 'Data pesanan berhasil diperbarui oleh Admin.');
     }
 
     public function destroy(Order $order): RedirectResponse
@@ -180,7 +179,7 @@ class OrderController extends Controller
 
         return redirect()
             ->route('orders.index')
-            ->with('success', 'Order berhasil dihapus.');
+            ->with('success', 'Data pesanan berhasil dihapus.');
     }
 
     private function generateOrderNumber(): string

@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-slate-900">Dashboard Direktur</h2>
+                <h2 class="text-xl font-bold text-slate-900">Beranda Direktur</h2>
                 <p class="mt-0.5 text-sm text-slate-500">
-                    Persetujuan Surat Perintah Survey, monitoring stok barang proyek, dan pemantauan pekerjaan.
+                    Persetujuan Surat Perintah Survei, pemantauan stok barang proyek, dan status pekerjaan.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('surveys.index') }}" class="btn-primary">
-                    Approval Survey ({{ $stats['pending_survey_approvals'] ?? 0 }})
+                    Persetujuan Survei ({{ $stats['pending_survey_approvals'] ?? 0 }})
                 </a>
                 <a href="{{ route('inventories.index') }}" class="btn-secondary">
                     Stok Barang
@@ -24,9 +24,9 @@
     <div class="space-y-6">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                <span class="text-xs font-semibold uppercase text-gray-500">Menunggu Approval Survey</span>
+                <span class="text-xs font-semibold uppercase text-gray-500">Menunggu Persetujuan Survei</span>
                 <div class="text-2xl font-bold text-blue-600 mt-2">{{ $stats['pending_survey_approvals'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Pengajuan Surat Perintah Survey</span>
+                <span class="text-xs text-gray-500">Pengajuan Surat Perintah Survei</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
@@ -58,8 +58,8 @@
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Order & Event</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Client</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Pesanan & Kegiatan</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Klien</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Jadwal & Lokasi</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>

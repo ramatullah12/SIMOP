@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-slate-900">Dashboard Client</h2>
+                <h2 class="text-xl font-bold text-slate-900">Beranda Klien</h2>
                 <p class="mt-0.5 text-sm text-slate-500">
-                    Pengajuan order, permintaan survey, dan pemantauan status pekerjaan.
+                    Pengajuan pesanan, permintaan survei, dan pemantauan status pekerjaan.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('orders.create') }}" class="btn-primary">
-                    Buat Order & Ajukan Survey
+                    Buat Pesanan & Ajukan Survei
                 </a>
                 <a href="{{ route('tracking.index') }}" class="btn-secondary">
                     Status Pekerjaan
@@ -21,15 +21,15 @@
     <div class="space-y-6">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                <span class="text-xs font-semibold uppercase text-gray-500">Total Order</span>
+                <span class="text-xs font-semibold uppercase text-gray-500">Total Pesanan</span>
                 <div class="text-2xl font-bold text-gray-900 mt-2">{{ $stats['orders_count'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Order yang diajukan</span>
+                <span class="text-xs text-gray-500">Pesanan yang diajukan</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                <span class="text-xs font-semibold uppercase text-gray-500">Pengajuan Survey</span>
+                <span class="text-xs font-semibold uppercase text-gray-500">Pengajuan Survei</span>
                 <div class="text-2xl font-bold text-blue-600 mt-2">{{ $stats['surveys_count'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Total survey lokasi</span>
+                <span class="text-xs text-gray-500">Total survei lokasi</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
@@ -47,7 +47,7 @@
 
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="font-semibold text-gray-900 text-base">Daftar Order & Status Pekerjaan</h3>
+                <h3 class="font-semibold text-gray-900 text-base">Daftar Pesanan & Status Pekerjaan</h3>
                 <a href="{{ route('tracking.index') }}" class="text-xs font-medium text-blue-600 hover:underline">
                     Lihat Semua
                 </a>
@@ -56,10 +56,10 @@
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Order</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Event & Lokasi</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Survey</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Project</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Pesanan</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Kegiatan & Lokasi</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Survei</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Proyek</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
                         </tr>
                     </thead>

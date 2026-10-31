@@ -77,13 +77,13 @@ class RatingController extends Controller
         $project = Project::with(['order', 'rating'])
             ->findOrFail($validated['project_id']);
 
-        abort_unless($project->workEstimate->order->client_id === $user->id, 403);
+        abort_unless($project->order?->client_id === $user->id, 403);
 
         if ($project->status !== 'completed') {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'project_id' => 'Rating hanya dapat diberikan untuk project yang sudah selesai.',
+                    'project_id' => 'Penilaian hanya dapat diberikan untuk proyek yang sudah selesai.',
                 ]);
         }
 
@@ -91,7 +91,7 @@ class RatingController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'project_id' => 'Project ini sudah memiliki rating.',
+                    'project_id' => 'Proyek ini sudah memiliki penilaian.',
                 ]);
         }
 
@@ -104,7 +104,7 @@ class RatingController extends Controller
 
         return redirect()
             ->route('ratings.show', $rating)
-            ->with('success', 'Terima kasih, rating dan ulasan berhasil dikirim.');
+            ->with('success', 'Terima kasih, penilaian dan ulasan berhasil dikirim.');
     }
 
     public function show(Rating $rating): View
@@ -137,6 +137,6 @@ class RatingController extends Controller
 
         return redirect()
             ->route('ratings.index')
-            ->with('success', 'Rating berhasil dihapus.');
+            ->with('success', 'Penilaian berhasil dihapus.');
     }
 }

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Input Dokumentasi Lapangan Pengerjaan
+            Unggah Dokumentasi Lapangan Pengerjaan
         </h2>
     </x-slot>
 
@@ -12,14 +12,14 @@
                     @csrf
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Project / Pengerjaan Lapangan</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Proyek / Pengerjaan Lapangan</label>
                         <select name="project_id" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">-- Pilih Project --</option>
+                            <option value="">-- Pilih Proyek --</option>
                             @foreach ($projects as $project)
                                 <option value="{{ $project->id }}"
                                     @selected(old('project_id', $selectedProject?->id) == $project->id)>
-                                    {{ $project->project_number }} - {{ $project->title }} ({{ $project->workEstimate?->order?->event_name ?? '-' }})
+                                    {{ $project->project_number }} - {{ $project->title }} ({{ $project->order?->event_name ?? '-' }})
                                 </option>
                             @endforeach
                         </select>
@@ -32,7 +32,7 @@
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Judul Dokumentasi Pengerjaan</label>
                             <input type="text" name="title" value="{{ old('title') }}" required
-                                   placeholder="Contoh: Pemasangan Rigging, Kursi & Booth Area Utama"
+                                   placeholder="Contoh: Pemasangan Struktur, Kursi & Stan Pameran Area Utama"
                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             @error('title')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -51,7 +51,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estimasi Progress Lapangan (%)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kemajuan Pengerjaan Lapangan (%)</label>
                             <input type="number" name="progress_percentage" min="0" max="100"
                                    value="{{ old('progress_percentage', $selectedProject?->progress ?? 50) }}"
                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -61,7 +61,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Foto / File Bukti Lapangan (Opsional)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Foto / Berkas Bukti Lapangan (Opsional)</label>
                             <input type="file" name="file"
                                    class="w-full rounded-lg border border-gray-300 p-2 text-sm text-gray-700">
                             <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG, WEBP, PDF, DOC, ZIP (Maks. 10MB)</p>
@@ -102,4 +102,3 @@
         </div>
     </div>
 </x-app-layout>
-

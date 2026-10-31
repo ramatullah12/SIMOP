@@ -42,17 +42,17 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Project & Event</p>
+                        <p class="text-gray-500">Proyek & Kegiatan</p>
                         <p class="font-semibold text-gray-900">
                             <a href="{{ route('projects.show', $fieldDocumentation->project) }}" class="text-blue-600 hover:underline">
                                 {{ $fieldDocumentation->project?->project_number }} - {{ $fieldDocumentation->project?->title }}
                             </a>
                         </p>
-                        <p class="text-xs text-gray-500">{{ $fieldDocumentation->project?->workEstimate?->order?->event_name ?? '-' }}</p>
+                        <p class="text-xs text-gray-500">{{ $fieldDocumentation->project?->order?->event_name ?? '-' }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Diinput Oleh (Petugas Lapangan)</p>
+                        <p class="text-gray-500">Diunggah Oleh (Petugas Lapangan)</p>
                         <p class="font-semibold text-gray-900">{{ $fieldDocumentation->uploader?->name ?? '-' }}</p>
                     </div>
 
@@ -62,7 +62,7 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Progress Lapangan Saat Diinput</p>
+                        <p class="text-gray-500">Kemajuan Lapangan Saat Diunggah</p>
                         <p class="font-semibold text-blue-700">{{ $fieldDocumentation->progress_percentage !== null ? $fieldDocumentation->progress_percentage . '%' : '-' }}</p>
                     </div>
 
@@ -78,7 +78,7 @@
 
                     @if ($fieldDocumentation->file_path)
                         <div class="md:col-span-2 border-t pt-4">
-                            <p class="text-gray-500 mb-2">File / Foto Bukti Pengerjaan Lapangan</p>
+                            <p class="text-gray-500 mb-2">Berkas / Foto Bukti Pengerjaan Lapangan</p>
                             @if (\Illuminate\Support\Str::startsWith($fieldDocumentation->mime_type ?? '', 'image/'))
                                 <div class="mb-3">
                                     <img src="{{ asset('storage/' . $fieldDocumentation->file_path) }}"
@@ -87,7 +87,7 @@
                                 </div>
                             @endif
                             <p class="text-xs text-gray-600">
-                                Nama File: <strong>{{ $fieldDocumentation->file_name }}</strong>
+                                Nama Berkas: <strong>{{ $fieldDocumentation->file_name }}</strong>
                                 ({{ $fieldDocumentation->file_size ? number_format($fieldDocumentation->file_size / 1024, 1) . ' KB' : '-' }})
                             </p>
                         </div>
@@ -97,4 +97,3 @@
         </div>
     </div>
 </x-app-layout>
-

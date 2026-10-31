@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Detail Pengguna
+                    Rincian Pengguna
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Informasi akun pengguna {{ $user->name }}.
@@ -12,7 +12,7 @@
             <div class="flex items-center gap-2">
                 <a href="{{ route('admin.users.edit', $user) }}"
                    class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
-                    Edit Pengguna
+                    Ubah Pengguna
                 </a>
                 <a href="{{ route('admin.users.index') }}"
                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
@@ -35,8 +35,8 @@
                         <p class="font-semibold text-gray-900 mt-0.5">{{ $user->email }}</p>
                     </div>
                     <div>
-                        <p class="text-gray-500">Peran (Role)</p>
-                        <p class="font-semibold text-gray-900 mt-0.5">{{ $user->role?->name ?? '-' }}</p>
+                        <p class="text-gray-500">Peran</p>
+                        <p class="font-semibold text-gray-900 mt-0.5">{{ ($user->role?->name === 'Client' ? 'Klien' : $user->role?->name) ?? '-' }}</p>
                     </div>
                     <div>
                         <p class="text-gray-500">Tanggal Terdaftar</p>
@@ -47,4 +47,3 @@
         </div>
     </div>
 </x-app-layout>
-

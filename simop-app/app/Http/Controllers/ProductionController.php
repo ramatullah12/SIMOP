@@ -40,7 +40,7 @@ class ProductionController extends Controller
         abort_unless($role === 'admin', 403);
 
         $plannings = Planning::with(['project.order', 'project.assignedUser'])
-            ->whereIn('status', ['approved', 'in_progress'])
+            ->whereIn('status', ['ready', 'in_progress', 'completed'])
             ->whereDoesntHave('production')
             ->latest()
             ->get();
@@ -49,7 +49,7 @@ class ProductionController extends Controller
 
         if ($request->filled('planning_id')) {
             $selectedPlanning = Planning::with(['project.order', 'project.assignedUser'])
-                ->whereIn('status', ['approved', 'in_progress'])
+                ->whereIn('status', ['ready', 'in_progress', 'completed'])
                 ->whereDoesntHave('production')
                 ->find($request->planning_id);
         }
@@ -90,7 +90,7 @@ class ProductionController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'planning_id' => 'Planning ini sudah memiliki Production.',
+                    'planning_id' => 'Perencanaan ini sudah memiliki data produksi.',
                 ]);
         }
 
@@ -125,12 +125,12 @@ class ProductionController extends Controller
                 'progress' => 100,
             ]);
             $project->returnAllocatedStock();
-            $project->workEstimate?->order?->update(['status' => 'selesai']);
+            $project->order?->update(['status' => 'selesai']);
         }
 
         return redirect()
             ->route('productions.show', $production)
-            ->with('success', 'Production berhasil dibuat.');
+            ->with('success', 'Data produksi & instalasi berhasil dibuat.');
     }
 
     public function show(Production $production): View
@@ -225,14 +225,14 @@ class ProductionController extends Controller
                 'progress' => 100,
             ]);
             $returnedCount = $project->returnAllocatedStock();
-            $project->workEstimate?->order?->update(['status' => 'selesai']);
+            $project->order?->update(['status' => 'selesai']);
         } elseif ($validated['status'] === 'cancelled') {
             $returnedCount = $project->returnAllocatedStock();
         }
 
-        $msg = 'Production berhasil diperbarui.';
+        $msg = 'Data produksi & instalasi berhasil diperbarui.';
         if ($returnedCount > 0) {
-            $msg .= ' Event/proyek selesai: seluruh stok barang yang dibawa otomatis dikembalikan ke stok awal.';
+            $msg .= ' Kegiatan/proyek selesai: seluruh stok barang yang dibawa otomatis dikembalikan ke stok awal.';
         }
 
         return redirect()
@@ -283,10 +283,10 @@ class ProductionController extends Controller
                 'progress' => 100,
             ]);
             $returnedCount = $project->returnAllocatedStock();
-            $project->workEstimate?->order?->update(['status' => 'selesai']);
+            $project->order?->update(['status' => 'selesai']);
         }
 
-        $msg = 'Progress production berhasil diperbarui.';
+        $msg = 'Kemajuan produksi & instalasi berhasil diperbarui.';
         if ($returnedCount > 0) {
             $msg .= ' Pengerjaan selesai 100%: stok barang proyek otomatis dikembalikan ke stok awal.';
         }
@@ -307,7 +307,7 @@ class ProductionController extends Controller
 
         return redirect()
             ->route('productions.index')
-            ->with('success', 'Production berhasil dihapus.');
+            ->with('success', 'Data produksi & instalasi berhasil dihapus.');
     }
 
     private function generateProductionNumber(): string

@@ -1,18 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Vendor - SIMOP')
-@section('page-title', 'Vendor')
+@section('title', 'Mitra Kerja - SIMOP')
+@section('page-title', 'Mitra Kerja')
 
 @section('content')
     <div class="space-y-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">
-                    Vendor
+                    Mitra Kerja
                 </h1>
 
                 <p class="mt-1 text-sm text-slate-500">
-                    Kelola data Vendor yang mendukung kebutuhan operasional Project.
+                    Kelola data mitra kerja (penyedia barang/jasa) yang mendukung kebutuhan operasional proyek.
                 </p>
             </div>
 
@@ -20,7 +20,7 @@
                 href="{{ route('admin.vendors.create') }}"
                 class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
-                + Tambah Vendor
+                + Tambah Mitra Kerja
             </a>
         </div>
 
@@ -41,7 +41,7 @@
                         for="search"
                         class="mb-2 block text-sm font-medium text-slate-700"
                     >
-                        Cari Vendor
+                        Cari Mitra Kerja
                     </label>
 
                     <input
@@ -49,7 +49,7 @@
                         type="text"
                         name="search"
                         value="{{ $search }}"
-                        placeholder="Kode, nama, PIC, telepon, email..."
+                        placeholder="Kode, nama, narahubung, telepon, email..."
                         class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                 </div>
@@ -88,7 +88,7 @@
                         type="submit"
                         class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
                     >
-                        Filter
+                        Saring
                     </button>
 
                     @if ($search !== '' || $status)
@@ -96,7 +96,7 @@
                             href="{{ route('admin.vendors.index') }}"
                             class="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                         >
-                            Reset
+                            Atur Ulang
                         </a>
                     @endif
                 </div>
@@ -110,7 +110,7 @@
                         <thead class="bg-slate-50">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                    Vendor
+                                    Mitra Kerja
                                 </th>
 
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -189,7 +189,7 @@
                                                 href="{{ route('admin.vendors.edit', $vendor) }}"
                                                 class="text-sm font-semibold text-amber-600 hover:text-amber-700"
                                             >
-                                                Edit
+                                                Ubah
                                             </a>
                                         </div>
                                     </td>
@@ -207,22 +207,22 @@
             @else
                 <div class="px-6 py-14 text-center">
                     <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-xl text-blue-600">
-                        V
+                        M
                     </div>
 
                     <h2 class="mt-4 text-lg font-bold text-slate-800">
-                        Belum Ada Vendor
+                        Belum Ada Mitra Kerja
                     </h2>
 
                     <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                        Tambahkan Vendor untuk menyimpan informasi penyedia barang atau jasa yang digunakan dalam kegiatan operasional.
+                        Tambahkan mitra kerja untuk menyimpan informasi penyedia barang atau jasa yang digunakan dalam kegiatan operasional.
                     </p>
 
                     <a
                         href="{{ route('admin.vendors.create') }}"
                         class="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                     >
-                        + Tambah Vendor
+                        + Tambah Mitra Kerja
                     </a>
                 </div>
             @endif

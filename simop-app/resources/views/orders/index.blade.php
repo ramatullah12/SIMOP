@@ -3,17 +3,17 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ auth()->user()->role?->slug === 'client' ? 'Order & Pengajuan Survey Saya' : 'Manajemen Order & Pengajuan Survey' }}
+                    {{ auth()->user()->role?->slug === 'client' ? 'Pesanan & Pengajuan Survei Saya' : 'Manajemen Pesanan & Pengajuan Survei' }}
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Daftar pengajuan event/pekerjaan beserta status alur survey dan pengerjaan.
+                    Daftar pengajuan kegiatan/pekerjaan beserta status alur survei dan pengerjaan.
                 </p>
             </div>
 
             @if(auth()->user()->role?->slug === 'client')
                 <a href="{{ route('orders.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                    + Buat Order & Ajukan Survey
+                    + Buat Pesanan & Ajukan Survei
                 </a>
             @endif
         </div>
@@ -32,12 +32,12 @@
                     <table class="min-w-full divide-y divide-gray-200 border border-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Order</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Pesanan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Perusahaan</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Event & Lokasi</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Tanggal Event</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Survey (SPS)</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Order</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Kegiatan & Lokasi</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Tanggal Kegiatan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Survei (SPS)</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Pesanan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>
@@ -83,7 +83,7 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada data order.
+                                        Belum ada data pesanan.
                                     </td>
                                 </tr>
                             @endforelse

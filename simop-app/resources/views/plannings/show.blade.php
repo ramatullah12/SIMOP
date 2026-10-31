@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Planning | SIMOP')
-@section('page-title', 'Detail Planning')
+@section('title', 'Detail Perencanaan | SIMOP')
+@section('page-title', 'Detail Perencanaan')
 
 @section('content')
     @php
@@ -15,7 +15,7 @@
         );
 
         $statusLabels = [
-            'draft' => 'Draft',
+            'draft' => 'Draf',
             'ready' => 'Siap',
             'in_progress' => 'Dalam Proses',
             'completed' => 'Selesai',
@@ -69,8 +69,8 @@
 
         $nextStatusLabel = match ($nextStatus) {
             'ready' => 'Tandai Siap',
-            'in_progress' => 'Mulai Planning',
-            'completed' => 'Selesaikan Planning',
+            'in_progress' => 'Mulai Perencanaan',
+            'completed' => 'Selesaikan Perencanaan',
             default => null,
         };
 
@@ -112,7 +112,7 @@
                 href="{{ route('plannings.index') }}"
                 class="text-sm font-semibold text-blue-600 hover:text-blue-800"
             >
-                &larr; Kembali ke Planning
+                &larr; Kembali ke Perencanaan
             </a>
         </div>
 
@@ -136,7 +136,7 @@
                     </h2>
 
                     <p class="mt-2 text-sm text-slate-500">
-                        Project:
+                        Proyek:
                         <a
                             href="{{ route('projects.show', $project) }}"
                             class="font-semibold text-blue-600 hover:text-blue-800"
@@ -155,31 +155,31 @@
         @if ($planning->status === 'completed')
             <div class="rounded-xl border border-green-200 bg-green-50 p-5">
                 <p class="font-semibold text-green-800">
-                    Planning Telah Selesai
+                    Perencanaan Telah Selesai
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-green-700">
-                    Tahap Planning telah selesai. Project dapat dilanjutkan ke proses Produksi & Instalasi.
+                    Tahap perencanaan telah selesai. Proyek dapat dilanjutkan ke proses Produksi & Instalasi.
                 </p>
             </div>
         @elseif ($planning->status === 'cancelled')
             <div class="rounded-xl border border-red-200 bg-red-50 p-5">
                 <p class="font-semibold text-red-800">
-                    Planning Dibatalkan
+                    Perencanaan Dibatalkan
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-red-700">
-                    Planning ini telah dibatalkan dan statusnya tidak dapat diubah kembali.
+                    Perencanaan ini telah dibatalkan dan statusnya tidak dapat diubah kembali.
                 </p>
             </div>
         @elseif ($project->status === 'cancelled')
             <div class="rounded-xl border border-red-200 bg-red-50 p-5">
                 <p class="font-semibold text-red-800">
-                    Project Dibatalkan
+                    Proyek Dibatalkan
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-red-700">
-                    Planning tidak dapat dilanjutkan karena Project telah dibatalkan.
+                    Perencanaan tidak dapat dilanjutkan karena proyek telah dibatalkan.
                 </p>
             </div>
         @endif
@@ -187,13 +187,13 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 class="text-lg font-bold text-slate-900">
-                    Informasi Planning
+                    Informasi Perencanaan
                 </h3>
 
                 <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Nomor Planning
+                            Nomor Perencanaan
                         </dt>
 
                         <dd class="mt-1 text-sm font-semibold text-slate-800">
@@ -286,11 +286,11 @@
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <h3 class="text-lg font-bold text-slate-900">
-                                Informasi Project
+                                Informasi Proyek
                             </h3>
 
                             <p class="mt-1 text-sm text-slate-500">
-                                Project yang menjadi sumber Planning.
+                                Proyek yang menjadi sumber perencanaan.
                             </p>
                         </div>
 
@@ -298,14 +298,14 @@
                             href="{{ route('projects.show', $project) }}"
                             class="text-sm font-semibold text-blue-600 hover:text-blue-800"
                         >
-                            Detail Project
+                            Detail Proyek
                         </a>
                     </div>
 
                     <div class="mt-5 space-y-5">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Nomor Project
+                                Nomor Proyek
                             </p>
 
                             <p class="mt-1 text-sm font-semibold text-slate-800">
@@ -315,7 +315,7 @@
 
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Nama Project
+                                Nama Proyek
                             </p>
 
                             <p class="mt-1 text-sm font-medium text-slate-800">
@@ -325,26 +325,16 @@
 
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Work Estimate
+                                Pesanan
                             </p>
 
                             <p class="mt-1 text-sm font-medium text-slate-800">
-                                {{ $project->workEstimate?->estimate_number ?? '-' }}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Order
+                                {{ $project->order?->order_number ?? '-' }}
                             </p>
 
-                            <p class="mt-1 text-sm font-medium text-slate-800">
-                                {{ $project->workEstimate?->order?->order_number ?? '-' }}
-                            </p>
-
-                            @if ($project->workEstimate?->order?->company_name)
+                            @if ($project->order?->company_name)
                                 <p class="mt-1 text-xs text-slate-500">
-                                    {{ $project->workEstimate->order->company_name }}
+                                    {{ $project->order->company_name }}
                                 </p>
                             @endif
                         </div>
@@ -362,7 +352,7 @@
                         <div>
                             <div class="flex items-center justify-between gap-4">
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                    Progress Project
+                                    Kemajuan Proyek
                                 </p>
 
                                 <span class="text-sm font-bold text-blue-600">
@@ -382,23 +372,23 @@
 
                 <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 class="text-lg font-bold text-slate-900">
-                        Status Planning
+                        Status Perencanaan
                     </h3>
 
                     @if ($role === 'direktur')
                         <div class="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4">
                             <p class="text-sm font-semibold text-blue-700">
-                                Mode Monitoring
+                                Mode Pemantauan
                             </p>
 
                             <p class="mt-1 text-xs leading-5 text-blue-600">
-                                Direktur dapat memantau Planning tetapi tidak dapat mengubah status.
+                                Direktur dapat memantau perencanaan tetapi tidak dapat mengubah status.
                             </p>
                         </div>
                     @elseif ($planning->status === 'completed')
                         <div class="mt-5 rounded-lg border border-green-200 bg-green-50 p-4">
                             <p class="text-sm font-semibold text-green-700">
-                                Planning Selesai
+                                Perencanaan Selesai
                             </p>
 
                             <p class="mt-1 text-xs leading-5 text-green-600">
@@ -408,7 +398,7 @@
                     @elseif ($planning->status === 'cancelled')
                         <div class="mt-5 rounded-lg border border-red-200 bg-red-50 p-4">
                             <p class="text-sm font-semibold text-red-700">
-                                Planning Dibatalkan
+                                Perencanaan Dibatalkan
                             </p>
 
                             <p class="mt-1 text-xs leading-5 text-red-600">
@@ -418,11 +408,11 @@
                     @elseif ($projectIsFinal)
                         <div class="mt-5 rounded-lg border border-red-200 bg-red-50 p-4">
                             <p class="text-sm font-semibold text-red-700">
-                                Planning Dikunci
+                                Perencanaan Dikunci
                             </p>
 
                             <p class="mt-1 text-xs leading-5 text-red-600">
-                                Planning tidak dapat diperbarui karena Project sudah selesai atau dibatalkan.
+                                Perencanaan tidak dapat diperbarui karena proyek sudah selesai atau dibatalkan.
                             </p>
                         </div>
                     @elseif ($canUpdateStatus)
@@ -449,7 +439,7 @@
                             @if ($nextStatus)
                                 <form
                                     method="POST"
-                                    action="{{ route('plannings.status', $planning) }}"
+                                    action="{{ route('plannings.update-status', $planning) }}"
                                 >
                                     @csrf
                                     @method('PATCH')
@@ -462,7 +452,7 @@
 
                                     <button
                                         type="submit"
-                                        onclick="return confirm('Lanjutkan status Planning ke {{ $statusLabels[$nextStatus] }}?')"
+                                        onclick="return confirm('Lanjutkan status perencanaan ke {{ $statusLabels[$nextStatus] }}?')"
                                         class="w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
                                     >
                                         {{ $nextStatusLabel }}
@@ -473,7 +463,7 @@
                             @if ($role === 'admin')
                                 <form
                                     method="POST"
-                                    action="{{ route('plannings.status', $planning) }}"
+                                    action="{{ route('plannings.update-status', $planning) }}"
                                 >
                                     @csrf
                                     @method('PATCH')
@@ -486,17 +476,17 @@
 
                                     <button
                                         type="submit"
-                                        onclick="return confirm('Batalkan Planning ini? Planning yang dibatalkan tidak dapat diaktifkan kembali.')"
+                                        onclick="return confirm('Batalkan perencanaan ini? Perencanaan yang dibatalkan tidak dapat diaktifkan kembali.')"
                                         class="w-full rounded-lg border border-red-300 bg-white px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
                                     >
-                                        Batalkan Planning
+                                        Batalkan Perencanaan
                                     </button>
                                 </form>
                             @endif
 
                             @if ($role === 'petugas-lapangan')
                                 <p class="text-xs leading-5 text-slate-500">
-                                    Petugas Lapangan hanya dapat melanjutkan tahapan Planning sesuai urutan proses.
+                                    Petugas Lapangan hanya dapat melanjutkan tahapan perencanaan sesuai urutan proses.
                                 </p>
                             @endif
                         </div>
@@ -508,11 +498,11 @@
         <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">
-                    Alur Planning
+                    Alur Perencanaan
                 </h3>
 
                 <p class="mt-1 text-sm text-slate-500">
-                    Status Planning berjalan secara berurutan sebelum masuk ke Produksi & Instalasi.
+                    Status perencanaan berjalan secara berurutan sebelum masuk ke Produksi & Instalasi.
                 </p>
             </div>
 
@@ -521,7 +511,7 @@
                     $steps = [
                         [
                             'status' => 'draft',
-                            'label' => 'Draft',
+                            'label' => 'Draf',
                             'number' => 1,
                         ],
                         [
@@ -609,7 +599,7 @@
             @if ($planning->status === 'cancelled')
                 <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
                     <p class="text-sm font-semibold text-red-700">
-                        Alur Planning dihentikan karena Planning dibatalkan.
+                        Alur perencanaan dihentikan karena perencanaan dibatalkan.
                     </p>
                 </div>
             @endif
@@ -623,7 +613,7 @@
                     </h3>
 
                     <p class="mt-1 text-sm text-slate-500">
-                        Tahap berikutnya setelah Planning selesai.
+                        Tahap berikutnya setelah perencanaan selesai.
                     </p>
                 </div>
 
@@ -657,7 +647,7 @@
                             </p>
 
                             <p class="mt-1 text-xs text-slate-500">
-                                Progress Produksi: {{ (int) $production->progress }}%
+                                Kemajuan Produksi: {{ (int) $production->progress }}%
                             </p>
                         </div>
 
@@ -672,11 +662,11 @@
             @elseif ($planning->status === 'completed')
                 <div class="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <p class="text-sm font-semibold text-blue-800">
-                        Planning Selesai
+                        Perencanaan Selesai
                     </p>
 
                     <p class="mt-1 text-sm leading-6 text-blue-700">
-                        Planning telah selesai dan siap dilanjutkan ke tahap Produksi & Instalasi.
+                        Perencanaan telah selesai dan siap dilanjutkan ke tahap Produksi & Instalasi.
                     </p>
 
                     @if ($role === 'admin')
@@ -691,7 +681,7 @@
             @else
                 <div class="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
                     <p class="text-sm text-slate-600">
-                        Produksi & Instalasi baru dapat dibuat setelah Planning berstatus Selesai.
+                        Produksi & Instalasi baru dapat dibuat setelah perencanaan berstatus Selesai.
                     </p>
                 </div>
             @endif

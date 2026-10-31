@@ -44,12 +44,12 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran Pengguna (Role)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran Pengguna</label>
                         <select name="role_id" required class="w-full rounded-md border-gray-300 text-sm">
                             <option value="">-- Pilih Peran --</option>
                             @foreach ($roles as $role)
                                 <option value="{{ $role->id }}" @selected(old('role_id') == $role->id)>
-                                    {{ $role->name }}
+                                    {{ $role->name === 'Client' ? 'Klien' : $role->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -82,4 +82,3 @@
         </div>
     </div>
 </x-app-layout>
-

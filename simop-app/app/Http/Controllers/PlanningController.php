@@ -133,7 +133,7 @@ class PlanningController extends Controller
                         true
                     ),
                     422,
-                    'Project yang sudah selesai atau dibatalkan tidak dapat dibuatkan Planning.'
+                    'Proyek yang sudah selesai atau dibatalkan tidak dapat dibuatkan perencanaan.'
                 );
 
                 $planningExists = Planning::query()
@@ -146,7 +146,7 @@ class PlanningController extends Controller
                 abort_if(
                     $planningExists,
                     422,
-                    'Project ini sudah memiliki Planning.'
+                    'Proyek ini sudah memiliki perencanaan.'
                 );
 
                 return Planning::create([
@@ -170,7 +170,7 @@ class PlanningController extends Controller
             )
             ->with(
                 'success',
-                'Planning berhasil dibuat.'
+                'Perencanaan berhasil dibuat.'
             );
     }
 
@@ -269,7 +269,7 @@ class PlanningController extends Controller
                         true
                     ),
                     422,
-                    'Planning tidak dapat diubah karena Project sudah selesai atau dibatalkan.'
+                    'Perencanaan tidak dapat diubah karena proyek sudah selesai atau dibatalkan.'
                 );
 
                 abort_if(
@@ -279,7 +279,7 @@ class PlanningController extends Controller
                         true
                     ),
                     422,
-                    'Planning yang sudah selesai atau dibatalkan tidak dapat diubah kembali.'
+                    'Perencanaan yang sudah selesai atau dibatalkan tidak dapat diubah kembali.'
                 );
 
                 if (
@@ -292,7 +292,7 @@ class PlanningController extends Controller
                 ) {
                     abort(
                         403,
-                        'Petugas Lapangan tidak dapat mengubah Planning ke status tersebut.'
+                        'Petugas Lapangan tidak dapat mengubah perencanaan ke status tersebut.'
                     );
                 }
 
@@ -322,7 +322,7 @@ class PlanningController extends Controller
                         true
                     ),
                     422,
-                    'Perubahan status Planning tidak sesuai urutan proses.'
+                    'Perubahan status perencanaan tidak sesuai urutan proses.'
                 );
 
                 $currentPlanning->update([
@@ -351,7 +351,7 @@ class PlanningController extends Controller
             )
             ->with(
                 'success',
-                'Status Planning berhasil diperbarui.'
+                'Status perencanaan berhasil diperbarui.'
             );
     }
 

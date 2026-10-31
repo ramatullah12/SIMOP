@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Vendor - SIMOP')
-@section('page-title', 'Tambah Vendor')
+@section('title', 'Tambah Mitra Kerja - SIMOP')
+@section('page-title', 'Tambah Mitra Kerja')
 
 @section('content')
     <div class="space-y-6">
@@ -10,15 +10,15 @@
                 href="{{ route('admin.vendors.index') }}"
                 class="text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-                ← Kembali ke Vendor
+                ← Kembali ke Mitra Kerja
             </a>
 
             <h1 class="mt-3 text-2xl font-bold text-slate-900">
-                Tambah Vendor
+                Tambah Mitra Kerja
             </h1>
 
             <p class="mt-1 text-sm text-slate-500">
-                Tambahkan data Vendor baru untuk kebutuhan operasional SIMOP.
+                Tambahkan data mitra kerja baru untuk kebutuhan operasional SIMOP.
             </p>
         </div>
 
@@ -46,11 +46,11 @@
             <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">
-                        Informasi Vendor
+                        Informasi Mitra Kerja
                     </h2>
 
                     <p class="mt-1 text-sm text-slate-500">
-                        Masukkan informasi utama Vendor.
+                        Masukkan informasi utama mitra kerja.
                     </p>
                 </div>
 
@@ -60,7 +60,7 @@
                             for="name"
                             class="mb-2 block text-sm font-semibold text-slate-700"
                         >
-                            Nama Vendor
+                            Nama Mitra Kerja
                             <span class="text-red-500">*</span>
                         </label>
 
@@ -87,7 +87,7 @@
                             for="contact_person"
                             class="mb-2 block text-sm font-semibold text-slate-700"
                         >
-                            Contact Person / PIC
+                            Penanggung Jawab / Narahubung
                         </label>
 
                         <input
@@ -96,7 +96,7 @@
                             name="contact_person"
                             value="{{ old('contact_person') }}"
                             maxlength="255"
-                            placeholder="Nama PIC Vendor"
+                            placeholder="Nama penanggung jawab mitra kerja"
                             class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >
 
@@ -121,7 +121,7 @@
                             name="service_type"
                             value="{{ old('service_type') }}"
                             maxlength="255"
-                            placeholder="Contoh: Percetakan, Sound System, Transportasi"
+                            placeholder="Contoh: Percetakan, Tata Suara, Transportasi"
                             class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >
 
@@ -171,7 +171,7 @@
                             name="email"
                             value="{{ old('email') }}"
                             maxlength="255"
-                            placeholder="vendor@example.com"
+                            placeholder="mitra@perusahaan.co.id"
                             class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >
 
@@ -194,7 +194,7 @@
                             id="address"
                             name="address"
                             rows="4"
-                            placeholder="Alamat lengkap Vendor"
+                            placeholder="Alamat lengkap mitra kerja"
                             class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >{{ old('address') }}</textarea>
 
@@ -214,7 +214,7 @@
                     </h2>
 
                     <p class="mt-1 text-sm text-slate-500">
-                        Tentukan status Vendor dan tambahkan catatan jika diperlukan.
+                        Tentukan status mitra kerja dan tambahkan catatan jika diperlukan.
                     </p>
                 </div>
 
@@ -268,7 +268,7 @@
                             id="notes"
                             name="notes"
                             rows="4"
-                            placeholder="Catatan tambahan mengenai Vendor"
+                            placeholder="Catatan tambahan mengenai mitra kerja"
                             class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >{{ old('notes') }}</textarea>
 
@@ -293,7 +293,7 @@
                     type="submit"
                     class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                 >
-                    Simpan Vendor
+                    Simpan Mitra Kerja
                 </button>
             </div>
         </form>

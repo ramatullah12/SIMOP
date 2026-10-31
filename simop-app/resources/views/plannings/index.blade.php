@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Planning | SIMOP')
-@section('page-title', 'Planning')
+@section('title', 'Perencanaan | SIMOP')
+@section('page-title', 'Perencanaan')
 
 @section('content')
     @php
         $role = auth()->user()?->role?->slug;
 
         $statusLabels = [
-            'draft' => 'Draft',
+            'draft' => 'Draf',
             'ready' => 'Siap',
             'in_progress' => 'Dalam Proses',
             'completed' => 'Selesai',
@@ -54,16 +54,16 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-xl font-bold text-slate-900">
-                    Daftar Planning
+                    Daftar Perencanaan
                 </h2>
 
                 <p class="mt-1 text-sm text-slate-500">
                     @if ($role === 'admin')
-                        Kelola perencanaan pekerjaan dari setiap Project yang aktif.
+                        Kelola perencanaan pekerjaan dari setiap proyek yang aktif.
                     @elseif ($role === 'direktur')
-                        Pantau perencanaan dan kesiapan pelaksanaan setiap Project.
+                        Pantau perencanaan dan kesiapan pelaksanaan setiap proyek.
                     @elseif ($role === 'petugas-lapangan')
-                        Lihat dan jalankan Planning dari Project yang ditugaskan kepada Anda.
+                        Lihat dan jalankan perencanaan dari proyek yang ditugaskan kepada Anda.
                     @endif
                 </p>
             </div>
@@ -73,7 +73,7 @@
                     href="{{ route('plannings.create') }}"
                     class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
-                    + Buat Planning
+                    + Buat Perencanaan
                 </a>
             @endif
         </div>
@@ -81,21 +81,21 @@
         @if ($role === 'direktur')
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
                 <p class="text-sm font-semibold text-blue-800">
-                    Monitoring Planning
+                    Pemantauan Perencanaan
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
-                    Direktur dapat melihat perkembangan Planning setiap Project, tetapi tidak dapat mengubah status Planning.
+                    Direktur dapat melihat perkembangan perencanaan setiap proyek, tetapi tidak dapat mengubah status perencanaan.
                 </p>
             </div>
         @elseif ($role === 'petugas-lapangan')
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
                 <p class="text-sm font-semibold text-blue-800">
-                    Planning Saya
+                    Perencanaan Saya
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
-                    Hanya Planning dari Project yang ditugaskan kepada Anda yang ditampilkan pada halaman ini.
+                    Hanya perencanaan dari proyek yang ditugaskan kepada Anda yang ditampilkan pada halaman ini.
                 </p>
             </div>
         @endif
@@ -110,15 +110,15 @@
                             </th>
 
                             <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Planning
+                                Perencanaan
                             </th>
 
                             <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Project
+                                Proyek
                             </th>
 
                             <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Order
+                                Pesanan
                             </th>
 
                             @if ($role !== 'petugas-lapangan')
@@ -200,12 +200,12 @@
 
                                 <td class="min-w-40 px-5 py-4">
                                     <p class="text-sm font-medium text-slate-700">
-                                        {{ $project?->workEstimate?->order?->order_number ?? '-' }}
+                                        {{ $project?->order?->order_number ?? '-' }}
                                     </p>
 
-                                    @if ($project?->workEstimate?->order?->company_name)
+                                    @if ($project?->order?->company_name)
                                         <p class="mt-1 text-xs text-slate-500">
-                                            {{ $project->workEstimate->order->company_name }}
+                                            {{ $project->order->company_name }}
                                         </p>
                                     @endif
                                 </td>
@@ -277,7 +277,7 @@
                                         @endif
 
                                         <p class="mt-2 text-xs text-slate-500">
-                                            Progress {{ (int) $production->progress }}%
+                                            Kemajuan {{ (int) $production->progress }}%
                                         </p>
                                     @elseif ($planning->status === 'completed')
                                         <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -298,7 +298,7 @@
                                         @if ($role === 'direktur')
                                             Pantau
                                         @elseif ($role === 'petugas-lapangan')
-                                            Buka Planning
+                                            Buka Perencanaan
                                         @else
                                             Detail
                                         @endif
@@ -317,19 +317,19 @@
 
                                     <p class="mt-4 font-semibold text-slate-700">
                                         @if ($role === 'petugas-lapangan')
-                                            Belum Ada Planning yang Ditugaskan
+                                            Belum Ada Perencanaan yang Ditugaskan
                                         @else
-                                            Belum Ada Planning
+                                            Belum Ada Perencanaan
                                         @endif
                                     </p>
 
                                     <p class="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">
                                         @if ($role === 'admin')
-                                            Planning dapat dibuat dari Project aktif yang belum memiliki Planning.
+                                            Perencanaan dapat dibuat dari proyek aktif yang belum memiliki perencanaan.
                                         @elseif ($role === 'direktur')
-                                            Belum ada Planning Project yang tersedia untuk dipantau.
+                                            Belum ada perencanaan proyek yang tersedia untuk dipantau.
                                         @elseif ($role === 'petugas-lapangan')
-                                            Planning akan muncul setelah Admin membuat Planning untuk Project yang ditugaskan kepada Anda.
+                                            Perencanaan akan muncul setelah Admin membuat perencanaan untuk proyek yang ditugaskan kepada Anda.
                                         @endif
                                     </p>
 
@@ -338,7 +338,7 @@
                                             href="{{ route('plannings.create') }}"
                                             class="mt-5 inline-flex rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                                         >
-                                            + Buat Planning
+                                            + Buat Perencanaan
                                         </a>
                                     @endif
                                 </td>

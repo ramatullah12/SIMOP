@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Vendor - SIMOP')
-@section('page-title', 'Edit Vendor')
+@section('title', 'Ubah Mitra Kerja - SIMOP')
+@section('page-title', 'Ubah Mitra Kerja')
 
 @section('content')
     <div class="space-y-6">
@@ -10,11 +10,11 @@
                 href="{{ route('admin.vendors.show', $vendor) }}"
                 class="text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-                ← Kembali ke Detail Vendor
+                ← Kembali ke Detail Mitra Kerja
             </a>
 
             <h1 class="mt-3 text-2xl font-bold text-slate-900">
-                Edit Vendor
+                Ubah Mitra Kerja
             </h1>
 
             <p class="mt-1 text-sm text-slate-500">
@@ -46,13 +46,13 @@
 
             <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 class="text-lg font-bold text-slate-900">
-                    Informasi Vendor
+                    Informasi Mitra Kerja
                 </h2>
 
                 <div class="mt-6 grid gap-6 md:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
-                            Kode Vendor
+                            Kode Mitra Kerja
                         </label>
 
                         <input
@@ -63,7 +63,7 @@
                         >
 
                         <p class="mt-2 text-xs text-slate-400">
-                            Kode Vendor dibuat otomatis dan tidak dapat diubah.
+                            Kode mitra kerja dibuat otomatis dan tidak dapat diubah.
                         </p>
                     </div>
 
@@ -72,7 +72,7 @@
                             for="name"
                             class="mb-2 block text-sm font-semibold text-slate-700"
                         >
-                            Nama Vendor
+                            Nama Mitra Kerja
                             <span class="text-red-500">*</span>
                         </label>
 
@@ -98,7 +98,7 @@
                             for="contact_person"
                             class="mb-2 block text-sm font-semibold text-slate-700"
                         >
-                            Contact Person / PIC
+                            Penanggung Jawab / Narahubung
                         </label>
 
                         <input

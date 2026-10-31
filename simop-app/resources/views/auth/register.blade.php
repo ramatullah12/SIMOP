@@ -53,7 +53,7 @@
         </div>
 
         <div>
-            <label for="password" class="auth-label">Password</label>
+            <label for="password" class="auth-label">Kata Sandi</label>
             <input
                 id="password"
                 type="password"
@@ -69,14 +69,14 @@
         </div>
 
         <div>
-            <label for="password_confirmation" class="auth-label">Konfirmasi Password</label>
+            <label for="password_confirmation" class="auth-label">Konfirmasi Kata Sandi</label>
             <input
                 id="password_confirmation"
                 type="password"
                 name="password_confirmation"
                 required
                 autocomplete="new-password"
-                placeholder="Ulangi password Anda"
+                placeholder="Ulangi kata sandi Anda"
                 class="auth-input"
             >
             @error('password_confirmation')

@@ -3,14 +3,14 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Edit Project — {{ $project->project_number }}
+                    Ubah Data Proyek — {{ $project->project_number }}
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Order: {{ $project->order?->order_number ?? '-' }} ({{ $project->order?->event_name ?? '-' }})
+                    Pesanan: {{ $project->order?->order_number ?? '-' }} ({{ $project->order?->event_name ?? '-' }})
                 </p>
             </div>
             <a href="{{ route('projects.show', $project) }}" class="text-sm text-gray-600 hover:text-gray-900">
-                Kembali ke Detail Project
+                Kembali ke Detail Proyek
             </a>
         </div>
     </x-slot>
@@ -24,7 +24,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Judul Project
+                            Judul Proyek
                         </label>
                         <input type="text"
                                name="title"
@@ -58,14 +58,14 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Status
+                                Status Proyek
                             </label>
                             <select name="status" required
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="planning" @selected(old('status', $project->status) === 'planning')>Planning</option>
-                                <option value="in_progress" @selected(old('status', $project->status) === 'in_progress')>In Progress</option>
-                                <option value="completed" @selected(old('status', $project->status) === 'completed')>Completed (Selesai & Kembalikan Stok)</option>
-                                <option value="cancelled" @selected(old('status', $project->status) === 'cancelled')>Cancelled</option>
+                                <option value="planning" @selected(old('status', $project->status) === 'planning')>Perencanaan</option>
+                                <option value="in_progress" @selected(old('status', $project->status) === 'in_progress')>Sedang Dikerjakan</option>
+                                <option value="completed" @selected(old('status', $project->status) === 'completed')>Selesai (Kembalikan Stok Barang)</option>
+                                <option value="cancelled" @selected(old('status', $project->status) === 'cancelled')>Dibatalkan</option>
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -89,7 +89,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Deadline
+                                Batas Waktu
                             </label>
                             <input type="date"
                                    name="deadline"
@@ -102,7 +102,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Progress (%)
+                                Kemajuan (%)
                             </label>
                             <input type="number"
                                    name="progress"
@@ -119,7 +119,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Catatan Project
+                            Catatan Proyek
                         </label>
                         <textarea name="notes"
                                   rows="4"

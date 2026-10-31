@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Vendor - SIMOP')
-@section('page-title', 'Detail Vendor')
+@section('title', 'Detail Mitra Kerja - SIMOP')
+@section('page-title', 'Detail Mitra Kerja')
 
 @section('content')
     <div class="space-y-6">
@@ -11,7 +11,7 @@
                     href="{{ route('admin.vendors.index') }}"
                     class="text-sm font-medium text-blue-600 hover:text-blue-700"
                 >
-                    ← Kembali ke Vendor
+                    ← Kembali ke Mitra Kerja
                 </a>
 
                 <div class="mt-3 flex flex-wrap items-center gap-3">
@@ -39,7 +39,7 @@
                 href="{{ route('admin.vendors.edit', $vendor) }}"
                 class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
             >
-                Edit Vendor
+                Ubah Mitra Kerja
             </a>
         </div>
 
@@ -52,13 +52,13 @@
         <div class="grid gap-6 lg:grid-cols-3">
             <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
                 <h2 class="text-lg font-bold text-slate-900">
-                    Informasi Vendor
+                    Informasi Mitra Kerja
                 </h2>
 
                 <div class="mt-6 grid gap-6 sm:grid-cols-2">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Kode Vendor
+                            Kode Mitra Kerja
                         </p>
 
                         <p class="mt-2 text-sm font-semibold text-slate-800">
@@ -68,7 +68,7 @@
 
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Nama Vendor
+                            Nama Mitra Kerja
                         </p>
 
                         <p class="mt-2 text-sm font-semibold text-slate-800">
@@ -78,7 +78,7 @@
 
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Contact Person / PIC
+                            Penanggung Jawab / Narahubung
                         </p>
 
                         <p class="mt-2 text-sm font-semibold text-slate-800">
@@ -129,23 +129,23 @@
             <div class="space-y-6">
                 <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-lg font-bold text-slate-900">
-                        Status Vendor
+                        Status Mitra Kerja
                     </h2>
 
                     <div class="mt-5">
                         @if ($vendor->status === 'active')
                             <span class="inline-flex rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
-                                Vendor Aktif
+                                Mitra Kerja Aktif
                             </span>
                         @else
                             <span class="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
-                                Vendor Tidak Aktif
+                                Mitra Kerja Tidak Aktif
                             </span>
                         @endif
                     </div>
 
                     <p class="mt-4 text-sm leading-6 text-slate-500">
-                        Vendor aktif dapat digunakan untuk mendukung kebutuhan operasional SIMOP.
+                        Mitra kerja aktif dapat digunakan untuk mendukung kebutuhan operasional SIMOP.
                     </p>
                 </div>
 

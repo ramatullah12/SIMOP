@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Edit Data Pengguna
+                    Ubah Data Pengguna
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Perbarui informasi akun dan peran pengguna {{ $user->name }}.
@@ -45,11 +45,11 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran Pengguna (Role)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran Pengguna</label>
                         <select name="role_id" required class="w-full rounded-md border-gray-300 text-sm">
                             @foreach ($roles as $role)
                                 <option value="{{ $role->id }}" @selected(old('role_id', $user->role_id) == $role->id)>
-                                    {{ $role->name }}
+                                    {{ $role->name === 'Client' ? 'Klien' : $role->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -87,4 +87,3 @@
         </div>
     </div>
 </x-app-layout>
-

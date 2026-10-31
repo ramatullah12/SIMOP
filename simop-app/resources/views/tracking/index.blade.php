@@ -5,7 +5,7 @@
                 Status Pekerjaan
             </h2>
             <p class="text-sm text-gray-500 mt-1">
-                Pemantauan alur pengerjaan mulai dari tahap pengajuan survey hingga pekerjaan selesai.
+                Pemantauan alur pengerjaan mulai dari tahap pengajuan survei hingga pekerjaan selesai.
             </p>
         </div>
     </x-slot>

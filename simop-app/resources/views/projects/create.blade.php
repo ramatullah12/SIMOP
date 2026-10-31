@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Buat Project Baru
+            Buat Proyek Baru
         </h2>
     </x-slot>
 
@@ -13,11 +13,11 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Order / Kegiatan Event
+                            Pesanan / Kegiatan
                         </label>
                         <select name="order_id" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">-- Pilih Order --</option>
+                            <option value="">-- Pilih Pesanan --</option>
                             @foreach ($orders as $orderItem)
                                 <option value="{{ $orderItem->id }}"
                                     @selected(old('order_id', $selectedOrder?->id) == $orderItem->id)>
@@ -32,7 +32,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Judul Project
+                            Judul Proyek
                         </label>
                         <input type="text"
                                name="title"
@@ -66,14 +66,14 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Status
+                                Status Proyek
                             </label>
                             <select name="status" required
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="planning" @selected(old('status', 'planning') === 'planning')>Planning</option>
-                                <option value="in_progress" @selected(old('status') === 'in_progress')>In Progress</option>
-                                <option value="completed" @selected(old('status') === 'completed')>Completed</option>
-                                <option value="cancelled" @selected(old('status') === 'cancelled')>Cancelled</option>
+                                <option value="planning" @selected(old('status', 'planning') === 'planning')>Perencanaan</option>
+                                <option value="in_progress" @selected(old('status') === 'in_progress')>Sedang Dikerjakan</option>
+                                <option value="completed" @selected(old('status') === 'completed')>Selesai</option>
+                                <option value="cancelled" @selected(old('status') === 'cancelled')>Dibatalkan</option>
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -97,7 +97,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Deadline
+                                Batas Waktu
                             </label>
                             <input type="date"
                                    name="deadline"
@@ -110,7 +110,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Progress (%)
+                                Kemajuan (%)
                             </label>
                             <input type="number"
                                    name="progress"
@@ -127,7 +127,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Catatan Project
+                            Catatan Proyek
                         </label>
                         <textarea name="notes"
                                   rows="4"
@@ -140,7 +140,7 @@
                     <div class="flex items-center gap-3">
                         <button type="submit"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                            Simpan Project
+                            Simpan Proyek
                         </button>
 
                         <a href="{{ route('projects.index') }}"

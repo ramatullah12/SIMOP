@@ -6,7 +6,7 @@
                     Detail Status Pekerjaan - {{ $order->order_number }}
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Alur pengerjaan dari pengajuan survey awal sampai pekerjaan selesai.
+                    Alur pengerjaan dari pengajuan survei awal sampai pekerjaan selesai.
                 </p>
             </div>
 
@@ -14,13 +14,13 @@
                 @if ($order->survey)
                     <a href="{{ route('surveys.show', $order->survey) }}"
                        class="px-3 py-2 bg-blue-600 rounded-md text-white text-xs font-medium hover:bg-blue-700">
-                        Detail Survey
+                        Detail Survei
                     </a>
                 @endif
                 @if ($order->project)
                     <a href="{{ route('projects.show', $order->project) }}"
                        class="px-3 py-2 bg-indigo-600 rounded-md text-white text-xs font-medium hover:bg-indigo-700">
-                        Detail Project
+                        Detail Proyek
                     </a>
                 @endif
                 <a href="{{ route('tracking.index') }}"
@@ -48,8 +48,8 @@
                         <h3 class="text-lg font-semibold mt-0.5">{{ $tracking['current_headline'] ?? '-' }}</h3>
                     </div>
                     <div class="text-left md:text-right">
-                        <p class="text-xs text-blue-100">No. Order: {{ $order->order_number }}</p>
-                        <p class="text-sm font-semibold">Progress: {{ $tracking['overall_progress'] ?? 0 }}%</p>
+                        <p class="text-xs text-blue-100">No. Pesanan: {{ $order->order_number }}</p>
+                        <p class="text-sm font-semibold">Kemajuan: {{ $tracking['overall_progress'] ?? 0 }}%</p>
                     </div>
                 </div>
 
@@ -92,13 +92,13 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="space-y-6">
                     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm space-y-3 text-sm">
-                        <h3 class="font-semibold text-gray-900 text-base border-b pb-2">Informasi Order</h3>
+                        <h3 class="font-semibold text-gray-900 text-base border-b pb-2">Informasi Pesanan</h3>
                         <div>
-                            <p class="text-xs text-gray-500">Perusahaan / Client</p>
+                            <p class="text-xs text-gray-500">Perusahaan / Klien</p>
                             <p class="font-semibold text-gray-900">{{ $order->company_name }} ({{ $order->contact_person }})</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500">Nama Event</p>
+                            <p class="text-xs text-gray-500">Nama Kegiatan</p>
                             <p class="font-semibold text-gray-900">{{ $order->event_name }}</p>
                         </div>
                         <div>
@@ -106,12 +106,12 @@
                             <p class="font-semibold text-gray-900">{{ $order->event_location }}</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500">Tanggal Event</p>
+                            <p class="text-xs text-gray-500">Tanggal Kegiatan</p>
                             <p class="font-semibold text-gray-900">{{ $order->event_date?->format('d M Y') ?? '-' }}</p>
                         </div>
                         @if ($order->survey)
                             <div class="pt-2 border-t">
-                                <p class="text-xs text-gray-500">Nomor Surat Perintah Survey</p>
+                                <p class="text-xs text-gray-500">Nomor Surat Perintah Survei</p>
                                 <p class="font-semibold text-blue-700">{{ $order->survey->sps_number ?: 'Menunggu Persetujuan Direktur' }}</p>
                                 <p class="text-xs text-gray-600 mt-0.5">
                                     Petugas Lapangan: {{ $order->survey->assignedUser?->name ?? 'Belum dipilih' }}
@@ -150,7 +150,7 @@
                                 Riwayat Status Pekerjaan
                             </h3>
                             <p class="text-xs text-gray-500 mt-0.5">
-                                Catatan tahapan pekerjaan dari awal survey sampai selesai.
+                                Catatan tahapan pekerjaan dari awal survei sampai selesai.
                             </p>
                         </div>
 
@@ -199,7 +199,7 @@
                                 <h3 class="font-semibold text-base text-gray-900">
                                     Dokumentasi Lapangan Pengerjaan
                                 </h3>
-                                <p class="text-xs text-gray-500">Dokumentasi yang diinput oleh petugas lapangan.</p>
+                                <p class="text-xs text-gray-500">Dokumentasi yang diunggah oleh petugas lapangan.</p>
                             </div>
                             <a href="{{ route('field-documentations.index') }}" class="text-xs font-medium text-blue-600 hover:underline">
                                 Lihat Semua
@@ -220,7 +220,7 @@
                                         @if ($doc->file_path)
                                             <a href="{{ route('field-documentations.download', $doc) }}"
                                                class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">
-                                                Unduh File
+                                                Unduh Berkas
                                             </a>
                                         @endif
                                         <a href="{{ route('field-documentations.show', $doc) }}"

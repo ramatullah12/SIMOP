@@ -3,7 +3,7 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Detail Project — {{ $project->project_number }}
+                    Detail Proyek — {{ $project->project_number }}
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
                     {{ $project->title }} ({{ $project->workEstimate?->order?->event_name ?? '-' }})
@@ -22,18 +22,18 @@
                     @if (! $project->planning)
                         <a href="{{ route('plannings.create', ['project_id' => $project->id]) }}"
                            class="inline-flex items-center px-4 py-2 bg-indigo-600 rounded-md text-white text-sm font-medium hover:bg-indigo-700">
-                            + Buat Planning
+                            + Buat Perencanaan
                         </a>
                     @else
                         <a href="{{ route('plannings.show', $project->planning) }}"
                            class="inline-flex items-center px-4 py-2 bg-indigo-600 rounded-md text-white text-sm font-medium hover:bg-indigo-700">
-                            Lihat Planning
+                            Lihat Perencanaan
                         </a>
                     @endif
 
                     <a href="{{ route('projects.edit', $project) }}"
                        class="inline-flex items-center px-4 py-2 bg-yellow-500 rounded-md text-white text-sm font-medium hover:bg-yellow-600">
-                        Edit Project
+                        Ubah Proyek
                     </a>
                 @endif
 
@@ -51,7 +51,7 @@
                 )
                     <a href="{{ route('ratings.create', ['project_id' => $project->id]) }}"
                        class="inline-flex items-center px-4 py-2 bg-amber-500 rounded-md text-white text-sm font-medium hover:bg-amber-600">
-                        + Beri Rating
+                        + Beri Penilaian
                     </a>
                 @endif
 
@@ -80,24 +80,24 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div>
-                        <p class="text-gray-500">Nomor Project</p>
+                        <p class="text-gray-500">Nomor Proyek</p>
                         <p class="font-semibold text-gray-900">{{ $project->project_number }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Judul Project</p>
+                        <p class="text-gray-500">Judul Proyek</p>
                         <p class="font-semibold text-gray-900">{{ $project->title }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Nomor Order</p>
+                        <p class="text-gray-500">Nomor Pesanan</p>
                         <p class="font-semibold text-gray-900">
                             {{ $project->order?->order_number ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Client & Event</p>
+                        <p class="text-gray-500">Klien & Kegiatan</p>
                         <p class="font-semibold text-gray-900">
                             {{ $project->order?->company_name ?? '-' }} — {{ $project->order?->event_name ?? '-' }}
                         </p>
@@ -125,21 +125,21 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Deadline</p>
+                        <p class="text-gray-500">Batas Waktu</p>
                         <p class="font-semibold text-gray-900">
                             {{ $project->deadline ? $project->deadline->format('d M Y') : '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Status Project</p>
+                        <p class="text-gray-500">Status Proyek</p>
                         <p class="font-semibold text-gray-900">
                             {{ strtoupper(str_replace('_', ' ', $project->status)) }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Progress</p>
+                        <p class="text-gray-500">Kemajuan</p>
                         <p class="font-semibold text-gray-900">{{ $project->progress }}%</p>
                     </div>
 

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Beri Rating & Ulasan Pekerjaan
+            Beri Penilaian & Ulasan Pekerjaan
         </h2>
     </x-slot>
 
@@ -10,7 +10,7 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 @if ($projects->isEmpty())
                     <div class="text-center py-6 space-y-3">
-                        <p class="text-gray-600">Belum ada project selesai yang dapat diberikan rating saat ini.</p>
+                        <p class="text-gray-600">Belum ada proyek selesai yang dapat diberikan penilaian saat ini.</p>
                         <a href="{{ route('ratings.index') }}" class="inline-flex px-4 py-2 bg-gray-200 rounded-md text-gray-700 text-sm font-medium">
                             Kembali
                         </a>
@@ -20,14 +20,14 @@
                         @csrf
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Project yang Telah Selesai</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Proyek yang Telah Selesai</label>
                             <select name="project_id" required
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">-- Pilih Project --</option>
+                                <option value="">-- Pilih Proyek --</option>
                                 @foreach ($projects as $project)
                                     <option value="{{ $project->id }}"
                                         @selected(old('project_id', $selectedProject?->id) == $project->id)>
-                                        {{ $project->project_number }} - {{ $project->title }} ({{ $project->workEstimate?->order?->event_name ?? '-' }})
+                                        {{ $project->project_number }} - {{ $project->title }} ({{ $project->order?->event_name ?? '-' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -37,7 +37,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nilai Rating (1 - 5 Bintang)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nilai Penilaian (1 - 5 Bintang)</label>
                             <select name="rating" required
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="5" @selected(old('rating', 5) == 5)>★★★★★ (5 - Sangat Puas)</option>
@@ -64,7 +64,7 @@
                         <div class="flex items-center gap-3">
                             <button type="submit"
                                     class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                                Kirim Rating & Ulasan
+                                Kirim Penilaian & Ulasan
                             </button>
                             <a href="{{ route('ratings.index') }}"
                                class="inline-flex items-center px-4 py-2 bg-gray-200 rounded-md text-gray-700 text-sm font-medium hover:bg-gray-300">

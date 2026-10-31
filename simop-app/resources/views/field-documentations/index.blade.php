@@ -6,14 +6,14 @@
                     Dokumentasi Lapangan Pengerjaan
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Fitur khusus dokumentasi pengerjaan lapangan yang diinput langsung oleh Petugas Lapangan.
+                    Dokumentasi pelaksanaan pengerjaan lapangan yang dicatat langsung oleh Petugas Lapangan.
                 </p>
             </div>
 
             @if ($role === 'petugas-lapangan')
                 <a href="{{ route('field-documentations.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                    + Input Dokumentasi Lapangan
+                    + Unggah Dokumentasi Lapangan
                 </a>
             @endif
         </div>
@@ -29,7 +29,7 @@
 
             @if ($role !== 'petugas-lapangan')
                 <div class="rounded-lg bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 text-sm">
-                    Dokumentasi pada menu ini diinput oleh <strong>Petugas Lapangan</strong> sebagai bukti dan laporan aktivitas pengerjaan di lokasi event/proyek.
+                    Dokumentasi pada menu ini diunggah oleh <strong>Petugas Lapangan</strong> sebagai bukti aktivitas pengerjaan di lokasi kegiatan/proyek.
                 </div>
             @endif
 
@@ -39,10 +39,10 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Dokumentasi</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Project & Event</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Proyek & Kegiatan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Judul Aktivitas</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Tanggal</th>
-                                <th class="px-4 py-3 text-center font-semibold text-gray-600">Progress</th>
+                                <th class="px-4 py-3 text-center font-semibold text-gray-600">Kemajuan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Lampiran</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
@@ -54,7 +54,7 @@
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ $doc->documentation_number }}</td>
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-gray-900">{{ $doc->project?->project_number }}</p>
-                                        <p class="text-xs text-gray-500">{{ $doc->project?->workEstimate?->order?->event_name ?? $doc->project?->title }}</p>
+                                        <p class="text-xs text-gray-500">{{ $doc->project?->order?->event_name ?? $doc->project?->title }}</p>
                                     </td>
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-gray-900">{{ $doc->title }}</p>
@@ -75,10 +75,10 @@
                                         @if ($doc->file_path)
                                             <a href="{{ route('field-documentations.download', $doc) }}"
                                                class="text-blue-600 hover:underline font-medium text-xs">
-                                                Unduh File ({{ $doc->file_name }})
+                                                Unduh Berkas ({{ $doc->file_name }})
                                             </a>
                                         @else
-                                            <span class="text-xs text-gray-400">Tanpa file</span>
+                                            <span class="text-xs text-gray-400">Tanpa berkas</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
@@ -91,7 +91,7 @@
                             @empty
                                 <tr>
                                     <td colspan="8" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada dokumentasi lapangan pengerjaan yang diinput.
+                                        Belum ada dokumentasi lapangan pengerjaan yang diunggah.
                                     </td>
                                 </tr>
                             @endforelse
@@ -106,4 +106,3 @@
         </div>
     </div>
 </x-app-layout>
-

@@ -1,29 +1,27 @@
 @extends('layouts.app')
 
-@section('title', 'Dokumen | SIMOP')
-@section('page-title', 'Dokumen')
+@section('title', 'Dokumen Umum | SIMOP')
+@section('page-title', 'Dokumen Umum')
 
 @section('content')
     @php
         $role = auth()->user()?->role?->slug;
 
         $typeLabels = [
+            'contract' => 'SPK / Kontrak Kerja',
+            'technical_drawing' => 'Gambar Teknis / Tata Letak',
             'po_spk' => 'PO / SPK',
-            'survey' => 'Survey',
-            'work_estimate' => 'Work Estimate',
+            'survey' => 'Survei',
             'production' => 'Produksi & Instalasi',
-            'bapp' => 'BAPP',
-            'invoice' => 'Invoice',
             'other' => 'Lainnya',
         ];
 
         $typeColors = [
+            'contract' => 'bg-purple-100 text-purple-700',
+            'technical_drawing' => 'bg-cyan-100 text-cyan-700',
             'po_spk' => 'bg-purple-100 text-purple-700',
             'survey' => 'bg-cyan-100 text-cyan-700',
-            'work_estimate' => 'bg-amber-100 text-amber-700',
             'production' => 'bg-blue-100 text-blue-700',
-            'bapp' => 'bg-green-100 text-green-700',
-            'invoice' => 'bg-indigo-100 text-indigo-700',
             'other' => 'bg-slate-100 text-slate-700',
         ];
     @endphp
@@ -44,20 +42,20 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-xl font-bold text-slate-900">
-                    Dokumen
+                    Dokumen Umum
                 </h2>
 
                 @if ($role === 'admin')
                     <p class="mt-1 text-sm text-slate-500">
-                        Kelola seluruh dokumen yang berkaitan dengan Project SIMOP.
+                        Kelola seluruh dokumen pendukung yang berkaitan dengan proyek SIMOP.
                     </p>
                 @elseif ($role === 'petugas-lapangan')
                     <p class="mt-1 text-sm text-slate-500">
-                        Akses dokumen dari Project yang ditugaskan kepada Anda.
+                        Akses dokumen dari proyek yang ditugaskan kepada Anda.
                     </p>
                 @elseif ($role === 'client')
                     <p class="mt-1 text-sm text-slate-500">
-                        Akses dokumen Project yang telah tersedia untuk Anda.
+                        Akses dokumen proyek yang telah tersedia untuk Anda.
                     </p>
                 @endif
             </div>
@@ -67,7 +65,7 @@
                     href="{{ route('documents.create') }}"
                     class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                 >
-                    + Upload Dokumen
+                    + Unggah Dokumen
                 </a>
             @endif
         </div>
@@ -75,17 +73,17 @@
         @if ($role === 'petugas-lapangan')
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <p class="text-sm font-semibold text-blue-800">
-                    Dokumen Project Saya
+                    Dokumen Proyek Saya
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
-                    Daftar ini hanya menampilkan dokumen dari Project yang ditugaskan kepada Anda.
+                    Daftar ini hanya menampilkan dokumen dari proyek yang ditugaskan kepada Anda.
                 </p>
             </div>
         @elseif ($role === 'client')
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <p class="text-sm font-semibold text-blue-800">
-                    Dokumen Project Anda
+                    Dokumen Proyek Anda
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
@@ -108,7 +106,7 @@
                             </th>
 
                             <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Project
+                                Proyek
                             </th>
 
                             <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -116,12 +114,12 @@
                             </th>
 
                             <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                File
+                                Berkas
                             </th>
 
                             @if ($role === 'admin')
                                 <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                    Akses Client
+                                    Akses Klien
                                 </th>
                             @endif
 
@@ -135,7 +133,7 @@
                         @forelse ($documents as $document)
                             @php
                                 $project = $document->project;
-                                $order = $project?->workEstimate?->order;
+                                $order = $project?->order;
 
                                 $typeLabel = $typeLabels[$document->document_type]
                                     ?? 'Lainnya';
@@ -178,7 +176,7 @@
 
                                     @if ($role === 'admin')
                                         <p class="mt-1 text-xs text-slate-400">
-                                            Upload:
+                                            Diunggah:
                                             {{ $document->uploader?->name ?? '-' }}
                                         </p>
                                     @endif
@@ -195,7 +193,7 @@
 
                                     @if ($order?->order_number)
                                         <p class="mt-1 text-xs text-slate-400">
-                                            Order: {{ $order->order_number }}
+                                            Pesanan: {{ $order->order_number }}
                                         </p>
                                     @endif
                                 </td>
@@ -227,7 +225,7 @@
                                             </span>
 
                                             <p class="mt-2 text-xs text-green-600">
-                                                Terlihat oleh Client
+                                                Terlihat oleh Klien
                                             </p>
                                         @else
                                             <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -235,7 +233,7 @@
                                             </span>
 
                                             <p class="mt-2 text-xs text-slate-400">
-                                                Tidak terlihat Client
+                                                Tidak terlihat Klien
                                             </p>
                                         @endif
                                     </td>
@@ -254,7 +252,7 @@
                                             href="{{ route('documents.download', $document) }}"
                                             class="text-sm font-semibold text-green-600 hover:text-green-800"
                                         >
-                                            Download
+                                            Unduh
                                         </a>
                                     </div>
                                 </td>
@@ -271,22 +269,22 @@
 
                                     @if ($role === 'admin')
                                         <p class="mt-1 text-sm text-slate-500">
-                                            Upload dokumen Project untuk mulai mengelola dokumen.
+                                            Unggah dokumen proyek untuk mulai mengelola dokumen.
                                         </p>
 
                                         <a
                                             href="{{ route('documents.create') }}"
                                             class="mt-4 inline-flex rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                                         >
-                                            + Upload Dokumen
+                                            + Unggah Dokumen
                                         </a>
                                     @elseif ($role === 'client')
                                         <p class="mt-1 text-sm text-slate-500">
-                                            Belum ada dokumen Project yang tersedia untuk Anda.
+                                            Belum ada dokumen proyek yang tersedia untuk Anda.
                                         </p>
                                     @else
                                         <p class="mt-1 text-sm text-slate-500">
-                                            Belum ada dokumen dari Project yang ditugaskan kepada Anda.
+                                            Belum ada dokumen dari proyek yang ditugaskan kepada Anda.
                                         </p>
                                     @endif
                                 </td>
@@ -317,7 +315,7 @@
                             </p>
 
                             <p class="mt-1 text-sm leading-6 text-slate-500">
-                                Dokumen tanpa akses Client hanya dapat diakses oleh pihak internal yang memiliki hak akses terhadap Project.
+                                Dokumen tanpa akses Klien hanya dapat diakses oleh pihak internal yang memiliki hak akses terhadap proyek.
                             </p>
                         </div>
                     </div>
@@ -331,11 +329,11 @@
 
                         <div>
                             <p class="text-sm font-semibold text-green-800">
-                                Akses Client
+                                Akses Klien
                             </p>
 
                             <p class="mt-1 text-sm leading-6 text-green-700">
-                                Dokumen dengan akses Client dapat dilihat dan diunduh oleh Client pemilik Project.
+                                Dokumen dengan akses Klien dapat dilihat dan diunduh oleh Klien pemilik proyek.
                             </p>
                         </div>
                     </div>

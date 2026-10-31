@@ -96,21 +96,21 @@ class TrackingController extends Controller
         $steps = [
             [
                 'number' => 1,
-                'title' => 'Pengajuan Survey',
-                'subtitle' => 'Client ke Admin',
+                'title' => 'Pengajuan Survei',
+                'subtitle' => 'Klien ke Admin',
                 'state' => $step1Done ? 'done' : 'pending',
                 'time' => $order->created_at?->format('d/m/Y H:i'),
             ],
             [
                 'number' => 2,
-                'title' => 'Surat Perintah Survey',
-                'subtitle' => 'Approval Direktur',
+                'title' => 'Surat Perintah Survei',
+                'subtitle' => 'Persetujuan Direktur',
                 'state' => $step2Done ? 'done' : ($step2Current ? 'active' : 'pending'),
                 'time' => $survey?->approved_at?->format('d/m/Y H:i') ?? ($survey?->submitted_to_direktur_at?->format('d/m/Y H:i')),
             ],
             [
                 'number' => 3,
-                'title' => 'Hasil Survey',
+                'title' => 'Hasil Survei',
                 'subtitle' => 'Petugas Lapangan',
                 'state' => $step3Done ? 'done' : ($step3Current ? 'active' : 'pending'),
                 'time' => $step3Done ? $survey?->updated_at?->format('d/m/Y H:i') : ($survey?->scheduled_at?->format('d/m/Y H:i')),
@@ -118,7 +118,7 @@ class TrackingController extends Controller
             [
                 'number' => 4,
                 'title' => 'Persiapan & Barang',
-                'subtitle' => 'Project, Planning & Stok',
+                'subtitle' => 'Proyek, Perencanaan & Stok',
                 'state' => $step4Done ? 'done' : ($step4Current ? 'active' : 'pending'),
                 'time' => $project?->created_at?->format('d/m/Y H:i'),
             ],
@@ -132,7 +132,7 @@ class TrackingController extends Controller
             [
                 'number' => 6,
                 'title' => 'Selesai',
-                'subtitle' => 'Stok Kembali',
+                'subtitle' => 'Stok Barang Kembali',
                 'state' => $step6Done ? 'done' : ($step6Current ? 'active' : 'pending'),
                 'time' => $step6Done ? $project?->updated_at?->format('d/m/Y H:i') : null,
             ],
@@ -142,9 +142,9 @@ class TrackingController extends Controller
 
         $logs[] = [
             'state' => 'done',
-            'badge' => 'Order & Survey',
-            'title' => 'Pengajuan Order dan Permintaan Survey Dibuat',
-            'description' => "Order {$order->order_number} untuk kegiatan {$order->event_name} ({$order->event_location}) telah diajukan oleh {$order->company_name} ke Admin.",
+            'badge' => 'Pesanan & Survei',
+            'title' => 'Pengajuan Pesanan dan Permintaan Survei Dibuat',
+            'description' => "Pesanan {$order->order_number} untuk kegiatan {$order->event_name} ({$order->event_location}) telah diajukan oleh {$order->company_name} ke Admin.",
             'actor' => $order->client?->name ?? $order->contact_person,
             'timestamp' => $order->created_at?->format('d M Y, H:i'),
         ];
@@ -153,7 +153,7 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'done',
                 'badge' => 'Verifikasi Admin',
-                'title' => 'Admin Meneruskan Pengajuan Survey ke Direktur',
+                'title' => 'Admin Meneruskan Pengajuan Survei ke Direktur',
                 'description' => 'Admin telah menetapkan jadwal serta petugas lapangan (' . ($survey->assignedUser?->name ?? '-') . ') dan mengirim pengajuan ke Direktur.',
                 'actor' => 'Admin',
                 'timestamp' => ($survey->submitted_to_direktur_at ?? $survey->updated_at)?->format('d M Y, H:i'),
@@ -162,8 +162,8 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'active',
                 'badge' => 'Proses Admin',
-                'title' => 'Menunggu Admin Memproses Pengajuan Survey',
-                'description' => 'Pengajuan survey sedang diverifikasi oleh Admin sebelum diteruskan ke Direktur.',
+                'title' => 'Menunggu Admin Memproses Pengajuan Survei',
+                'description' => 'Pengajuan survei sedang diverifikasi oleh Admin sebelum diteruskan ke Direktur.',
                 'actor' => 'Admin',
                 'timestamp' => 'Sedang berjalan',
             ];
@@ -173,8 +173,8 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'done',
                 'badge' => 'SPS Diterbitkan',
-                'title' => "Disetujui Direktur - Surat Perintah Survey ({$survey->sps_number}) Dikirim ke Petugas Lapangan",
-                'description' => "Direktur menyetujui jadwal survey. Surat Perintah Survey {$survey->sps_number} diteruskan ke petugas lapangan ({$survey->assignedUser?->name}).",
+                'title' => "Disetujui Direktur - Surat Perintah Survei ({$survey->sps_number}) Dikirim ke Petugas Lapangan",
+                'description' => "Direktur menyetujui jadwal survei. Surat Perintah Survei {$survey->sps_number} diteruskan ke petugas lapangan ({$survey->assignedUser?->name}).",
                 'actor' => $survey->approver?->name ?? 'Direktur',
                 'timestamp' => $survey->approved_at->format('d M Y, H:i'),
             ];
@@ -182,7 +182,7 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'rejected',
                 'badge' => 'Ditolak Direktur',
-                'title' => 'Pengajuan Survey Dikembalikan oleh Direktur',
+                'title' => 'Pengajuan Survei Dikembalikan oleh Direktur',
                 'description' => 'Catatan: ' . ($survey->rejection_notes ?? '-'),
                 'actor' => 'Direktur',
                 'timestamp' => $survey->updated_at?->format('d M Y, H:i'),
@@ -191,8 +191,8 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'active',
                 'badge' => 'Menunggu Direktur',
-                'title' => 'Menunggu Approval Direktur untuk Surat Perintah Survey',
-                'description' => 'Menunggu persetujuan Direktur sebelum Surat Perintah Survey dikirim ke petugas lapangan.',
+                'title' => 'Menunggu Persetujuan Direktur untuk Surat Perintah Survei',
+                'description' => 'Menunggu persetujuan Direktur sebelum Surat Perintah Survei dikirim ke petugas lapangan.',
                 'actor' => 'Direktur',
                 'timestamp' => 'Menunggu persetujuan',
             ];
@@ -200,8 +200,8 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'pending',
                 'badge' => 'Belum Berjalan',
-                'title' => 'Persetujuan Direktur & Penerbitan Surat Perintah Survey',
-                'description' => 'Surat Perintah Survey akan dikirim ke petugas lapangan setelah disetujui Direktur.',
+                'title' => 'Persetujuan Direktur & Penerbitan Surat Perintah Survei',
+                'description' => 'Surat Perintah Survei akan dikirim ke petugas lapangan setelah disetujui Direktur.',
                 'actor' => 'Direktur',
                 'timestamp' => '-',
             ];
@@ -210,20 +210,20 @@ class TrackingController extends Controller
         if ($survey && $survey->status === 'selesai') {
             $logs[] = [
                 'state' => 'done',
-                'badge' => 'Survey Selesai',
-                'title' => 'Petugas Lapangan Menyelesaikan Survey Lokasi',
-                'description' => 'Hasil temuan: ' . ($survey->findings ?: 'Data hasil survey telah diinput.'),
+                'badge' => 'Survei Selesai',
+                'title' => 'Petugas Lapangan Menyelesaikan Survei Lokasi',
+                'description' => 'Hasil temuan: ' . ($survey->findings ?: 'Data hasil survei telah diinput.'),
                 'actor' => $survey->assignedUser?->name ?? 'Petugas Lapangan',
                 'timestamp' => $survey->updated_at?->format('d M Y, H:i'),
             ];
         } elseif ($survey && $survey->approved_at && in_array($survey->status, ['dijadwalkan', 'berlangsung'], true)) {
             $logs[] = [
                 'state' => 'active',
-                'badge' => $survey->status === 'berlangsung' ? 'Sedang Survey' : 'Terjadwal',
+                'badge' => $survey->status === 'berlangsung' ? 'Sedang Survei' : 'Terjadwal',
                 'title' => $survey->status === 'berlangsung'
-                    ? 'Petugas Lapangan Sedang Melakukan Survey'
-                    : 'Surat Perintah Survey Diterima Petugas Lapangan',
-                'description' => "Petugas lapangan ({$survey->assignedUser?->name}) melaksanakan survey di {$survey->location}.",
+                    ? 'Petugas Lapangan Sedang Melakukan Survei'
+                    : 'Surat Perintah Survei Diterima Petugas Lapangan',
+                'description' => "Petugas lapangan ({$survey->assignedUser?->name}) melaksanakan survei di {$survey->location}.",
                 'actor' => $survey->assignedUser?->name ?? 'Petugas Lapangan',
                 'timestamp' => $survey->scheduled_at?->format('d M Y, H:i') ?? '-',
             ];
@@ -231,8 +231,8 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'pending',
                 'badge' => 'Belum Berjalan',
-                'title' => 'Pelaksanaan Survey Lapangan',
-                'description' => 'Petugas lapangan melakukan pengecekan lokasi berdasarkan Surat Perintah Survey.',
+                'title' => 'Pelaksanaan Survei Lapangan',
+                'description' => 'Petugas lapangan melakukan pengecekan lokasi berdasarkan Surat Perintah Survei.',
                 'actor' => 'Petugas Lapangan',
                 'timestamp' => '-',
             ];
@@ -241,9 +241,9 @@ class TrackingController extends Controller
         if ($project) {
             $logs[] = [
                 'state' => 'done',
-                'badge' => 'Project Aktif',
-                'title' => "Project ({$project->project_number}) Dibuat",
-                'description' => "Project {$project->title} telah dibuat. Koordinator lapangan: " . ($project->assignedUser?->name ?? '-'),
+                'badge' => 'Proyek Aktif',
+                'title' => "Proyek ({$project->project_number}) Dibuat",
+                'description' => "Proyek {$project->title} telah dibuat. Koordinator lapangan: " . ($project->assignedUser?->name ?? '-'),
                 'actor' => 'Admin',
                 'timestamp' => $project->created_at?->format('d M Y, H:i'),
             ];
@@ -266,8 +266,8 @@ class TrackingController extends Controller
             if ($planning) {
                 $logs[] = [
                     'state' => in_array($planning->status, ['approved', 'in_progress', 'completed'], true) ? 'done' : 'active',
-                    'badge' => 'Planning',
-                    'title' => "Planning ({$planning->planning_number}) - {$planning->title}",
+                    'badge' => 'Perencanaan',
+                    'title' => "Perencanaan ({$planning->planning_number}) - {$planning->title}",
                     'description' => $planning->work_scope ?? $planning->description,
                     'actor' => 'Admin',
                     'timestamp' => $planning->created_at?->format('d M Y, H:i'),
@@ -277,8 +277,8 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'pending',
                 'badge' => 'Belum Berjalan',
-                'title' => 'Pembuatan Project, Planning & Alokasi Stok Barang',
-                'description' => 'Penjadwalan proyek dan alokasi barang dilakukan setelah survey lapangan selesai.',
+                'title' => 'Pembuatan Proyek, Perencanaan & Alokasi Stok Barang',
+                'description' => 'Penjadwalan proyek dan alokasi barang dilakukan setelah survei lapangan selesai.',
                 'actor' => 'Admin',
                 'timestamp' => '-',
             ];
@@ -312,7 +312,7 @@ class TrackingController extends Controller
                     'state' => 'done',
                     'badge' => 'Dokumentasi Lapangan',
                     'title' => "Input Dokumentasi Lapangan: {$doc->title}",
-                    'description' => $doc->description . ($doc->progress_percentage !== null ? " (Progress: {$doc->progress_percentage}%)" : ''),
+                    'description' => $doc->description . ($doc->progress_percentage !== null ? " (Kemajuan: {$doc->progress_percentage}%)" : ''),
                     'actor' => $doc->uploader?->name ?? 'Petugas Lapangan',
                     'timestamp' => $doc->created_at?->format('d M Y, H:i'),
                 ];
@@ -332,7 +332,7 @@ class TrackingController extends Controller
                 'state' => 'done',
                 'badge' => 'Selesai',
                 'title' => 'Pekerjaan Selesai & Barang Kembali ke Stok Awal',
-                'description' => "Pekerjaan untuk event {$order->event_name} telah selesai." . $returnedItemsText,
+                'description' => "Pekerjaan untuk kegiatan {$order->event_name} telah selesai." . $returnedItemsText,
                 'actor' => 'Admin',
                 'timestamp' => $project->updated_at?->format('d M Y, H:i'),
             ];
@@ -340,10 +340,10 @@ class TrackingController extends Controller
             if ($rating) {
                 $logs[] = [
                     'state' => 'done',
-                    'badge' => "Rating {$rating->rating}/5",
-                    'title' => 'Ulasan Pekerjaan dari Client',
+                    'badge' => "Penilaian {$rating->rating}/5",
+                    'title' => 'Ulasan Pekerjaan dari Klien',
                     'description' => $rating->review,
-                    'actor' => $rating->client?->name ?? 'Client',
+                    'actor' => $rating->client?->name ?? 'Klien',
                     'timestamp' => $rating->created_at?->format('d M Y, H:i'),
                 ];
             }
@@ -364,7 +364,7 @@ class TrackingController extends Controller
             $overallProgress = 100;
         }
 
-        $currentHeadline = 'Pengajuan Survey Diterima Admin';
+        $currentHeadline = 'Pengajuan Survei Diterima Admin';
         if ($project && $project->status === 'completed') {
             $currentHeadline = 'Pekerjaan Selesai & Stok Barang Telah Dikembalikan';
         } elseif ($production) {
@@ -372,20 +372,20 @@ class TrackingController extends Controller
         } elseif ($planning) {
             $currentHeadline = 'Perencanaan Teknis & Persiapan Barang';
         } elseif ($project) {
-            $currentHeadline = 'Project Aktif';
+            $currentHeadline = 'Proyek Aktif';
         } elseif ($survey) {
             if ($survey->status === 'diajukan_client') {
-                $currentHeadline = 'Menunggu Admin Meneruskan Survey ke Direktur';
+                $currentHeadline = 'Menunggu Admin Meneruskan Survei ke Direktur';
             } elseif ($survey->status === 'menunggu_persetujuan_direktur') {
-                $currentHeadline = 'Menunggu Approval Direktur (Surat Perintah Survey)';
+                $currentHeadline = 'Menunggu Persetujuan Direktur (Surat Perintah Survei)';
             } elseif ($survey->status === 'ditolak_direktur') {
-                $currentHeadline = 'Pengajuan Survey Perlu Revisi';
+                $currentHeadline = 'Pengajuan Survei Perlu Revisi';
             } elseif ($survey->status === 'dijadwalkan') {
-                $currentHeadline = "Surat Perintah Survey ({$survey->sps_number}) Dikirim ke Petugas";
+                $currentHeadline = "Surat Perintah Survei ({$survey->sps_number}) Dikirim ke Petugas";
             } elseif ($survey->status === 'berlangsung') {
-                $currentHeadline = 'Survey Lapangan Sedang Berlangsung';
+                $currentHeadline = 'Survei Lapangan Sedang Berlangsung';
             } elseif ($survey->status === 'selesai') {
-                $currentHeadline = 'Survey Selesai';
+                $currentHeadline = 'Survei Selesai';
             }
         }
 

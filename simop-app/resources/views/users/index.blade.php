@@ -6,7 +6,7 @@
                     Manajemen Pengguna
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Kelola akun pengguna sistem (Admin, Direktur, Petugas Lapangan, dan Client).
+                    Kelola akun pengguna sistem (Admin, Direktur, Petugas Lapangan, dan Klien).
                 </p>
             </div>
             <a href="{{ route('admin.users.create') }}"
@@ -38,23 +38,23 @@
                                class="w-full rounded-md border-gray-300 text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran (Role)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran</label>
                         <select name="role_id" class="w-full rounded-md border-gray-300 text-sm">
                             <option value="">Semua Peran</option>
                             @foreach ($roles as $role)
                                 <option value="{{ $role->id }}" @selected((string) $roleId === (string) $role->id)>
-                                    {{ $role->name }}
+                                    {{ $role->name === 'Client' ? 'Klien' : $role->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm font-medium hover:bg-gray-900">
-                            Filter
+                            Saring
                         </button>
                         @if ($search || $roleId)
                             <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
-                                Reset
+                                Atur Ulang
                             </a>
                         @endif
                     </div>
@@ -85,7 +85,7 @@
                                     <td class="px-4 py-3 text-gray-600">{{ $item->email }}</td>
                                     <td class="px-4 py-3">
                                         <span class="px-2.5 py-1 rounded bg-gray-100 text-gray-800 text-xs font-medium">
-                                            {{ $item->role?->name ?? '-' }}
+                                            {{ ($item->role?->name === 'Client' ? 'Klien' : $item->role?->name) ?? '-' }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-gray-500">
@@ -95,16 +95,16 @@
                                         <div class="flex items-center gap-2">
                                             <a href="{{ route('admin.users.show', $item) }}"
                                                class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200">
-                                                Detail
+                                                Rincian
                                             </a>
                                             <a href="{{ route('admin.users.edit', $item) }}"
                                                class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">
-                                                Edit
+                                                Ubah
                                             </a>
                                             @if ($item->id !== auth()->id())
                                                 <form method="POST" action="{{ route('admin.users.destroy', $item) }}"
                                                       data-confirm-title="Hapus Data Pengguna"
-                                                      data-confirm-detail="{{ $item->name }} ({{ $item->email }} - {{ $item->role?->name ?? '-' }})"
+                                                      data-confirm-detail="{{ $item->name }} ({{ $item->email }} - {{ ($item->role?->name === 'Client' ? 'Klien' : $item->role?->name) ?? '-' }})"
                                                       data-confirm-message="Akun pengguna ini akan dihapus secara permanen dan tidak dapat lagi masuk ke sistem.">
                                                     @csrf
                                                     @method('DELETE')
@@ -136,4 +136,3 @@
         </div>
     </div>
 </x-app-layout>
-

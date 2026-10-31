@@ -33,10 +33,10 @@
 
         <div>
             <div class="flex items-center justify-between mb-1.5">
-                <label for="password" class="auth-label" style="margin-bottom:0">Password</label>
+                <label for="password" class="auth-label" style="margin-bottom:0">Kata Sandi</label>
                 @if (Route::has('password.request'))
                     <a href="{{ route('password.request') }}" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                        Lupa password?
+                        Lupa kata sandi?
                     </a>
                 @endif
             </div>

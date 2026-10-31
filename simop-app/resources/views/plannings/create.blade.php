@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Buat Planning | SIMOP')
-@section('page-title', 'Buat Planning')
+@section('title', 'Buat Perencanaan | SIMOP')
+@section('page-title', 'Buat Perencanaan')
 
 @section('content')
     @php
@@ -11,9 +11,8 @@
                 'project_number' => $project->project_number,
                 'title' => $project->title,
                 'status' => $project->status,
-                'work_estimate' => $project->workEstimate?->estimate_number ?? '-',
-                'order_number' => $project->workEstimate?->order?->order_number ?? '-',
-                'company_name' => $project->workEstimate?->order?->company_name ?? '-',
+                'order_number' => $project->order?->order_number ?? '-',
+                'company_name' => $project->order?->company_name ?? '-',
                 'officer' => $project->assignedUser?->name ?? 'Belum ditentukan',
                 'start_date' => $project->start_date?->format('d/m/Y') ?? '-',
                 'deadline' => $project->deadline?->format('d/m/Y') ?? '-',
@@ -29,15 +28,15 @@
                 href="{{ route('plannings.index') }}"
                 class="text-sm font-semibold text-blue-600 hover:text-blue-800"
             >
-                &larr; Kembali ke Planning
+                &larr; Kembali ke Perencanaan
             </a>
 
             <h2 class="mt-3 text-2xl font-bold text-slate-900">
-                Buat Planning Baru
+                Buat Perencanaan Baru
             </h2>
 
             <p class="mt-1 text-sm leading-6 text-slate-500">
-                Buat rencana pekerjaan untuk Project yang belum memiliki Planning.
+                Buat rencana pekerjaan untuk proyek yang belum memiliki perencanaan.
             </p>
         </div>
 
@@ -64,18 +63,18 @@
 
                     <div>
                         <h3 class="font-semibold text-amber-800">
-                            Belum Ada Project yang Tersedia
+                            Belum Ada Proyek yang Tersedia
                         </h3>
 
                         <p class="mt-1 text-sm leading-6 text-amber-700">
-                            Planning hanya dapat dibuat dari Project yang belum memiliki Planning dan tidak berstatus Selesai atau Dibatalkan.
+                            Perencanaan hanya dapat dibuat dari proyek yang belum memiliki perencanaan dan tidak berstatus Selesai atau Dibatalkan.
                         </p>
 
                         <a
                             href="{{ route('projects.index') }}"
                             class="mt-3 inline-flex text-sm font-semibold text-amber-800 underline hover:text-amber-900"
                         >
-                            Lihat Project
+                            Lihat Proyek
                         </a>
                     </div>
                 </div>
@@ -91,11 +90,11 @@
                 <div class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div>
                         <h3 class="text-lg font-bold text-slate-900">
-                            Pilih Project
+                            Pilih Proyek
                         </h3>
 
                         <p class="mt-1 text-sm text-slate-500">
-                            Planning akan terhubung langsung dengan Project yang dipilih.
+                            Perencanaan akan terhubung langsung dengan proyek yang dipilih.
                         </p>
                     </div>
 
@@ -104,7 +103,7 @@
                             for="project_id"
                             class="mb-2 block text-sm font-semibold text-slate-700"
                         >
-                            Project <span class="text-red-500">*</span>
+                            Proyek <span class="text-red-500">*</span>
                         </label>
 
                         <select
@@ -114,7 +113,7 @@
                             class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                         >
                             <option value="">
-                                -- Pilih Project --
+                                -- Pilih Proyek --
                             </option>
 
                             @foreach ($projects as $project)
@@ -129,7 +128,7 @@
                         </select>
 
                         <p class="mt-2 text-xs text-slate-500">
-                            Hanya Project aktif yang belum memiliki Planning yang ditampilkan.
+                            Hanya proyek aktif yang belum memiliki perencanaan yang ditampilkan.
                         </p>
 
                         @error('project_id')
@@ -171,20 +170,7 @@
                         <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             <div>
                                 <p class="text-xs font-medium uppercase tracking-wide text-blue-600">
-                                    Work Estimate
-                                </p>
-
-                                <p
-                                    id="info-work-estimate"
-                                    class="mt-1 text-sm font-semibold text-blue-950"
-                                >
-                                    -
-                                </p>
-                            </div>
-
-                            <div>
-                                <p class="text-xs font-medium uppercase tracking-wide text-blue-600">
-                                    Order
+                                    Pesanan
                                 </p>
 
                                 <p
@@ -197,7 +183,7 @@
 
                             <div>
                                 <p class="text-xs font-medium uppercase tracking-wide text-blue-600">
-                                    Client / Perusahaan
+                                    Klien / Perusahaan
                                 </p>
 
                                 <p
@@ -223,7 +209,7 @@
 
                             <div>
                                 <p class="text-xs font-medium uppercase tracking-wide text-blue-600">
-                                    Tanggal Mulai Project
+                                    Tanggal Mulai Proyek
                                 </p>
 
                                 <p
@@ -236,7 +222,7 @@
 
                             <div>
                                 <p class="text-xs font-medium uppercase tracking-wide text-blue-600">
-                                    Deadline Project
+                                    Batas Waktu Proyek
                                 </p>
 
                                 <p
@@ -257,7 +243,7 @@
                         </h3>
 
                         <p class="mt-1 text-sm text-slate-500">
-                            Tentukan detail dan jadwal pelaksanaan Planning.
+                            Tentukan detail dan jadwal pelaksanaan perencanaan.
                         </p>
                     </div>
 
@@ -266,7 +252,7 @@
                             for="title"
                             class="mb-2 block text-sm font-semibold text-slate-700"
                         >
-                            Judul Planning <span class="text-red-500">*</span>
+                            Judul Perencanaan <span class="text-red-500">*</span>
                         </label>
 
                         <input
@@ -280,7 +266,7 @@
                         >
 
                         <p class="mt-2 text-xs text-slate-500">
-                            Judul akan mengikuti nama Project saat Project dipilih dan tetap dapat diubah.
+                            Judul akan mengikuti nama proyek saat proyek dipilih dan tetap dapat diubah.
                         </p>
 
                         @error('title')
@@ -391,11 +377,11 @@
 
                 <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
                     <p class="text-sm font-semibold text-blue-800">
-                        Status Awal Planning
+                        Status Awal Perencanaan
                     </p>
 
                     <p class="mt-1 text-sm leading-6 text-blue-700">
-                        Planning baru akan dibuat dengan status Draft. Setelah dibuat, proses dilanjutkan secara berurutan dari Draft, Siap, Dalam Proses, hingga Selesai.
+                        Perencanaan baru akan dibuat dengan status Draf. Setelah dibuat, proses dilanjutkan secara berurutan dari Draf, Siap, Dalam Proses, hingga Selesai.
                     </p>
                 </div>
 
@@ -411,7 +397,7 @@
                         type="submit"
                         class="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
                     >
-                        Buat Planning
+                        Buat Perencanaan
                     </button>
                 </div>
             </form>
@@ -431,7 +417,6 @@
                 const projectTitle = document.getElementById('info-project-title');
                 const projectNumber = document.getElementById('info-project-number');
                 const projectStatus = document.getElementById('info-status');
-                const workEstimate = document.getElementById('info-work-estimate');
                 const order = document.getElementById('info-order');
                 const company = document.getElementById('info-company');
                 const officer = document.getElementById('info-officer');
@@ -446,11 +431,11 @@
 
                 function formatStatus(status) {
                     if (status === 'planning') {
-                        return 'Planning';
+                        return 'Perencanaan';
                     }
 
-                    if (status === 'ongoing') {
-                        return 'Dalam Pengerjaan';
+                    if (status === 'ongoing' || status === 'in_progress') {
+                        return 'Sedang Dikerjakan';
                     }
 
                     return status
@@ -471,7 +456,6 @@
                     projectTitle.textContent = selected.title;
                     projectNumber.textContent = selected.project_number;
                     projectStatus.textContent = formatStatus(selected.status);
-                    workEstimate.textContent = selected.work_estimate;
                     order.textContent = selected.order_number;
                     company.textContent = selected.company_name;
                     officer.textContent = selected.officer;

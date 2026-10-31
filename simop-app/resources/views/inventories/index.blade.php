@@ -71,7 +71,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
                         <h3 class="text-base font-semibold text-gray-900 mb-1">
-                            Input Pemakaian Barang Proyek
+                            Catat Pemakaian Barang Proyek
                         </h3>
                         <p class="text-xs text-gray-500 mb-4">
                             Pilih proyek dan jumlah barang yang dibawa. Stok otomatis kembali saat proyek selesai.
@@ -85,7 +85,7 @@
                                     <option value="">-- Pilih Proyek --</option>
                                     @foreach ($activeProjects as $proj)
                                         <option value="{{ $proj->id }}">
-                                            {{ $proj->project_number }} - {{ $proj->title }} ({{ $proj->workEstimate?->order?->event_name ?? '-' }})
+                                            {{ $proj->project_number }} - {{ $proj->title }} ({{ $proj->order?->event_name ?? '-' }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -212,7 +212,7 @@
                                                         <a href="{{ route('projects.show', $usage->project) }}" class="text-blue-600 hover:underline font-medium">
                                                             {{ $usage->project?->project_number }}
                                                         </a>
-                                                        ({{ $usage->project?->workEstimate?->order?->event_name ?? $usage->project?->title }}):
+                                                        ({{ $usage->project?->order?->event_name ?? $usage->project?->title }}):
                                                         <strong>{{ $usage->quantity }} {{ $item->unit }}</strong>
                                                     </div>
                                                 @endforeach
@@ -267,14 +267,14 @@
                     Riwayat Pemakaian & Pengembalian Barang Proyek
                 </h3>
                 <p class="text-xs text-gray-500 mb-4">
-                    Daftar barang yang dibawa ke proyek dan status pengembaliannya ke stok awal setelah event selesai.
+                    Daftar barang yang dibawa ke proyek dan status pengembaliannya ke stok awal setelah kegiatan selesai.
                 </p>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full border border-gray-200 divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Proyek & Event</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Proyek & Kegiatan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Barang</th>
                                 <th class="px-4 py-3 text-center font-semibold text-gray-600">Stok Awal</th>
                                 <th class="px-4 py-3 text-center font-semibold text-gray-600">Jumlah Dibawa</th>
@@ -292,7 +292,7 @@
                                         <a href="{{ route('projects.show', $alloc->project) }}" class="font-medium text-blue-600 hover:underline">
                                             {{ $alloc->project?->project_number }}
                                         </a>
-                                        <p class="text-xs text-gray-600">{{ $alloc->project?->workEstimate?->order?->event_name ?? $alloc->project?->title }}</p>
+                                        <p class="text-xs text-gray-600">{{ $alloc->project?->order?->event_name ?? $alloc->project?->title }}</p>
                                     </td>
                                     <td class="px-4 py-3 font-medium text-gray-900">
                                         {{ $alloc->item?->name }}

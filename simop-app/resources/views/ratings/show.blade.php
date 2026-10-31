@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Detail Rating & Ulasan
+                Detail Penilaian & Ulasan
             </h2>
 
             <a href="{{ route('ratings.index') }}"
@@ -23,23 +23,23 @@
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div>
-                        <p class="text-gray-500">Nomor Project</p>
+                        <p class="text-gray-500">Nomor Proyek</p>
                         <p class="font-semibold text-gray-900">
                             {{ $rating->project?->project_number ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Judul Project</p>
+                        <p class="text-gray-500">Judul Proyek</p>
                         <p class="font-semibold text-gray-900">
                             {{ $rating->project?->title ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Client</p>
+                        <p class="text-gray-500">Klien</p>
                         <p class="font-semibold text-gray-900">
-                            {{ $rating->project?->workEstimate?->order?->company_name ?? '-' }}
+                            {{ $rating->project?->order?->company_name ?? '-' }}
                         </p>
                     </div>
 
@@ -51,7 +51,7 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Rating</p>
+                        <p class="text-gray-500">Penilaian</p>
                         <p class="font-semibold text-amber-600 text-lg">
                             {{ str_repeat('★', (int) $rating->rating) }}{{ str_repeat('☆', 5 - (int) $rating->rating) }}
                             ({{ $rating->rating }}/5)

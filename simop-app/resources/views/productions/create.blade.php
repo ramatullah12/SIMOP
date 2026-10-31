@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Buat Production Baru
+            Buat Produksi & Instalasi Baru
         </h2>
     </x-slot>
 
@@ -13,11 +13,11 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Planning Teknis
+                            Perencanaan Teknis
                         </label>
                         <select name="planning_id" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">-- Pilih Planning --</option>
+                            <option value="">-- Pilih Perencanaan --</option>
                             @foreach ($plannings as $planning)
                                 <option value="{{ $planning->id }}"
                                     @selected(old('planning_id', $selectedPlanning?->id) == $planning->id)>
@@ -32,7 +32,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Judul Production
+                            Judul Produksi & Instalasi
                         </label>
                         <input type="text"
                                name="title"
@@ -70,10 +70,10 @@
                             </label>
                             <select name="status" required
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="pending" @selected(old('status', 'pending') === 'pending')>Pending</option>
-                                <option value="in_progress" @selected(old('status') === 'in_progress')>In Progress</option>
-                                <option value="completed" @selected(old('status') === 'completed')>Completed</option>
-                                <option value="cancelled" @selected(old('status') === 'cancelled')>Cancelled</option>
+                                <option value="pending" @selected(old('status', 'pending') === 'pending')>Menunggu</option>
+                                <option value="in_progress" @selected(old('status') === 'in_progress')>Sedang Dikerjakan</option>
+                                <option value="completed" @selected(old('status') === 'completed')>Selesai</option>
+                                <option value="cancelled" @selected(old('status') === 'cancelled')>Dibatalkan</option>
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -110,7 +110,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Progress (%)
+                                Kemajuan (%)
                             </label>
                             <input type="number"
                                    name="progress"
@@ -132,7 +132,7 @@
                         <textarea name="description"
                                   rows="4"
                                   required
-                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description', $selectedPlanning?->work_scope) }}</textarea>
+                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description', $selectedPlanning?->description) }}</textarea>
                         @error('description')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -151,13 +151,13 @@
                     </div>
 
                     <div class="rounded-lg bg-blue-50 border border-blue-200 p-4 text-xs text-blue-800">
-                        Saat progress produksi mencapai 100% (Completed), Project otomatis selesai dan seluruh barang yang dibawa ke proyek otomatis kembali ke stok awal.
+                        Saat kemajuan produksi mencapai 100% (Selesai), proyek otomatis selesai dan seluruh barang yang dibawa ke proyek otomatis kembali ke stok awal.
                     </div>
 
                     <div class="flex items-center gap-3">
                         <button type="submit"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                            Simpan Production
+                            Simpan Produksi
                         </button>
 
                         <a href="{{ route('productions.index') }}"

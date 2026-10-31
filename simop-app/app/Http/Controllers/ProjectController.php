@@ -101,7 +101,7 @@ class ProjectController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'order_id' => 'Order ini sudah memiliki Project.',
+                    'order_id' => 'Pesanan ini sudah memiliki proyek.',
                 ]);
         }
 
@@ -121,7 +121,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.show', $project)
-            ->with('success', 'Project berhasil dibuat.');
+            ->with('success', 'Proyek berhasil dibuat.');
     }
 
     public function show(Project $project): View
@@ -211,7 +211,7 @@ class ProjectController extends Controller
             }
         }
 
-        $msg = 'Project berhasil diperbarui.';
+        $msg = 'Data proyek berhasil diperbarui.';
         if ($returnedCount > 0) {
             $msg .= ' Semua stok barang yang dibawa ke proyek ini otomatis dikembalikan ke stok awal.';
         }
@@ -233,7 +233,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.index')
-            ->with('success', 'Project berhasil dihapus dan stok barang telah dikembalikan.');
+            ->with('success', 'Proyek berhasil dihapus dan stok barang telah dikembalikan.');
     }
 
     private function generateProjectNumber(): string

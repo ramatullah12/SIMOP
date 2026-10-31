@@ -13,7 +13,7 @@
             @if (auth()->user()?->role?->slug === 'admin')
                 <a href="{{ route('productions.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                    + Buat Production
+                    + Buat Produksi
                 </a>
             @endif
         </div>
@@ -32,30 +32,39 @@
                     <table class="min-w-full border border-gray-200 divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Production</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Produksi</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Judul</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Project & Event</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Proyek & Kegiatan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Progress</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Kemajuan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Status</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($productions as $production)
+                                @php
+                                    $statusLabel = match ($production->status) {
+                                        'pending' => 'Menunggu',
+                                        'in_progress' => 'Sedang Dikerjakan',
+                                        'completed' => 'Selesai',
+                                        'cancelled' => 'Dibatalkan',
+                                        default => strtoupper(str_replace('_', ' ', $production->status)),
+                                    };
+                                @endphp
                                 <tr>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ $production->production_number }}</td>
                                     <td class="px-4 py-3">{{ $production->title }}</td>
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-gray-900">{{ $production->planning?->project?->project_number ?? '-' }}</p>
-                                        <p class="text-xs text-gray-500">{{ $production->planning?->project?->workEstimate?->order?->event_name ?? '-' }}</p>
+                                        <p class="text-xs text-gray-500">{{ $production->planning?->project?->order?->event_name ?? '-' }}</p>
                                     </td>
                                     <td class="px-4 py-3">{{ $production->assignedUser?->name ?? '-' }}</td>
                                     <td class="px-4 py-3 font-semibold">{{ $production->progress }}%</td>
                                     <td class="px-4 py-3">
                                         <span class="px-2.5 py-1 rounded-full text-xs font-semibold
                                             {{ $production->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800' }}">
-                                            {{ strtoupper(str_replace('_', ' ', $production->status)) }}
+                                            {{ $statusLabel }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
@@ -67,7 +76,7 @@
                                             @if (auth()->user()?->role?->slug === 'petugas-lapangan')
                                                 <a href="{{ route('field-documentations.create', ['project_id' => $production->planning?->project_id]) }}"
                                                    class="text-emerald-600 hover:underline text-xs font-semibold">
-                                                    + Input Dokumentasi
+                                                    + Unggah Dokumentasi
                                                 </a>
                                             @endif
                                         </div>
@@ -76,7 +85,7 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada data production.
+                                        Belum ada data produksi & instalasi.
                                     </td>
                                 </tr>
                             @endforelse

@@ -25,7 +25,6 @@ class SurveyController extends Controller
                 });
             })
             ->when($role === 'petugas-lapangan', function ($query) use ($user) {
-                // Petugas Lapangan hanya menerima Surat Perintah Survey setelah di-approve oleh Direktur
                 $query->where('assigned_to', $user->id)
                     ->whereNotNull('approved_at')
                     ->whereIn('status', ['dijadwalkan', 'berlangsung', 'selesai']);
@@ -100,10 +99,9 @@ class SurveyController extends Controller
 
             return redirect()
                 ->route('surveys.show', $survey)
-                ->with('success', 'Pengajuan Survey berhasil dikirim ke Admin untuk diteruskan ke Direktur.');
+                ->with('success', 'Pengajuan survei berhasil dikirim ke Admin untuk diteruskan ke Direktur.');
         }
 
-        // Admin membuat & langsung meneruskan ke Direktur untuk Approval Surat Perintah Survey
         $validated = $request->validate([
             'order_id' => ['required', 'exists:orders,id'],
             'assigned_to' => ['required', 'exists:users,id'],
@@ -129,7 +127,7 @@ class SurveyController extends Controller
 
         return redirect()
             ->route('surveys.show', $survey)
-            ->with('success', 'Pengajuan Survey telah dikirim ke Direktur. Menunggu approval Direktur untuk menerbitkan Surat Perintah Survey ke Petugas Lapangan.');
+            ->with('success', 'Pengajuan survei telah dikirim ke Direktur. Menunggu persetujuan Direktur untuk menerbitkan Surat Perintah Survei ke Petugas Lapangan.');
     }
 
     public function show(Survey $survey): View
@@ -147,7 +145,7 @@ class SurveyController extends Controller
             abort_unless(
                 $survey->assigned_to === $user->id && $survey->approved_at !== null,
                 403,
-                'Surat Perintah Survey belum diterbitkan atau belum disetujui Direktur.'
+                'Surat Perintah Survei belum diterbitkan atau belum disetujui Direktur.'
             );
         }
 
@@ -174,7 +172,7 @@ class SurveyController extends Controller
             abort_unless(
                 $survey->assigned_to === $user->id && $survey->approved_at !== null,
                 403,
-                'Surat Perintah Survey belum disetujui Direktur.'
+                'Surat Perintah Survei belum disetujui Direktur.'
             );
         }
 
@@ -200,7 +198,7 @@ class SurveyController extends Controller
             abort_unless(
                 $survey->assigned_to === $user->id && $survey->approved_at !== null,
                 403,
-                'Surat Perintah Survey belum disetujui Direktur.'
+                'Surat Perintah Survei belum disetujui Direktur.'
             );
 
             $validated = $request->validate([
@@ -208,7 +206,7 @@ class SurveyController extends Controller
                 'findings' => ['required_if:status,selesai', 'nullable', 'string'],
                 'notes' => ['nullable', 'string'],
             ], [
-                'findings.required_if' => 'Hasil temuan survey lapangan wajib diisi saat menyelesaikan survey.',
+                'findings.required_if' => 'Hasil temuan survei lapangan wajib diisi saat menyelesaikan survei.',
             ]);
 
             $survey->update($validated);
@@ -221,10 +219,9 @@ class SurveyController extends Controller
 
             return redirect()
                 ->route('surveys.show', $survey)
-                ->with('success', 'Laporan hasil pelaksanaan Surat Perintah Survey berhasil diperbarui oleh Petugas Lapangan.');
+                ->with('success', 'Laporan hasil pelaksanaan Surat Perintah Survei berhasil diperbarui oleh Petugas Lapangan.');
         }
 
-        // Admin memproses pengajuan survey & memilih Petugas Lapangan untuk dikirim ke Direktur
         $validated = $request->validate([
             'order_id' => ['required', 'exists:orders,id'],
             'assigned_to' => ['required', 'exists:users,id'],
@@ -235,7 +232,6 @@ class SurveyController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        // Jika belum diapprove direktur, maka otomatis masuk ke menunggu_persetujuan_direktur
         $nextStatus = $survey->approved_at
             ? ($validated['status'] ?? $survey->status)
             : 'menunggu_persetujuan_direktur';
@@ -260,13 +256,10 @@ class SurveyController extends Controller
         return redirect()
             ->route('surveys.show', $survey)
             ->with('success', $survey->approved_at
-                ? 'Data survey berhasil diperbarui oleh Admin.'
-                : 'Pengajuan survey berhasil diteruskan oleh Admin ke Direktur untuk persetujuan Surat Perintah Survey.');
+                ? 'Data survei berhasil diperbarui oleh Admin.'
+                : 'Pengajuan survei berhasil diteruskan oleh Admin ke Direktur untuk persetujuan Surat Perintah Survei.');
     }
 
-    /**
-     * Admin meneruskan pengajuan survey dari Client ke Direktur
-     */
     public function submitToDirektur(Request $request, Survey $survey): RedirectResponse
     {
         abort_unless(auth()->user()?->role?->slug === 'admin', 403);
@@ -278,7 +271,7 @@ class SurveyController extends Controller
             'notes' => ['nullable', 'string'],
         ], [
             'assigned_to.required' => 'Pilih Petugas Lapangan yang akan ditugaskan.',
-            'scheduled_at.required' => 'Tentukan jadwal pelaksanaan survey.',
+            'scheduled_at.required' => 'Tentukan jadwal pelaksanaan survei.',
         ]);
 
         $survey->update([
@@ -297,19 +290,16 @@ class SurveyController extends Controller
 
         return redirect()
             ->route('surveys.show', $survey)
-            ->with('success', 'Pengajuan Survey berhasil dikirim ke Direktur. Menunggu Direktur menyetujui Surat Perintah Survey (SPS).');
+            ->with('success', 'Pengajuan survei berhasil dikirim ke Direktur. Menunggu Direktur menyetujui Surat Perintah Survei (SPS).');
     }
 
-    /**
-     * Direktur menyetujui pengajuan survey -> Menerbitkan Surat Perintah Survey (SPS) ke Petugas Lapangan
-     */
     public function approveByDirektur(Request $request, Survey $survey): RedirectResponse
     {
         $user = auth()->user();
         abort_unless($user?->role?->slug === 'direktur', 403);
 
         if (! $survey->assigned_to) {
-            return back()->with('error', 'Admin belum memilih Petugas Lapangan untuk Surat Perintah Survey ini.');
+            return back()->with('error', 'Admin belum memilih Petugas Lapangan untuk Surat Perintah Survei ini.');
         }
 
         $spsNumber = $survey->sps_number ?: ('SPS-' . now()->format('Ymd') . '-' . str_pad((string) $survey->id, 4, '0', STR_PAD_LEFT));
@@ -329,12 +319,9 @@ class SurveyController extends Controller
 
         return redirect()
             ->route('surveys.show', $survey)
-            ->with('success', "Pengajuan Survey disetujui Direktur! Surat Perintah Survey ({$spsNumber}) resmi diterbitkan dan dikirim ke Petugas Lapangan ({$survey->assignedUser?->name}).");
+            ->with('success', "Pengajuan survei disetujui Direktur! Surat Perintah Survei ({$spsNumber}) resmi diterbitkan dan dikirim ke Petugas Lapangan ({$survey->assignedUser?->name}).");
     }
 
-    /**
-     * Direktur menolak pengajuan survey
-     */
     public function rejectByDirektur(Request $request, Survey $survey): RedirectResponse
     {
         $user = auth()->user();
@@ -343,7 +330,7 @@ class SurveyController extends Controller
         $validated = $request->validate([
             'rejection_notes' => ['required', 'string'],
         ], [
-            'rejection_notes.required' => 'Alasan penolakan / revisi wajib diisi.',
+            'rejection_notes.required' => 'Alasan penolakan atau revisi wajib diisi.',
         ]);
 
         $survey->update([
@@ -353,7 +340,7 @@ class SurveyController extends Controller
 
         return redirect()
             ->route('surveys.show', $survey)
-            ->with('success', 'Pengajuan Survey dikembalikan ke Admin dengan catatan revisi Direktur.');
+            ->with('success', 'Pengajuan survei dikembalikan ke Admin dengan catatan revisi Direktur.');
     }
 
     public function destroy(Survey $survey): RedirectResponse
@@ -367,6 +354,6 @@ class SurveyController extends Controller
 
         return redirect()
             ->route('surveys.index')
-            ->with('success', 'Data survey berhasil dihapus.');
+            ->with('success', 'Data survei berhasil dihapus.');
     }
 }

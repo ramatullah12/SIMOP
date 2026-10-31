@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Unggah Dokumen Umum Project
+            Unggah Dokumen Umum Proyek
         </h2>
     </x-slot>
 
@@ -12,14 +12,14 @@
                     @csrf
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Proyek</label>
                         <select name="project_id" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">-- Pilih Project --</option>
+                            <option value="">-- Pilih Proyek --</option>
                             @foreach ($projects as $project)
                                 <option value="{{ $project->id }}"
                                     @selected(old('project_id', $selectedProject?->id) == $project->id)>
-                                    {{ $project->project_number }} - {{ $project->title }} ({{ $project->workEstimate?->order?->company_name ?? '-' }})
+                                    {{ $project->project_number }} - {{ $project->title }} ({{ $project->order?->company_name ?? '-' }})
                                 </option>
                             @endforeach
                         </select>
@@ -32,7 +32,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Judul Dokumen</label>
                             <input type="text" name="title" value="{{ old('title') }}" required
-                                   placeholder="Contoh: Layout Teknis Area Event"
+                                   placeholder="Contoh: Tata Letak Teknis Area Kegiatan"
                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             @error('title')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -44,7 +44,7 @@
                             <select name="document_type" required
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="contract" @selected(old('document_type') === 'contract')>SPK / Kontrak Kerja</option>
-                                <option value="technical_drawing" @selected(old('document_type') === 'technical_drawing')>Gambar Teknis / Layout</option>
+                                <option value="technical_drawing" @selected(old('document_type') === 'technical_drawing')>Gambar Teknis / Tata Letak</option>
                                 <option value="other" @selected(old('document_type') === 'other')>Dokumen Pendukung Lainnya</option>
                             </select>
                             @error('document_type')
@@ -54,7 +54,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">File Dokumen</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Berkas Dokumen</label>
                         <input type="file" name="file" required
                                class="w-full rounded-lg border border-gray-300 p-2 text-sm text-gray-700">
                         <p class="mt-1 text-xs text-gray-500">Format: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, ZIP (Maks. 10MB)</p>

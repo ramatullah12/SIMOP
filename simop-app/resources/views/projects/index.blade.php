@@ -3,17 +3,17 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Daftar Project Operasional
+                    Daftar Proyek Operasional
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Kelola project, pemantauan progress, dan alokasi stok barang proyek.
+                    Kelola proyek, pemantauan kemajuan, dan alokasi stok barang proyek.
                 </p>
             </div>
 
             @if (auth()->user()?->role?->slug === 'admin')
                 <a href="{{ route('projects.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                    + Buat Project
+                    + Buat Proyek
                 </a>
             @endif
         </div>
@@ -32,12 +32,12 @@
                     <table class="min-w-full border border-gray-200 divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Project</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Judul & Event</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Client</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Proyek</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Judul & Kegiatan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Klien</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Stok Barang Dibawa</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Progress & Status</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Kemajuan & Status</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>

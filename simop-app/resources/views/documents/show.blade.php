@@ -8,32 +8,30 @@
         $role = auth()->user()?->role?->slug;
 
         $project = $document->project;
-        $workEstimate = $project?->workEstimate;
-        $order = $workEstimate?->order;
+        $order = $project?->order;
 
         $typeLabels = [
+            'contract' => 'SPK / Kontrak Kerja',
+            'technical_drawing' => 'Gambar Teknis / Tata Letak',
             'po_spk' => 'PO / SPK',
-            'survey' => 'Survey',
-            'work_estimate' => 'Work Estimate',
+            'survey' => 'Survei',
             'production' => 'Produksi & Instalasi',
-            'bapp' => 'BAPP',
-            'invoice' => 'Invoice',
             'other' => 'Lainnya',
         ];
 
         $typeColors = [
+            'contract' => 'bg-purple-100 text-purple-700',
+            'technical_drawing' => 'bg-cyan-100 text-cyan-700',
             'po_spk' => 'bg-purple-100 text-purple-700',
             'survey' => 'bg-cyan-100 text-cyan-700',
-            'work_estimate' => 'bg-amber-100 text-amber-700',
             'production' => 'bg-blue-100 text-blue-700',
-            'bapp' => 'bg-green-100 text-green-700',
-            'invoice' => 'bg-indigo-100 text-indigo-700',
             'other' => 'bg-slate-100 text-slate-700',
         ];
 
         $projectStatusLabels = [
-            'planning' => 'Planning',
-            'ongoing' => 'Berjalan',
+            'planning' => 'Perencanaan',
+            'ongoing' => 'Sedang Dikerjakan',
+            'in_progress' => 'Sedang Dikerjakan',
             'completed' => 'Selesai',
             'cancelled' => 'Dibatalkan',
         ];
@@ -41,6 +39,7 @@
         $projectStatusColors = [
             'planning' => 'bg-slate-100 text-slate-700',
             'ongoing' => 'bg-blue-100 text-blue-700',
+            'in_progress' => 'bg-blue-100 text-blue-700',
             'completed' => 'bg-green-100 text-green-700',
             'cancelled' => 'bg-red-100 text-red-700',
         ];
@@ -107,7 +106,7 @@
                 href="{{ route('documents.index') }}"
                 class="text-sm font-semibold text-blue-600 hover:text-blue-800"
             >
-                &larr; Kembali ke Dokumen
+                &larr; Kembali ke Dokumen Umum
             </a>
         </div>
 
@@ -129,7 +128,7 @@
                     </h2>
 
                     <p class="mt-2 text-sm text-slate-500">
-                        Diupload oleh
+                        Diunggah oleh
                         <span class="font-semibold text-slate-700">
                             {{ $document->uploader?->name ?? '-' }}
                         </span>
@@ -140,7 +139,7 @@
                     href="{{ route('documents.download', $document) }}"
                     class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                 >
-                    Download Dokumen
+                    Unduh Dokumen
                 </a>
             </div>
         </div>
@@ -148,21 +147,21 @@
         @if ($role === 'petugas-lapangan')
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <p class="text-sm font-semibold text-blue-800">
-                    Dokumen Project Anda
+                    Dokumen Proyek Anda
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
-                    Dokumen ini berasal dari Project yang ditugaskan kepada Anda. Anda dapat melihat detail dan mengunduh file.
+                    Dokumen ini berasal dari proyek yang ditugaskan kepada Anda. Anda dapat melihat detail dan mengunduh berkas.
                 </p>
             </div>
         @elseif ($role === 'client')
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <p class="text-sm font-semibold text-blue-800">
-                    Dokumen Project
+                    Dokumen Proyek
                 </p>
 
                 <p class="mt-1 text-sm leading-6 text-blue-700">
-                    Dokumen ini telah diberikan akses kepada Anda dan dapat diunduh melalui tombol Download Dokumen.
+                    Dokumen ini telah diberikan akses kepada Anda dan dapat diunduh melalui tombol Unduh Dokumen.
                 </p>
             </div>
         @endif
@@ -208,7 +207,7 @@
 
                     <div>
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Nama File
+                            Nama Berkas
                         </dt>
 
                         <dd class="mt-1 break-all text-sm font-medium text-slate-800">
@@ -219,7 +218,7 @@
                     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Ukuran File
+                                Ukuran Berkas
                             </dt>
 
                             <dd class="mt-1 text-sm font-medium text-slate-800">
@@ -229,7 +228,7 @@
 
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Format File
+                                Format Berkas
                             </dt>
 
                             <dd class="mt-1 text-sm font-medium text-slate-800">
@@ -240,7 +239,7 @@
 
                     <div>
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Diupload Oleh
+                            Diunggah Oleh
                         </dt>
 
                         <dd class="mt-1 text-sm font-medium text-slate-800">
@@ -250,7 +249,7 @@
 
                     <div>
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Tanggal Upload
+                            Tanggal Unggah
                         </dt>
 
                         <dd class="mt-1 text-sm font-medium text-slate-800">
@@ -260,11 +259,11 @@
 
                     <div>
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Deskripsi
+                            Catatan / Deskripsi
                         </dt>
 
                         <dd class="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">
-                            {{ $document->description ?: 'Tidak ada deskripsi.' }}
+                            {{ $document->notes ?: ($document->description ?: 'Tidak ada catatan.') }}
                         </dd>
                     </div>
                 </dl>
@@ -273,13 +272,13 @@
             <div class="space-y-6">
                 <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 class="text-lg font-bold text-slate-900">
-                        Informasi Project
+                        Informasi Proyek
                     </h3>
 
                     <div class="mt-5 space-y-5">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Project
+                                Proyek
                             </p>
 
                             @if ($project)
@@ -306,7 +305,7 @@
 
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Order
+                                Pesanan
                             </p>
 
                             <p class="mt-1 text-sm font-medium text-slate-800">
@@ -315,16 +314,6 @@
                         </div>
 
                         @if ($role !== 'client')
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                    Work Estimate
-                                </p>
-
-                                <p class="mt-1 text-sm font-medium text-slate-800">
-                                    {{ $workEstimate?->estimate_number ?? '-' }}
-                                </p>
-                            </div>
-
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
                                     Petugas Lapangan
@@ -338,7 +327,7 @@
 
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Status Project
+                                Status Proyek
                             </p>
 
                             <div class="mt-2">
@@ -351,7 +340,7 @@
                         <div>
                             <div class="flex items-center justify-between gap-4">
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                    Progress Project
+                                    Kemajuan Proyek
                                 </p>
 
                                 <span class="text-sm font-bold text-blue-600">
@@ -378,11 +367,11 @@
                         @if ($document->client_access)
                             <div class="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
                                 <p class="font-semibold text-green-800">
-                                    Dapat Diakses Client
+                                    Dapat Diakses Klien
                                 </p>
 
                                 <p class="mt-1 text-sm leading-6 text-green-700">
-                                    Dokumen ini dapat dilihat dan diunduh oleh Client pemilik Project.
+                                    Dokumen ini dapat dilihat dan diunduh oleh Klien pemilik proyek.
                                 </p>
                             </div>
                         @else
@@ -392,7 +381,7 @@
                                 </p>
 
                                 <p class="mt-1 text-sm leading-6 text-slate-600">
-                                    Dokumen ini tidak ditampilkan kepada Client.
+                                    Dokumen ini tidak ditampilkan kepada Klien.
                                 </p>
                             </div>
                         @endif
@@ -404,14 +393,16 @@
                         </h3>
 
                         <p class="mt-2 text-sm leading-6 text-slate-500">
-                            Dokumen akan dihapus dari SIMOP dan file akan dihapus dari penyimpanan. Tindakan ini tidak dapat dibatalkan.
+                            Dokumen akan dihapus dari SIMOP dan berkas akan dihapus dari penyimpanan. Tindakan ini tidak dapat dibatalkan.
                         </p>
 
                         <form
                             method="POST"
                             action="{{ route('documents.destroy', $document) }}"
                             class="mt-5"
-                            onsubmit="return confirm('Yakin ingin menghapus dokumen ini? File juga akan dihapus dari penyimpanan.')"
+                            data-confirm-title="Hapus Dokumen Proyek"
+                            data-confirm-detail="{{ $document->document_number }} - {{ $document->title }}"
+                            data-confirm-message="Dokumen ini beserta berkasnya akan dihapus secara permanen dari penyimpanan."
                         >
                             @csrf
                             @method('DELETE')

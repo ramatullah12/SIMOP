@@ -65,17 +65,15 @@ class VendorController extends Controller
         ]);
 
         $vendor = DB::transaction(function () use ($validated) {
-            $vendor = Vendor::create([
+            return Vendor::create([
                 ...$validated,
                 'vendor_code' => $this->generateVendorCode(),
             ]);
-
-            return $vendor;
         });
 
         return redirect()
             ->route('admin.vendors.show', $vendor)
-            ->with('success', 'Vendor berhasil ditambahkan.');
+            ->with('success', 'Data mitra kerja berhasil ditambahkan.');
     }
 
     public function show(Request $request, Vendor $vendor): View
@@ -119,7 +117,7 @@ class VendorController extends Controller
 
         return redirect()
             ->route('admin.vendors.show', $vendor)
-            ->with('success', 'Data Vendor berhasil diperbarui.');
+            ->with('success', 'Data mitra kerja berhasil diperbarui.');
     }
 
     public function destroy(Request $request, Vendor $vendor): RedirectResponse
@@ -130,7 +128,7 @@ class VendorController extends Controller
 
         return redirect()
             ->route('admin.vendors.index')
-            ->with('success', 'Data Vendor berhasil dihapus.');
+            ->with('success', 'Data mitra kerja berhasil dihapus.');
     }
 
     private function authorizeAdmin(Request $request): void

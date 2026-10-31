@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ $role === 'petugas-lapangan' ? 'Pelaksanaan Surat Perintah Survey (' . ($survey->sps_number ?? 'SPS') . ')' : 'Edit Data Survey' }}
+            {{ $role === 'petugas-lapangan' ? 'Pelaksanaan Surat Perintah Survei (' . ($survey->sps_number ?? 'SPS') . ')' : 'Ubah Data Survei' }}
         </h2>
     </x-slot>
 
@@ -14,7 +14,7 @@
 
                     @if ($role === 'admin')
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Order</label>
+                            <label class="block text-sm font-medium text-gray-700">Pesanan</label>
                             <select name="order_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                 @foreach ($orders as $order)
                                     <option value="{{ $order->id }}" @selected(old('order_id', $survey->order_id) == $order->id)>
@@ -39,7 +39,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Jadwal Survey</label>
+                                <label class="block text-sm font-medium text-gray-700">Jadwal Survei</label>
                                 <input type="datetime-local" name="scheduled_at"
                                        value="{{ old('scheduled_at', $survey->scheduled_at?->format('Y-m-d\TH:i')) }}"
                                        required
@@ -49,23 +49,23 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Lokasi Survey</label>
+                            <label class="block text-sm font-medium text-gray-700">Lokasi Survei</label>
                             <input type="text" name="location" value="{{ old('location', $survey->location) }}" required
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             @error('location') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
                     @else
                         <div class="p-4 rounded-lg bg-blue-50 border border-blue-200 text-sm space-y-1">
-                            <p><strong>Nomor Surat Perintah Survey:</strong> {{ $survey->sps_number }}</p>
-                            <p><strong>Event / Lokasi:</strong> {{ $survey->order?->event_name }} — {{ $survey->location }}</p>
+                            <p><strong>Nomor Surat Perintah Survei:</strong> {{ $survey->sps_number }}</p>
+                            <p><strong>Kegiatan / Lokasi:</strong> {{ $survey->order?->event_name }} — {{ $survey->location }}</p>
                             <p><strong>Disetujui Direktur:</strong> {{ $survey->approver?->name ?? 'Direktur' }} ({{ $survey->approved_at?->format('d M Y H:i') }})</p>
                         </div>
                     @endif
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Status Pelaksanaan Survey</label>
+                        <label class="block text-sm font-medium text-gray-700">Status Pelaksanaan Survei</label>
                         <select name="status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            @foreach (['dijadwalkan' => 'SPS Diterima / Dijadwalkan', 'berlangsung' => 'Survey Sedang Berlangsung di Lokasi', 'selesai' => 'Survey Selesai Dilaksanakan'] as $val => $label)
+                            @foreach (['dijadwalkan' => 'SPS Diterima / Dijadwalkan', 'berlangsung' => 'Survei Sedang Berlangsung di Lokasi', 'selesai' => 'Survei Selesai Dilaksanakan'] as $val => $label)
                                 <option value="{{ $val }}" @selected(old('status', $survey->status) === $val)>
                                     {{ $label }}
                                 </option>
@@ -75,9 +75,9 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Hasil Temuan Survey Lapangan</label>
+                        <label class="block text-sm font-medium text-gray-700">Hasil Temuan Survei Lapangan</label>
                         <textarea name="findings" rows="4"
-                                  placeholder="Tuliskan hasil pengukuran area, kebutuhan kursi/barang, akses loading, dan kondisi lapangan..."
+                                  placeholder="Tuliskan hasil pengukuran area, kebutuhan kursi/barang, akses bongkar muat, dan kondisi lapangan..."
                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('findings', $survey->findings) }}</textarea>
                         @error('findings') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -93,7 +93,7 @@
                             Batal
                         </a>
                         <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 font-medium">
-                            Simpan Laporan Survey
+                            Simpan Hasil Survei
                         </button>
                     </div>
                 </form>
@@ -101,4 +101,3 @@
         </div>
     </div>
 </x-app-layout>
-

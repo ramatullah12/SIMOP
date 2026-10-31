@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\FieldDocumentation;
-use App\Models\Production;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,7 +41,7 @@ class FieldDocumentationController extends Controller
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless($role === 'petugas-lapangan', 403, 'Hanya Petugas Lapangan yang dapat menginput dokumentasi lapangan pengerjaan.');
+        abort_unless($role === 'petugas-lapangan', 403, 'Hanya Petugas Lapangan yang dapat mencatat dokumentasi lapangan pengerjaan.');
 
         $projects = Project::with(['order', 'planning.production'])
             ->where(function ($q) use ($user) {
@@ -54,7 +53,6 @@ class FieldDocumentationController extends Controller
             ->latest()
             ->get();
 
-        // Fallback so Petugas Lapangan can still select active projects if none explicitly assigned yet
         if ($projects->isEmpty()) {
             $projects = Project::with(['order', 'planning.production'])
                 ->latest()
@@ -75,7 +73,7 @@ class FieldDocumentationController extends Controller
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless($role === 'petugas-lapangan', 403, 'Hanya Petugas Lapangan yang dapat menginput dokumentasi lapangan pengerjaan.');
+        abort_unless($role === 'petugas-lapangan', 403, 'Hanya Petugas Lapangan yang dapat mencatat dokumentasi lapangan pengerjaan.');
 
         $validated = $request->validate([
             'project_id' => ['required', 'exists:projects,id'],
@@ -135,7 +133,7 @@ class FieldDocumentationController extends Controller
 
         if ($role === 'client') {
             abort_unless(
-                $fieldDocumentation->project?->workEstimate?->order?->client_id === $user->id,
+                $fieldDocumentation->project?->order?->client_id === $user->id,
                 403
             );
         }
@@ -158,7 +156,7 @@ class FieldDocumentationController extends Controller
 
         if ($role === 'client') {
             abort_unless(
-                $fieldDocumentation->project?->workEstimate?->order?->client_id === $user->id,
+                $fieldDocumentation->project?->order?->client_id === $user->id,
                 403
             );
         }
@@ -166,7 +164,7 @@ class FieldDocumentationController extends Controller
         abort_unless(
             $fieldDocumentation->file_path && Storage::disk('public')->exists($fieldDocumentation->file_path),
             404,
-            'File lampiran dokumentasi tidak ditemukan.'
+            'Berkas lampiran dokumentasi tidak ditemukan.'
         );
 
         return Storage::disk('public')->download(
@@ -193,4 +191,3 @@ class FieldDocumentationController extends Controller
             ->with('success', 'Dokumentasi lapangan pengerjaan berhasil dihapus.');
     }
 }
-

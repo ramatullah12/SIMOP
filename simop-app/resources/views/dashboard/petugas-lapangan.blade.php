@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-slate-900">Dashboard Petugas Lapangan</h2>
+                <h2 class="text-xl font-bold text-slate-900">Beranda Petugas Lapangan</h2>
                 <p class="mt-0.5 text-sm text-slate-500">
-                    Daftar Surat Perintah Survey, pengerjaan produksi, dan dokumentasi lapangan.
+                    Daftar Surat Perintah Survei, pengerjaan produksi, dan dokumentasi lapangan.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('surveys.index') }}" class="btn-primary">
-                    Surat Perintah Survey ({{ $stats['sps_active'] ?? 0 }})
+                    Surat Perintah Survei ({{ $stats['sps_active'] ?? 0 }})
                 </a>
                 <a href="{{ route('field-documentations.create') }}" class="btn-secondary">
                     Input Dokumentasi Lapangan
@@ -26,13 +26,13 @@
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                 <span class="text-xs font-semibold uppercase text-gray-500">SPS Aktif</span>
                 <div class="text-2xl font-bold text-blue-600 mt-2">{{ $stats['sps_active'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Surat Perintah Survey terjadwal</span>
+                <span class="text-xs text-gray-500">Surat Perintah Survei terjadwal</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                <span class="text-xs font-semibold uppercase text-gray-500">Survey Selesai</span>
+                <span class="text-xs font-semibold uppercase text-gray-500">Survei Selesai</span>
                 <div class="text-2xl font-bold text-green-600 mt-2">{{ $stats['sps_completed'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Hasil survey telah diinput</span>
+                <span class="text-xs text-gray-500">Hasil survei telah diinput</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
@@ -61,7 +61,7 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-2.5 text-left font-semibold text-gray-600">No. SPS</th>
-                                <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Event & Lokasi</th>
+                                <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Kegiatan & Lokasi</th>
                                 <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Status</th>
                                 <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
@@ -110,7 +110,7 @@
                             <tr>
                                 <th class="px-4 py-2.5 text-left font-semibold text-gray-600">No. Dok</th>
                                 <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Judul</th>
-                                <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Project</th>
+                                <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Proyek</th>
                                 <th class="px-4 py-2.5 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>

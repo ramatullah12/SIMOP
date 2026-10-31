@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\FieldDocumentationController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
@@ -66,6 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tracking/{order}', [TrackingController::class, 'show'])->name('tracking.show');
 
     Route::resource('ratings', RatingController::class)->except(['edit', 'update']);
+    Route::resource('employees', EmployeeController::class);
 
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class);
