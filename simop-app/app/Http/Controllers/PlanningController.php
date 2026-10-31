@@ -26,7 +26,7 @@ class PlanningController extends Controller
 
         $plannings = Planning::with([
             'project.assignedUser',
-            'project.workEstimate.order',
+            'project.order',
             'creator',
             'production',
         ])
@@ -62,7 +62,7 @@ class PlanningController extends Controller
 
         $projects = Project::with([
             'assignedUser',
-            'workEstimate.order',
+            'order',
         ])
             ->whereDoesntHave('planning')
             ->whereNotIn(
@@ -191,9 +191,9 @@ class PlanningController extends Controller
         $planning->load([
             'project.assignedUser',
             'project.creator',
-            'project.workEstimate.order',
+            'project.order',
             'creator',
-            'production.bapp',
+            'production',
         ]);
 
         if (

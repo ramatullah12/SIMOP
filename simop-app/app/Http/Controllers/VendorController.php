@@ -122,6 +122,17 @@ class VendorController extends Controller
             ->with('success', 'Data Vendor berhasil diperbarui.');
     }
 
+    public function destroy(Request $request, Vendor $vendor): RedirectResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $vendor->delete();
+
+        return redirect()
+            ->route('admin.vendors.index')
+            ->with('success', 'Data Vendor berhasil dihapus.');
+    }
+
     private function authorizeAdmin(Request $request): void
     {
         abort_unless(

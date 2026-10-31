@@ -1,232 +1,90 @@
-@extends('layouts.app')
-
-@section('title', 'Edit Pengguna - SIMOP')
-@section('page-title', 'Edit Pengguna')
-
-@section('content')
-    <div class="space-y-6">
-        <div>
-            <a
-                href="{{ route('admin.users.show', $user) }}"
-                class="text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-                ← Kembali ke Detail Pengguna
-            </a>
-
-            <h1 class="mt-3 text-2xl font-bold text-slate-900">
-                Edit Pengguna
-            </h1>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Perbarui informasi akun {{ $user->name }}.
-            </p>
-        </div>
-
-        @if ($errors->any())
-            <div class="rounded-xl border border-red-200 bg-red-50 p-5">
-                <h2 class="font-semibold text-red-800">
-                    Data belum dapat diperbarui
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Edit Data Pengguna
                 </h2>
-
-                <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-red-700">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        @if (auth()->id() === $user->id)
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
-                <p class="text-sm font-semibold text-amber-900">
-                    Anda sedang mengedit akun sendiri.
-                </p>
-
-                <p class="mt-1 text-sm leading-6 text-amber-700">
-                    Pastikan perubahan tidak menyebabkan akun Anda kehilangan akses Admin.
+                <p class="text-sm text-gray-500 mt-1">
+                    Perbarui informasi akun dan peran pengguna {{ $user->name }}.
                 </p>
             </div>
-        @endif
+            <a href="{{ route('admin.users.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                Kembali ke Daftar Pengguna
+            </a>
+        </div>
+    </x-slot>
 
-        <form
-            method="POST"
-            action="{{ route('admin.users.update', $user) }}"
-            class="space-y-6"
-        >
-            @csrf
-            @method('PUT')
+    <div class="py-6">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                @if ($errors->any())
+                    <div class="mb-4 rounded-lg bg-red-100 border border-red-300 text-red-800 px-4 py-3">
+                        <ul class="list-disc pl-5 text-sm space-y-1">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">
-                        Informasi Akun
-                    </h2>
+                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="space-y-4">
+                    @csrf
+                    @method('PUT')
 
-                    <p class="mt-1 text-sm text-slate-500">
-                        Perbarui identitas dan role pengguna.
-                    </p>
-                </div>
-
-                <div class="mt-6 grid gap-6 md:grid-cols-2">
                     <div>
-                        <label
-                            for="name"
-                            class="mb-2 block text-sm font-semibold text-slate-700"
-                        >
-                            Nama Pengguna
-                            <span class="text-red-500">*</span>
-                        </label>
-
-                        <input
-                            id="name"
-                            type="text"
-                            name="name"
-                            value="{{ old('name', $user->name) }}"
-                            required
-                            maxlength="255"
-                            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        >
-
-                        @error('name')
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required
+                               class="w-full rounded-md border-gray-300 text-sm">
                     </div>
 
                     <div>
-                        <label
-                            for="email"
-                            class="mb-2 block text-sm font-semibold text-slate-700"
-                        >
-                            Email
-                            <span class="text-red-500">*</span>
-                        </label>
-
-                        <input
-                            id="email"
-                            type="email"
-                            name="email"
-                            value="{{ old('email', $user->email) }}"
-                            required
-                            maxlength="255"
-                            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        >
-
-                        @error('email')
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                               class="w-full rounded-md border-gray-300 text-sm">
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label
-                            for="role_id"
-                            class="mb-2 block text-sm font-semibold text-slate-700"
-                        >
-                            Role
-                            <span class="text-red-500">*</span>
-                        </label>
-
-                        <select
-                            id="role_id"
-                            name="role_id"
-                            required
-                            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        >
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Peran Pengguna (Role)</label>
+                        <select name="role_id" required class="w-full rounded-md border-gray-300 text-sm">
                             @foreach ($roles as $role)
-                                <option
-                                    value="{{ $role->id }}"
-                                    @selected((string) old('role_id', $user->role_id) === (string) $role->id)
-                                >
+                                <option value="{{ $role->id }}" @selected(old('role_id', $user->role_id) == $role->id)>
                                     {{ $role->name }}
                                 </option>
                             @endforeach
                         </select>
-
-                        @error('role_id')
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">
-                        Ubah Password
-                    </h2>
-
-                    <p class="mt-1 text-sm text-slate-500">
-                        Kosongkan kedua kolom jika password tidak ingin diubah.
-                    </p>
-                </div>
-
-                <div class="mt-6 grid gap-6 md:grid-cols-2">
-                    <div>
-                        <label
-                            for="password"
-                            class="mb-2 block text-sm font-semibold text-slate-700"
-                        >
-                            Password Baru
-                        </label>
-
-                        <input
-                            id="password"
-                            type="password"
-                            name="password"
-                            minlength="8"
-                            autocomplete="new-password"
-                            placeholder="Minimal 8 karakter"
-                            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        >
-
-                        @error('password')
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
                     </div>
 
-                    <div>
-                        <label
-                            for="password_confirmation"
-                            class="mb-2 block text-sm font-semibold text-slate-700"
-                        >
-                            Konfirmasi Password Baru
-                        </label>
+                    <div class="border-t border-gray-200 pt-4">
+                        <p class="text-xs text-gray-500 mb-3">
+                            Kosongkan kolom kata sandi di bawah jika tidak ingin mengubah kata sandi pengguna.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Baru (Opsional)</label>
+                                <input type="password" name="password" minlength="6"
+                                       class="w-full rounded-md border-gray-300 text-sm">
+                            </div>
 
-                        <input
-                            id="password_confirmation"
-                            type="password"
-                            name="password_confirmation"
-                            minlength="8"
-                            autocomplete="new-password"
-                            placeholder="Ulangi password baru"
-                            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        >
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Kata Sandi Baru</label>
+                                <input type="password" name="password_confirmation" minlength="6"
+                                       class="w-full rounded-md border-gray-300 text-sm">
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <a
-                    href="{{ route('admin.users.show', $user) }}"
-                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                    Batal
-                </a>
-
-                <button
-                    type="submit"
-                    class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                    Simpan Perubahan
-                </button>
+                    <div class="pt-2 flex items-center gap-3">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+                            Simpan Perubahan
+                        </button>
+                        <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                            Batal
+                        </a>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
-@endsection
+</x-app-layout>
+

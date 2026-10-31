@@ -1,607 +1,292 @@
-@extends('layouts.app')
-
-@section('title', 'Detail Survey | SIMOP')
-@section('page-title', 'Detail Survey')
-
-@section('content')
-    @php
-        $role = auth()->user()?->role?->slug;
-
-        $statusLabel = match ($survey->status) {
-            'dijadwalkan' => 'Dijadwalkan',
-            'berlangsung' => 'Berlangsung',
-            'selesai' => 'Selesai',
-            'dibatalkan' => 'Dibatalkan',
-            default => ucfirst($survey->status),
-        };
-
-        $statusClass = match ($survey->status) {
-            'dijadwalkan' => 'bg-amber-100 text-amber-700',
-            'berlangsung' => 'bg-blue-100 text-blue-700',
-            'selesai' => 'bg-green-100 text-green-700',
-            'dibatalkan' => 'bg-red-100 text-red-700',
-            default => 'bg-slate-100 text-slate-700',
-        };
-
-        $canAdminUpdate = $role === 'admin';
-
-        $canOfficerUpdate = $role === 'petugas-lapangan'
-            && $survey->assigned_to === auth()->id()
-            && ! in_array(
-                $survey->status,
-                ['selesai', 'dibatalkan'],
-                true
-            );
-    @endphp
-
-    <div class="mx-auto max-w-4xl space-y-6">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <a
-                    href="{{ route('admin.surveys.index') }}"
-                    class="text-sm font-medium text-blue-600 hover:text-blue-800"
-                >
-                    &larr; Kembali ke Daftar Survey
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Detail Survey & Surat Perintah Survey (SPS)
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    Order: {{ $survey->order?->order_number }} — {{ $survey->order?->event_name }}
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                @if ($survey->order)
+                    <a href="{{ route('tracking.show', $survey->order) }}"
+                       class="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
+                        Lihat Status Pekerjaan
+                    </a>
+                @endif
+
+                @if ($role === 'admin' && $survey->status === 'selesai' && ! $survey->order?->project)
+                    <a href="{{ route('projects.create', ['survey_id' => $survey->id]) }}"
+                       class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                        + Buat Project
+                    </a>
+                @endif
+
+                @if ($role === 'petugas-lapangan' && $survey->approved_at)
+                    <a href="{{ route('surveys.edit', $survey) }}"
+                       class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                        Input Hasil Pelaksanaan Survey
+                    </a>
+                @endif
+
+                <a href="{{ route('surveys.index') }}"
+                   class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">
+                    Kembali
                 </a>
-
-                <div class="mt-3 flex flex-wrap items-center gap-3">
-                    <h2 class="text-2xl font-bold text-slate-900">
-                        Detail Survey
-                    </h2>
-
-                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
-                        {{ $statusLabel }}
-                    </span>
-                </div>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Informasi Survey untuk Order
-                    {{ $survey->order?->order_number ?? '#'.$survey->order_id }}
-                </p>
             </div>
         </div>
+    </x-slot>
 
-        @if (session('success'))
-            <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                <p class="font-semibold">
-                    Terdapat data yang perlu diperbaiki:
-                </p>
-
-                <ul class="mt-2 list-inside list-disc space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        @if ($survey->status === 'selesai')
-            <div class="rounded-xl border border-green-200 bg-green-50 p-5">
-                <div class="flex gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
-                        ✓
-                    </div>
-
-                    <div>
-                        <p class="font-semibold text-green-800">
-                            Survey Telah Selesai
-                        </p>
-
-                        <p class="mt-1 text-sm leading-6 text-green-700">
-                            Hasil Survey telah diselesaikan dan dapat digunakan untuk proses Work Estimate.
-                        </p>
-                    </div>
+    <div class="py-6">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @if (session('success'))
+                <div class="rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3 font-medium">
+                    {{ session('success') }}
                 </div>
-            </div>
-        @elseif ($survey->status === 'dibatalkan')
-            <div class="rounded-xl border border-red-200 bg-red-50 p-5">
-                <div class="flex gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 font-bold text-red-700">
-                        ×
-                    </div>
+            @endif
 
-                    <div>
-                        <p class="font-semibold text-red-800">
-                            Survey Dibatalkan
-                        </p>
-
-                        <p class="mt-1 text-sm leading-6 text-red-700">
-                            Survey ini telah dibatalkan.
-                        </p>
-                    </div>
+            @if (session('error'))
+                <div class="rounded-lg bg-red-100 border border-red-300 text-red-800 px-4 py-3 font-medium">
+                    {{ session('error') }}
                 </div>
-            </div>
-        @elseif ($survey->status === 'berlangsung')
-            <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
-                <div class="flex gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">
-                        •
+            @endif
+
+            <!-- Alur Status Survey & SPS -->
+            <div class="bg-white shadow-sm sm:rounded-lg p-6 border border-gray-200">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">
+                    Alur Persetujuan & Penerbitan Surat Perintah Survey (SPS)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div class="p-4 rounded-lg border border-emerald-300 bg-emerald-50">
+                        <p class="text-xs font-bold text-emerald-700 uppercase">1. Pengajuan Client</p>
+                        <p class="font-semibold text-gray-900 mt-1">Pengajuan Survey</p>
+                        <p class="text-xs text-gray-600 mt-1">Diajukan oleh {{ $survey->order?->company_name }}</p>
                     </div>
 
-                    <div>
-                        <p class="font-semibold text-blue-800">
-                            Survey Sedang Berlangsung
+                    <div class="p-4 rounded-lg border {{ $survey->submitted_to_direktur_at || $survey->approved_at ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50' }}">
+                        <p class="text-xs font-bold {{ $survey->submitted_to_direktur_at || $survey->approved_at ? 'text-emerald-700' : 'text-amber-700' }} uppercase">2. Proses Admin</p>
+                        <p class="font-semibold text-gray-900 mt-1">Verifikasi & Pilih Petugas</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            {{ $survey->assignedUser ? 'Petugas: ' . $survey->assignedUser->name : 'Menunggu Admin memilih petugas & mengirim ke Direktur' }}
                         </p>
+                    </div>
 
-                        <p class="mt-1 text-sm leading-6 text-blue-700">
-                            Petugas Lapangan sedang menjalankan proses Survey.
+                    <div class="p-4 rounded-lg border {{ $survey->approved_at ? 'border-emerald-300 bg-emerald-50' : ($survey->status === 'menunggu_persetujuan_direktur' ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-gray-50') }}">
+                        <p class="text-xs font-bold {{ $survey->approved_at ? 'text-emerald-700' : ($survey->status === 'menunggu_persetujuan_direktur' ? 'text-purple-700' : 'text-gray-500') }} uppercase">3. Direktur Approval</p>
+                        <p class="font-semibold text-gray-900 mt-1">Terbit SPS ke Petugas</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            @if ($survey->approved_at)
+                                Disetujui ({{ $survey->sps_number }})
+                            @elseif ($survey->status === 'menunggu_persetujuan_direktur')
+                                Menunggu Approval Direktur
+                            @elseif ($survey->status === 'ditolak_direktur')
+                                Ditolak / Revisi Direktur
+                            @else
+                                Menunggu kiriman Admin
+                            @endif
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-lg border {{ $survey->status === 'selesai' ? 'border-emerald-300 bg-emerald-50' : ($survey->approved_at ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-gray-50') }}">
+                        <p class="text-xs font-bold {{ $survey->status === 'selesai' ? 'text-emerald-700' : ($survey->approved_at ? 'text-blue-700' : 'text-gray-500') }} uppercase">4. Petugas Lapangan</p>
+                        <p class="font-semibold text-gray-900 mt-1">Eksekusi Survey</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            @if ($survey->status === 'selesai')
+                                Survey Selesai Dilaksanakan
+                            @elseif ($survey->approved_at)
+                                SPS Diterima Petugas ({{ strtoupper($survey->status) }})
+                            @else
+                                Menunggu SPS Terbit
+                            @endif
                         </p>
                     </div>
                 </div>
             </div>
-        @elseif ($survey->status === 'dijadwalkan')
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
-                <div class="flex gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 font-bold text-amber-700">
-                        !
-                    </div>
 
-                    <div>
-                        <p class="font-semibold text-amber-800">
-                            Survey Dijadwalkan
-                        </p>
-
-                        <p class="mt-1 text-sm leading-6 text-amber-700">
-                            Survey telah dijadwalkan dan menunggu pelaksanaan oleh Petugas Lapangan.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">
-                        Informasi Survey
-                    </h3>
-
-                    <p class="mt-1 text-sm text-slate-500">
-                        Informasi Order, jadwal, lokasi, dan Petugas Lapangan.
-                    </p>
-                </div>
-
-                <span class="w-fit rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
-                    {{ $statusLabel }}
-                </span>
-            </div>
-
-            <dl class="mt-5 grid gap-5 sm:grid-cols-2">
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Nomor Order
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->order?->order_number ?? '-' }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Perusahaan
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->order?->company_name ?? '-' }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Nama Event
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->order?->event_name ?? '-' }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Tanggal Event
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->order?->event_date?->format('d/m/Y') ?? '-' }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Lokasi Survey
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->location }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Petugas Lapangan
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->assignedUser?->name ?? 'Belum ditugaskan' }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Jadwal Survey
-                    </dt>
-
-                    <dd class="mt-1 font-semibold text-slate-900">
-                        {{ $survey->scheduled_at?->format('d/m/Y H:i') ?? 'Belum dijadwalkan' }}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm text-slate-500">
-                        Status
-                    </dt>
-
-                    <dd class="mt-1">
-                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
-                            {{ $statusLabel }}
-                        </span>
-                    </dd>
-                </div>
-            </dl>
-        </div>
-
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-slate-900">
-                Hasil Survey
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Hasil dan catatan dari pelaksanaan Survey lapangan.
-            </p>
-
-            <div class="mt-5 space-y-5">
-                <div>
-                    <p class="text-sm font-semibold text-slate-700">
-                        Hasil atau Temuan Survey
-                    </p>
-
-                    <div class="mt-2 rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-                        @if ($survey->findings)
-                            {!! nl2br(e($survey->findings)) !!}
-                        @else
-                            <span class="text-slate-400">
-                                Belum ada hasil atau temuan Survey.
+            <!-- Surat Perintah Survey (SPS) Resmi (Tampil setelah diapprove Direktur) -->
+            @if ($survey->approved_at && $survey->sps_number)
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-blue-200 pb-4 mb-4">
+                        <div>
+                            <span class="inline-flex px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-wider">
+                                Surat Perintah Survey (SPS) Resmi
                             </span>
-                        @endif
+                            <h3 class="text-xl font-bold text-gray-900 mt-2">{{ $survey->sps_number }}</h3>
+                        </div>
+                        <div class="text-sm text-right">
+                            <p class="text-gray-600">Disetujui Direktur:</p>
+                            <p class="font-bold text-gray-900">{{ $survey->approver?->name ?? 'Direktur' }}</p>
+                            <p class="text-xs text-gray-500">{{ $survey->approved_at->format('d M Y, H:i') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Ditugaskan Kepada (Petugas Lapangan)</p>
+                            <p class="font-bold text-gray-900 text-base">{{ $survey->assignedUser?->name ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Jadwal Pelaksanaan Survey</p>
+                            <p class="font-semibold text-gray-900">{{ $survey->scheduled_at?->format('d M Y, H:i') ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Lokasi Survey</p>
+                            <p class="font-semibold text-gray-900">{{ $survey->location }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if ($survey->rejection_notes)
+                <div class="bg-red-50 border border-red-300 rounded-lg p-4 text-sm text-red-800">
+                    <strong>Catatan Penolakan / Revisi dari Direktur:</strong>
+                    <p class="mt-1">{{ $survey->rejection_notes }}</p>
+                </div>
+            @endif
+
+            <!-- Panel Action Admin: Teruskan Pengajuan Survey Client ke Direktur -->
+            @if ($role === 'admin' && ! $survey->approved_at)
+                <div class="bg-white shadow-sm sm:rounded-lg p-6 border-2 border-amber-300">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                        Proses Admin: Pilih Petugas Lapangan & Kirim ke Direktur
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Pengajuan survey dari Client harus diteruskan oleh Admin ke Direktur. Setelah Direktur menyetujui, Surat Perintah Survey (SPS) akan dikirim ke Petugas Lapangan.
+                    </p>
+
+                    <form method="POST" action="{{ route('surveys.submit-to-direktur', $survey) }}" class="space-y-4">
+                        @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Petugas Lapangan</label>
+                                <select name="assigned_to" required class="w-full rounded-lg border-gray-300 text-sm">
+                                    <option value="">-- Pilih Petugas Lapangan --</option>
+                                    @foreach ($fieldOfficers as $officer)
+                                        <option value="{{ $officer->id }}" @selected(old('assigned_to', $survey->assigned_to) == $officer->id)>
+                                            {{ $officer->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jadwal Survey</label>
+                                <input type="datetime-local" name="scheduled_at" required
+                                       value="{{ old('scheduled_at', $survey->scheduled_at?->format('Y-m-d\TH:i') ?? now()->addDay()->format('Y-m-d\T09:00')) }}"
+                                       class="w-full rounded-lg border-gray-300 text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Survey</label>
+                                <input type="text" name="location" required
+                                       value="{{ old('location', $survey->location) }}"
+                                       class="w-full rounded-lg border-gray-300 text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Pengantar untuk Direktur</label>
+                            <textarea name="notes" rows="2" class="w-full rounded-lg border-gray-300 text-sm">{{ old('notes', $survey->notes) }}</textarea>
+                        </div>
+
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">
+                            Kirim ke Direktur (Menunggu Approval Direktur)
+                        </button>
+                    </form>
+                </div>
+            @endif
+
+            <!-- Panel Action Direktur: Approve & Terbitkan Surat Perintah Survey (SPS) ke Petugas Lapangan -->
+            @if ($role === 'direktur' && ! $survey->approved_at)
+                <div class="bg-white shadow-sm sm:rounded-lg p-6 border-2 border-purple-300 space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            Approval Direktur — Penerbitan Surat Perintah Survey (SPS)
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Setujui pengajuan survey dari Admin ini untuk menerbitkan <strong>Surat Perintah Survey (SPS)</strong> dan mengirimkannya ke <strong>Petugas Lapangan ({{ $survey->assignedUser?->name ?? 'Belum dipilih' }})</strong>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <form method="POST" action="{{ route('surveys.approve-direktur', $survey) }}" class="p-4 rounded-lg bg-emerald-50 border border-emerald-200 space-y-3">
+                            @csrf
+                            <h4 class="font-semibold text-emerald-900 text-sm">Setujui & Kirim SPS ke Petugas Lapangan</h4>
+                            <div>
+                                <label class="block text-xs font-medium text-emerald-800 mb-1">Instruksi Direktur pada SPS (Opsional)</label>
+                                <textarea name="notes" rows="2" placeholder="Catatan instruksi Direktur untuk Petugas Lapangan..."
+                                          class="w-full rounded-lg border-emerald-300 text-sm">{{ $survey->notes }}</textarea>
+                            </div>
+                            <button type="submit" class="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">
+                                Setujui & Kirim Surat Perintah Survey ke Petugas Lapangan
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ route('surveys.reject-direktur', $survey) }}" class="p-4 rounded-lg bg-red-50 border border-red-200 space-y-3">
+                            @csrf
+                            <h4 class="font-semibold text-red-900 text-sm">Tolak / Minta Revisi ke Admin</h4>
+                            <div>
+                                <label class="block text-xs font-medium text-red-800 mb-1">Alasan Penolakan / Revisi (Wajib)</label>
+                                <textarea name="rejection_notes" rows="2" required placeholder="Contoh: Ganti jadwal survey atau ganti petugas..."
+                                          class="w-full rounded-lg border-red-300 text-sm"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-2.5 px-4 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700">
+                                Kembalikan ke Admin (Revisi)
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Detail Informasi Survey & Hasil Temuan Lapangan -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <p class="text-gray-500">Nomor Order</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $survey->order?->order_number ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Client & Event</p>
+                        <p class="font-semibold text-gray-900 mt-1">
+                            {{ $survey->order?->company_name ?? '-' }} - {{ $survey->order?->event_name ?? '-' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Petugas Lapangan</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $survey->assignedUser?->name ?? 'Belum dipilih' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Jadwal Survey</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $survey->scheduled_at?->format('d M Y H:i') ?? 'Belum dijadwalkan' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Lokasi Survey</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $survey->location }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Status Saat Ini</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ strtoupper(str_replace('_', ' ', $survey->status)) }}</p>
                     </div>
                 </div>
 
-                <div>
-                    <p class="text-sm font-semibold text-slate-700">
-                        Catatan Tambahan
-                    </p>
+                <div class="border-t pt-4">
+                    <p class="text-sm text-gray-500">Hasil Temuan Survey Lapangan (Diinput oleh Petugas Lapangan)</p>
+                    <p class="mt-2 text-gray-900 whitespace-pre-line font-medium">{{ $survey->findings ?: 'Belum ada hasil temuan survey.' }}</p>
+                </div>
 
-                    <div class="mt-2 rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-                        @if ($survey->notes)
-                            {!! nl2br(e($survey->notes)) !!}
-                        @else
-                            <span class="text-slate-400">
-                                Tidak ada catatan tambahan.
-                            </span>
-                        @endif
-                    </div>
+                <div>
+                    <p class="text-sm text-gray-500">Catatan Tambahan</p>
+                    <p class="mt-2 text-gray-900 whitespace-pre-line">{{ $survey->notes ?: '-' }}</p>
                 </div>
             </div>
         </div>
-
-        @if ($canAdminUpdate)
-            <form
-                action="{{ route('admin.surveys.update', $survey) }}"
-                method="POST"
-                class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-            >
-                @csrf
-                @method('PUT')
-
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">
-                        Perbarui Survey
-                    </h3>
-
-                    <p class="mt-1 text-sm text-slate-500">
-                        Atur Petugas Lapangan, jadwal, lokasi, status, dan hasil Survey.
-                    </p>
-                </div>
-
-                <div>
-                    <label
-                        for="assigned_to"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Petugas Lapangan
-                    </label>
-
-                    <select
-                        id="assigned_to"
-                        name="assigned_to"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    >
-                        <option value="">
-                            -- Belum Ditugaskan --
-                        </option>
-
-                        @foreach ($officers as $officer)
-                            <option
-                                value="{{ $officer->id }}"
-                                @selected(old('assigned_to', $survey->assigned_to) == $officer->id)
-                            >
-                                {{ $officer->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label
-                        for="scheduled_at"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Tanggal dan Waktu Survey
-                    </label>
-
-                    <input
-                        id="scheduled_at"
-                        name="scheduled_at"
-                        type="datetime-local"
-                        value="{{ old('scheduled_at', $survey->scheduled_at?->format('Y-m-d\TH:i')) }}"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    >
-                </div>
-
-                <div>
-                    <label
-                        for="location"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Lokasi Survey
-                    </label>
-
-                    <input
-                        id="location"
-                        name="location"
-                        type="text"
-                        required
-                        value="{{ old('location', $survey->location) }}"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    >
-                </div>
-
-                <div>
-                    <label
-                        for="status"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Status Survey
-                    </label>
-
-                    <select
-                        id="status"
-                        name="status"
-                        required
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    >
-                        @foreach ([
-                            'dijadwalkan' => 'Dijadwalkan',
-                            'berlangsung' => 'Berlangsung',
-                            'selesai' => 'Selesai',
-                            'dibatalkan' => 'Dibatalkan',
-                        ] as $value => $label)
-                            <option
-                                value="{{ $value }}"
-                                @selected(old('status', $survey->status) === $value)
-                            >
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label
-                        for="findings"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Hasil atau Temuan Survey
-                    </label>
-
-                    <textarea
-                        id="findings"
-                        name="findings"
-                        rows="5"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                        placeholder="Masukkan hasil atau temuan Survey"
-                    >{{ old('findings', $survey->findings) }}</textarea>
-
-                    <p class="mt-2 text-xs text-slate-500">
-                        Hasil atau temuan wajib diisi ketika Survey diselesaikan.
-                    </p>
-                </div>
-
-                <div>
-                    <label
-                        for="notes"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Catatan Tambahan
-                    </label>
-
-                    <textarea
-                        id="notes"
-                        name="notes"
-                        rows="4"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                        placeholder="Masukkan catatan tambahan jika diperlukan"
-                    >{{ old('notes', $survey->notes) }}</textarea>
-                </div>
-
-                <div class="flex justify-end border-t border-slate-200 pt-5">
-                    <button
-                        type="submit"
-                        class="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                        Simpan Perubahan
-                    </button>
-                </div>
-            </form>
-        @elseif ($canOfficerUpdate)
-            <form
-                action="{{ route('admin.surveys.update', $survey) }}"
-                method="POST"
-                class="space-y-5 rounded-xl border border-blue-200 bg-white p-6 shadow-sm"
-            >
-                @csrf
-                @method('PUT')
-
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">
-                        Update Hasil Survey
-                    </h3>
-
-                    <p class="mt-1 text-sm text-slate-500">
-                        Perbarui status pelaksanaan dan masukkan hasil Survey lapangan.
-                    </p>
-                </div>
-
-                <div>
-                    <label
-                        for="status"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Status Survey
-                    </label>
-
-                    <select
-                        id="status"
-                        name="status"
-                        required
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    >
-                        @if ($survey->status === 'dijadwalkan')
-                            <option
-                                value="berlangsung"
-                                @selected(old('status') === 'berlangsung')
-                            >
-                                Mulai Survey
-                            </option>
-
-                            <option
-                                value="selesai"
-                                @selected(old('status') === 'selesai')
-                            >
-                                Selesaikan Survey
-                            </option>
-                        @elseif ($survey->status === 'berlangsung')
-                            <option
-                                value="berlangsung"
-                                @selected(old('status', $survey->status) === 'berlangsung')
-                            >
-                                Berlangsung
-                            </option>
-
-                            <option
-                                value="selesai"
-                                @selected(old('status') === 'selesai')
-                            >
-                                Selesaikan Survey
-                            </option>
-                        @endif
-                    </select>
-                </div>
-
-                <div>
-                    <label
-                        for="findings"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Hasil atau Temuan Survey
-                    </label>
-
-                    <textarea
-                        id="findings"
-                        name="findings"
-                        rows="5"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                        placeholder="Masukkan hasil atau temuan Survey di lapangan"
-                    >{{ old('findings', $survey->findings) }}</textarea>
-
-                    <p class="mt-2 text-xs text-slate-500">
-                        Hasil atau temuan wajib diisi sebelum Survey diselesaikan.
-                    </p>
-                </div>
-
-                <div>
-                    <label
-                        for="notes"
-                        class="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                        Catatan Tambahan
-                    </label>
-
-                    <textarea
-                        id="notes"
-                        name="notes"
-                        rows="4"
-                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                        placeholder="Masukkan catatan tambahan jika diperlukan"
-                    >{{ old('notes', $survey->notes) }}</textarea>
-                </div>
-
-                <div class="flex justify-end border-t border-slate-200 pt-5">
-                    <button
-                        type="submit"
-                        class="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                        Simpan Hasil Survey
-                    </button>
-                </div>
-            </form>
-        @elseif ($role === 'petugas-lapangan' && $survey->status === 'selesai')
-            <div class="rounded-xl border border-green-200 bg-green-50 p-5">
-                <p class="font-semibold text-green-800">
-                    Survey Sudah Selesai
-                </p>
-
-                <p class="mt-1 text-sm leading-6 text-green-700">
-                    Hasil Survey sudah disimpan dan tidak dapat diubah kembali oleh Petugas Lapangan.
-                </p>
-            </div>
-        @elseif ($role === 'petugas-lapangan' && $survey->status === 'dibatalkan')
-            <div class="rounded-xl border border-red-200 bg-red-50 p-5">
-                <p class="font-semibold text-red-800">
-                    Survey Tidak Dapat Diperbarui
-                </p>
-
-                <p class="mt-1 text-sm leading-6 text-red-700">
-                    Survey telah dibatalkan oleh Admin.
-                </p>
-            </div>
-        @elseif ($role === 'direktur')
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                <p class="font-semibold text-slate-800">
-                    Mode Monitoring
-                </p>
-
-                <p class="mt-1 text-sm leading-6 text-slate-600">
-                    Direktur dapat melihat informasi dan hasil Survey, tetapi tidak dapat mengubah data Survey.
-                </p>
-            </div>
-        @endif
     </div>
-@endsection
+</x-app-layout>

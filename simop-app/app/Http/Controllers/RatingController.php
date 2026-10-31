@@ -2,281 +2,141 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Rating;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class RatingController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless(
-            in_array(
-                $role,
-                ['admin', 'client'],
-                true
-            ),
-            403
-        );
+        abort_unless(in_array($role, ['admin', 'direktur', 'client'], true), 403);
 
-        if ($role === 'admin') {
-            $ratings = Rating::with([
-                'project.workEstimate.order.client',
-                'project.invoice',
-                'client',
-            ])
-                ->latest()
-                ->paginate(10);
-
-            return view(
-                'ratings.index',
-                compact('ratings')
-            );
-        }
-
-        $projects = Project::with([
-            'workEstimate.order',
-            'invoice',
-            'rating',
+        $ratings = Rating::with([
+            'project.order',
+            'client',
         ])
-            ->where('status', 'completed')
-            ->whereHas(
-                'workEstimate.order',
-                fn ($query) => $query->where(
-                    'client_id',
-                    $user->id
-                )
-            )
-            ->whereHas(
-                'invoice',
-                fn ($query) => $query->where(
-                    'status',
-                    'paid'
-                )
-            )
+            ->when($role === 'client', function ($query) use ($user) {
+                $query->where('client_id', $user->id);
+            })
             ->latest()
             ->paginate(10);
 
-        return view(
-            'ratings.index',
-            compact('projects')
-        );
+        return view('ratings.index', compact('ratings'));
     }
 
-    public function create(Project $project)
-    {
-        $user = auth()->user();
-
-        abort_unless(
-            $user?->role?->slug === 'client',
-            403
-        );
-
-        $project->load([
-            'workEstimate.order',
-            'invoice',
-            'rating',
-        ]);
-
-        abort_unless(
-            $project
-                ->workEstimate
-                ?->order
-                ?->client_id === $user->id,
-            403
-        );
-
-        abort_unless(
-            $project->status === 'completed',
-            422,
-            'Rating hanya dapat diberikan setelah Project selesai.'
-        );
-
-        abort_unless(
-            $project->invoice
-            && $project->invoice->status === 'paid',
-            422,
-            'Rating hanya dapat diberikan setelah Invoice lunas.'
-        );
-
-        abort_if(
-            $project->rating,
-            422,
-            'Project ini sudah memiliki Rating.'
-        );
-
-        return view(
-            'ratings.create',
-            compact('project')
-        );
-    }
-
-    public function store(
-        Request $request,
-        Project $project
-    ) {
-        $user = auth()->user();
-
-        abort_unless(
-            $user?->role?->slug === 'client',
-            403
-        );
-
-        $validated = $request->validate([
-            'rating' => [
-                'required',
-                'integer',
-                Rule::in([
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                ]),
-            ],
-            'review' => [
-                'nullable',
-                'string',
-                'max:5000',
-            ],
-        ]);
-
-        $rating = DB::transaction(
-            function () use (
-                $project,
-                $user,
-                $validated
-            ) {
-                $currentProject = Project::query()
-                    ->lockForUpdate()
-                    ->findOrFail(
-                        $project->id
-                    );
-
-                abort_unless(
-                    $currentProject->status === 'completed',
-                    422,
-                    'Rating hanya dapat diberikan setelah Project selesai.'
-                );
-
-                $workEstimate = $currentProject
-                    ->workEstimate()
-                    ->first();
-
-                abort_unless(
-                    $workEstimate,
-                    422,
-                    'Work Estimate Project tidak ditemukan.'
-                );
-
-                $order = $workEstimate
-                    ->order()
-                    ->first();
-
-                abort_unless(
-                    $order,
-                    422,
-                    'Order Project tidak ditemukan.'
-                );
-
-                abort_unless(
-                    $order->client_id === $user->id,
-                    403
-                );
-
-                $invoice = Invoice::query()
-                    ->where(
-                        'project_id',
-                        $currentProject->id
-                    )
-                    ->lockForUpdate()
-                    ->first();
-
-                abort_unless(
-                    $invoice
-                    && $invoice->status === 'paid',
-                    422,
-                    'Rating hanya dapat diberikan setelah Invoice lunas.'
-                );
-
-                $ratingExists = Rating::query()
-                    ->where(
-                        'project_id',
-                        $currentProject->id
-                    )
-                    ->exists();
-
-                abort_if(
-                    $ratingExists,
-                    422,
-                    'Project ini sudah memiliki Rating.'
-                );
-
-                return Rating::create([
-                    'project_id' => $currentProject->id,
-                    'client_id' => $user->id,
-                    'rating' => $validated['rating'],
-                    'review' => $validated['review'] ?? null,
-                ]);
-            }
-        );
-
-        return redirect()
-            ->route(
-                'ratings.show',
-                $rating
-            )
-            ->with(
-                'success',
-                'Rating dan ulasan berhasil dikirim.'
-            );
-    }
-
-    public function show(Rating $rating)
+    public function create(Request $request): View
     {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless(
-            in_array(
-                $role,
-                ['admin', 'client'],
-                true
-            ),
-            403
-        );
+        abort_unless($role === 'client', 403);
+
+        $projects = Project::with(['order'])
+            ->where('status', 'completed')
+            ->whereHas('order', function ($query) use ($user) {
+                $query->where('client_id', $user->id);
+            })
+            ->whereDoesntHave('rating')
+            ->latest()
+            ->get();
+
+        $selectedProject = null;
+
+        if ($request->filled('project_id')) {
+            $selectedProject = Project::with(['order'])
+                ->where('status', 'completed')
+                ->whereHas('order', function ($query) use ($user) {
+                    $query->where('client_id', $user->id);
+                })
+                ->whereDoesntHave('rating')
+                ->find($request->project_id);
+        }
+
+        return view('ratings.create', compact('projects', 'selectedProject'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
+        abort_unless($role === 'client', 403);
+
+        $validated = $request->validate([
+            'project_id' => ['required', 'exists:projects,id'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'review' => ['required', 'string'],
+        ]);
+
+        $project = Project::with(['order', 'rating'])
+            ->findOrFail($validated['project_id']);
+
+        abort_unless($project->workEstimate->order->client_id === $user->id, 403);
+
+        if ($project->status !== 'completed') {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'project_id' => 'Rating hanya dapat diberikan untuk project yang sudah selesai.',
+                ]);
+        }
+
+        if ($project->rating) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'project_id' => 'Project ini sudah memiliki rating.',
+                ]);
+        }
+
+        $rating = Rating::create([
+            'project_id' => $project->id,
+            'client_id' => $user->id,
+            'rating' => $validated['rating'],
+            'review' => $validated['review'],
+        ]);
+
+        return redirect()
+            ->route('ratings.show', $rating)
+            ->with('success', 'Terima kasih, rating dan ulasan berhasil dikirim.');
+    }
+
+    public function show(Rating $rating): View
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
+        abort_unless(in_array($role, ['admin', 'direktur', 'client'], true), 403);
+
+        if ($role === 'client' && $rating->client_id !== $user->id) {
+            abort(403);
+        }
 
         $rating->load([
-            'project.workEstimate.order.client',
-            'project.invoice',
+            'project.order',
             'client',
         ]);
 
-        if ($role === 'client') {
-            abort_unless(
-                $rating->client_id === $user->id,
-                403
-            );
+        return view('ratings.show', compact('rating'));
+    }
 
-            abort_unless(
-                $rating
-                    ->project
-                    ?->workEstimate
-                    ?->order
-                    ?->client_id === $user->id,
-                403
-            );
-        }
+    public function destroy(Rating $rating): RedirectResponse
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
 
-        return view(
-            'ratings.show',
-            compact('rating')
-        );
+        abort_unless($role === 'admin', 403);
+
+        $rating->delete();
+
+        return redirect()
+            ->route('ratings.index')
+            ->with('success', 'Rating berhasil dihapus.');
     }
 }

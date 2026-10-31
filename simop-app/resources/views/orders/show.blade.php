@@ -1,154 +1,123 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Detail Order — {{ $order->order_number }}
+            </h2>
 
-@extends('layouts.app')
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('tracking.show', $order) }}"
+                   class="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
+                    Lihat Status Pekerjaan
+                </a>
 
-@section('title', 'Detail Order | SIMOP')
-@section('page-title', 'Detail Order')
+                @if ($order->survey)
+                    <a href="{{ route('surveys.show', $order->survey) }}"
+                       class="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                        Detail Survey / SPS
+                    </a>
+                @elseif (in_array(auth()->user()->role?->slug, ['admin', 'client']))
+                    <a href="{{ route('surveys.create', ['order_id' => $order->id]) }}"
+                       class="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                        + Ajukan Survey
+                    </a>
+                @endif
 
-@section('content')
-<div class="mx-auto max-w-5xl space-y-6">
+                <a href="{{ route('orders.index') }}"
+                   class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 text-sm">
+                    Kembali
+                </a>
 
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-            <p class="text-sm text-slate-500">{{ $order->order_number }}</p>
-            <h1 class="mt-1 text-2xl font-bold text-slate-900">
-                {{ $order->event_name }}
-            </h1>
+                @if(auth()->user()->role?->slug === 'admin' || (auth()->user()->role?->slug === 'client' && in_array($order->status, ['masuk', 'menunggu_survey', 'ditolak'])))
+                    <a href="{{ route('orders.edit', $order) }}"
+                       class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
+                        Edit
+                    </a>
+                @endif
+            </div>
         </div>
+    </x-slot>
 
-        <a href="{{ route($role === 'admin' ? 'admin.orders.index' : 'client.orders.index') }}"
-           class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-center text-sm font-semibold hover:bg-slate-50">
-            Kembali
-        </a>
-    </div>
-
-    @if (session('success'))
-        <div class="rounded-lg bg-green-50 p-4 text-sm text-green-700">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="grid gap-6 lg:grid-cols-3">
-        <section class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-            <h2 class="text-lg font-bold">Informasi Pekerjaan</h2>
-
-            <div class="grid gap-5 sm:grid-cols-2">
-                <div>
-                    <p class="text-sm text-slate-500">Nama Perusahaan</p>
-                    <p class="mt-1 font-medium">{{ $order->company_name }}</p>
-                </div>
-
-                <div>
-                    <p class="text-sm text-slate-500">Contact Person</p>
-                    <p class="mt-1 font-medium">{{ $order->contact_person }}</p>
-                </div>
-
-                <div>
-                    <p class="text-sm text-slate-500">Nomor Telepon</p>
-                    <p class="mt-1 font-medium">{{ $order->phone }}</p>
-                </div>
-
-                <div>
-                    <p class="text-sm text-slate-500">Email</p>
-                    <p class="mt-1 font-medium">{{ $order->email }}</p>
-                </div>
-
-                <div>
-                    <p class="text-sm text-slate-500">Tanggal Event</p>
-                    <p class="mt-1 font-medium">{{ $order->event_date->format('d/m/Y') }}</p>
-                </div>
-
-                <div>
-                    <p class="text-sm text-slate-500">Lokasi Event</p>
-                    <p class="mt-1 font-medium">{{ $order->event_location }}</p>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <p class="text-sm text-slate-500">Deskripsi Kebutuhan</p>
-                    <p class="mt-1 whitespace-pre-line">{{ $order->description }}</p>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <p class="text-sm text-slate-500">Estimasi Anggaran</p>
-                    <p class="mt-1 font-semibold">
-                        {{ $order->estimated_budget !== null
-                            ? 'Rp ' . number_format((float) $order->estimated_budget, 0, ',', '.')
-                            : 'Belum ditentukan' }}
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <section class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-lg font-bold">Status Order</h2>
-
-            <div>
-                <p class="text-sm text-slate-500">Status Saat Ini</p>
-                <span class="mt-2 inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-                    {{ str($order->status)->replace('_', ' ')->title() }}
-                </span>
-            </div>
-
-            <div>
-                <p class="text-sm text-slate-500">Tanggal Pengajuan</p>
-                <p class="mt-1 font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</p>
-            </div>
-
-            @if ($role === 'admin')
-                <div>
-                    <p class="text-sm text-slate-500">Client</p>
-                    <p class="mt-1 font-medium">{{ $order->client->name ?? '-' }}</p>
-                </div>
-
-                <form method="POST"
-                      action="{{ route('admin.orders.status', $order) }}"
-                      class="space-y-4 border-t border-slate-100 pt-5">
-                    @csrf
-                    @method('PATCH')
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium">Ubah Status</label>
-                        <select name="status" required
-                                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500">
-                            @foreach ([
-                                'baru' => 'Baru',
-                                'diperiksa' => 'Sedang Diperiksa',
-                                'perlu_revisi' => 'Perlu Revisi',
-                                'ditolak' => 'Ditolak',
-                                'menunggu_survey' => 'Menunggu Survey',
-                            ] as $value => $label)
-                                <option value="{{ $value }}" @selected($order->status === $value)>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium">Catatan Admin</label>
-                        <textarea name="admin_notes" rows="4"
-                                  class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500">{{ old('admin_notes', $order->admin_notes) }}</textarea>
-                    </div>
-
-                    @if ($errors->any())
-                        <div class="text-sm text-red-600">
-                            @foreach ($errors->all() as $error)
-                                <p>{{ $error }}</p>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <button type="submit"
-                            class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">
-                        Simpan Perubahan
-                    </button>
-                </form>
-            @elseif ($order->admin_notes)
-                <div class="border-t border-slate-100 pt-4">
-                    <p class="text-sm font-semibold">Catatan Admin</p>
-                    <p class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ $order->admin_notes }}</p>
+    <div class="py-6">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @if (session('success'))
+                <div class="rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3">
+                    {{ session('success') }}
                 </div>
             @endif
-        </section>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <p class="text-gray-500">Nomor Order</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->order_number }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Status</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ strtoupper(str_replace('_', ' ', $order->status)) }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Nama Perusahaan</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->company_name }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Contact Person</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->contact_person }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Telepon</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->phone }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Email</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->email ?: '-' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Nama Event</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->event_name }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Lokasi Event</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->event_location }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Tanggal Event</p>
+                        <p class="font-semibold text-gray-900 mt-1">{{ $order->event_date ? $order->event_date->format('d M Y') : '-' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500">Status Survey & SPS</p>
+                        <p class="font-semibold text-blue-700 mt-1">
+                            @if ($order->survey)
+                                {{ strtoupper(str_replace('_', ' ', $order->survey->status)) }}
+                                {{ $order->survey->sps_number ? '(' . $order->survey->sps_number . ')' : '' }}
+                            @else
+                                Belum ada pengajuan survey
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-sm text-gray-500">Deskripsi Kebutuhan Pekerjaan</p>
+                    <p class="mt-2 text-gray-900 whitespace-pre-line">{{ $order->description }}</p>
+                </div>
+
+                @if($order->admin_notes)
+                    <div>
+                        <p class="text-sm text-gray-500">Catatan Admin</p>
+                        <p class="mt-2 text-gray-900 whitespace-pre-line">{{ $order->admin_notes }}</p>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
-</div>
-@endsection
+</x-app-layout>

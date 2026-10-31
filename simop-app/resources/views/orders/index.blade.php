@@ -1,99 +1,100 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    {{ auth()->user()->role?->slug === 'client' ? 'Order & Pengajuan Survey Saya' : 'Manajemen Order & Pengajuan Survey' }}
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    Daftar pengajuan event/pekerjaan beserta status alur survey dan pengerjaan.
+                </p>
+            </div>
 
-@extends('layouts.app')
-
-@section('title', 'Order & RFQ | SIMOP')
-@section('page-title', 'Order & RFQ')
-
-@section('content')
-<div class="space-y-6">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">Order & RFQ</h1>
-            <p class="mt-2 text-sm text-slate-500">
-                Kelola permintaan penawaran dan order pekerjaan.
-            </p>
+            @if(auth()->user()->role?->slug === 'client')
+                <a href="{{ route('orders.create') }}"
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+                    + Buat Order & Ajukan Survey
+                </a>
+            @endif
         </div>
+    </x-slot>
 
-        @if ($role === 'client')
-            <a href="{{ route('client.orders.create') }}"
-               class="rounded-lg bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700">
-                + Ajukan Order
-            </a>
-        @endif
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
+            @if (session('success'))
+                <div class="rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Order</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Perusahaan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Event & Lokasi</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Tanggal Event</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Survey (SPS)</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Order</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse ($orders as $order)
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-gray-900">{{ $order->order_number }}</td>
+                                    <td class="px-4 py-3">{{ $order->company_name }}</td>
+                                    <td class="px-4 py-3">
+                                        <p class="font-medium text-gray-900">{{ $order->event_name }}</p>
+                                        <p class="text-xs text-gray-500">{{ $order->event_location }}</p>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {{ $order->event_date ? $order->event_date->format('d M Y') : '-' }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if ($order->survey)
+                                            <a href="{{ route('surveys.show', $order->survey) }}" class="text-blue-600 hover:underline font-medium text-xs">
+                                                {{ $order->survey->sps_number ?: strtoupper(str_replace('_', ' ', $order->survey->status)) }}
+                                            </a>
+                                        @else
+                                            <span class="text-xs text-gray-400">Belum ada</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                            {{ strtoupper(str_replace('_', ' ', $order->status)) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <a href="{{ route('orders.show', $order) }}"
+                                               class="text-blue-600 hover:underline font-medium">
+                                                Detail
+                                            </a>
+                                            <a href="{{ route('tracking.show', $order) }}"
+                                               class="text-emerald-600 hover:underline font-semibold text-xs">
+                                                Lacak Status
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
+                                        Belum ada data order.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                    <div class="mt-4">
+                        {{ $orders->links() }}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    @if (session('success'))
-        <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
-                    <tr>
-                        <th class="px-5 py-4">Nomor Order</th>
-                        @if ($role === 'admin')
-                            <th class="px-5 py-4">Client</th>
-                        @endif
-                        <th class="px-5 py-4">Nama Event</th>
-                        <th class="px-5 py-4">Tanggal</th>
-                        <th class="px-5 py-4">Status</th>
-                        <th class="px-5 py-4">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse ($orders as $order)
-                        <tr class="hover:bg-slate-50">
-                            <td class="whitespace-nowrap px-5 py-4 font-semibold text-blue-700">
-                                {{ $order->order_number }}
-                            </td>
-                            @if ($role === 'admin')
-                                <td class="px-5 py-4">
-                                    {{ $order->client->name ?? '-' }}
-                                </td>
-                            @endif
-                            <td class="px-5 py-4">{{ $order->event_name }}</td>
-                            <td class="whitespace-nowrap px-5 py-4">
-                                {{ $order->event_date->format('d/m/Y') }}
-                            </td>
-                            <td class="px-5 py-4">
-                                @php
-                                    $statusColors = [
-                                        'baru' => 'bg-blue-100 text-blue-700',
-                                        'diperiksa' => 'bg-amber-100 text-amber-700',
-                                        'perlu_revisi' => 'bg-orange-100 text-orange-700',
-                                        'ditolak' => 'bg-red-100 text-red-700',
-                                        'menunggu_survey' => 'bg-green-100 text-green-700',
-                                    ];
-                                @endphp
-                                <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusColors[$order->status] ?? 'bg-slate-100 text-slate-600' }}">
-                                    {{ str($order->status)->replace('_', ' ')->title() }}
-                                </span>
-                            </td>
-                            <td class="whitespace-nowrap px-5 py-4">
-                                <a href="{{ route('orders.show', $order) }}"
-                                   class="font-semibold text-blue-600 hover:text-blue-800">
-                                    Detail
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ $role === 'admin' ? 6 : 5 }}"
-                                class="px-5 py-12 text-center text-slate-500">
-                                Belum ada order yang tersedia.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <div class="border-t border-slate-200 px-5 py-4">
-            {{ $orders->links() }}
-        </div>
-    </div>
-</div>
-@endsection
+</x-app-layout>

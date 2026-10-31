@@ -2,373 +2,245 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Item;
+use App\Models\Order;
 use App\Models\Project;
+use App\Models\Survey;
 use App\Models\User;
-use App\Models\WorkEstimate;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless(
-            in_array(
-                $role,
-                ['admin', 'direktur', 'petugas-lapangan'],
-                true
-            ),
-            403
-        );
+        abort_unless(in_array($role, ['admin', 'direktur', 'petugas-lapangan', 'client'], true), 403);
 
         $projects = Project::with([
-            'workEstimate.order',
+            'order',
+            'survey',
             'creator',
             'assignedUser',
-            'planning.production.bapp',
+            'projectItems.item',
         ])
-            ->when(
-                $role === 'petugas-lapangan',
-                function ($query) use ($user) {
-                    $query->where(
-                        'assigned_to',
-                        $user->id
-                    );
-                }
-            )
+            ->when($role === 'petugas-lapangan', function ($query) use ($user) {
+                $query->where('assigned_to', $user->id);
+            })
+            ->when($role === 'client', function ($query) use ($user) {
+                $query->whereHas('order', function ($orderQuery) use ($user) {
+                    $orderQuery->where('client_id', $user->id);
+                });
+            })
             ->latest()
             ->paginate(10);
 
-        return view(
-            'projects.index',
-            compact('projects')
-        );
+        return view('projects.index', compact('projects'));
     }
 
-    public function create()
+    public function create(Request $request): View
     {
-        abort_unless(
-            auth()->user()?->role?->slug === 'admin',
-            403
-        );
+        $user = auth()->user();
+        $role = $user?->role?->slug;
 
-        $workEstimates = WorkEstimate::with([
-            'order',
-            'survey',
-        ])
-            ->where('status', 'approved')
+        abort_unless($role === 'admin', 403);
+
+        $orders = Order::with(['client', 'survey'])
             ->whereDoesntHave('project')
             ->latest()
             ->get();
 
-        $fieldOfficers = User::with('role')
-            ->whereHas(
-                'role',
-                function ($query) {
-                    $query->where(
-                        'slug',
-                        'petugas-lapangan'
-                    );
-                }
-            )
-            ->orderBy('name')
-            ->get();
+        $selectedOrder = null;
 
-        return view(
-            'projects.create',
-            compact(
-                'workEstimates',
-                'fieldOfficers'
-            )
-        );
-    }
-
-    public function store(Request $request)
-    {
-        abort_unless(
-            auth()->user()?->role?->slug === 'admin',
-            403
-        );
-
-        $validated = $request->validate([
-            'work_estimate_id' => [
-                'required',
-                'integer',
-                'exists:work_estimates,id',
-                'unique:projects,work_estimate_id',
-            ],
-            'assigned_to' => [
-                'nullable',
-                'integer',
-                'exists:users,id',
-            ],
-            'title' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-            'start_date' => [
-                'nullable',
-                'date',
-            ],
-            'deadline' => [
-                'nullable',
-                'date',
-                'after_or_equal:start_date',
-            ],
-            'notes' => [
-                'nullable',
-                'string',
-                'max:5000',
-            ],
-        ]);
-
-        if (!empty($validated['assigned_to'])) {
-            $fieldOfficer = User::with('role')
-                ->findOrFail(
-                    $validated['assigned_to']
-                );
-
-            abort_unless(
-                $fieldOfficer->role?->slug === 'petugas-lapangan',
-                422,
-                'Petugas yang dipilih harus memiliki role Petugas Lapangan.'
-            );
+        if ($request->filled('order_id')) {
+            $selectedOrder = Order::with(['client', 'survey'])
+                ->whereDoesntHave('project')
+                ->find($request->order_id);
+        } elseif ($request->filled('survey_id')) {
+            $survey = Survey::with('order')->find($request->survey_id);
+            if ($survey && $survey->order && ! $survey->order->project) {
+                $selectedOrder = $survey->order->load(['client', 'survey']);
+            }
         }
 
-        $project = DB::transaction(
-            function () use ($validated) {
-                $workEstimate = WorkEstimate::query()
-                    ->lockForUpdate()
-                    ->findOrFail(
-                        $validated['work_estimate_id']
-                    );
+        $fieldUsers = User::whereHas('role', function ($query) {
+            $query->where('slug', 'petugas-lapangan');
+        })->orderBy('name')->get();
 
-                abort_unless(
-                    $workEstimate->status === 'approved',
-                    422,
-                    'Hanya Work Estimate yang sudah mendapatkan persetujuan final Direktur yang dapat dijadikan Project.'
-                );
-
-                $projectExists = Project::query()
-                    ->where(
-                        'work_estimate_id',
-                        $workEstimate->id
-                    )
-                    ->exists();
-
-                abort_if(
-                    $projectExists,
-                    422,
-                    'Work Estimate ini sudah memiliki Project.'
-                );
-
-                return Project::create([
-                    'work_estimate_id' => $workEstimate->id,
-                    'created_by' => auth()->id(),
-                    'assigned_to' => $validated['assigned_to'] ?? null,
-                    'project_number' => $this->generateProjectNumber(),
-                    'title' => $validated['title'],
-                    'start_date' => $validated['start_date'] ?? null,
-                    'deadline' => $validated['deadline'] ?? null,
-                    'status' => 'planning',
-                    'progress' => 0,
-                    'notes' => $validated['notes'] ?? null,
-                ]);
-            }
-        );
-
-        return redirect()
-            ->route(
-                'projects.show',
-                $project
-            )
-            ->with(
-                'success',
-                'Project berhasil dibuat dari Work Estimate yang telah disetujui Direktur.'
-            );
+        return view('projects.create', compact(
+            'orders',
+            'selectedOrder',
+            'fieldUsers'
+        ));
     }
 
-    public function show(Project $project)
+    public function store(Request $request): RedirectResponse
     {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless(
-            in_array(
-                $role,
-                ['admin', 'direktur', 'petugas-lapangan'],
-                true
-            ),
-            403
-        );
+        abort_unless($role === 'admin', 403);
 
-        if (
-            $role === 'petugas-lapangan'
-            && $project->assigned_to !== $user->id
-        ) {
+        $validated = $request->validate([
+            'order_id' => ['required', 'exists:orders,id'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'start_date' => ['nullable', 'date'],
+            'deadline' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'status' => ['required', 'in:planning,in_progress,completed,cancelled'],
+            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $order = Order::with(['project', 'survey'])->findOrFail($validated['order_id']);
+
+        if ($order->project) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'order_id' => 'Order ini sudah memiliki Project.',
+                ]);
+        }
+
+        $project = Project::create([
+            'order_id' => $order->id,
+            'survey_id' => $order->survey?->id,
+            'created_by' => $user->id,
+            'assigned_to' => $validated['assigned_to'] ?? null,
+            'project_number' => $this->generateProjectNumber(),
+            'title' => $validated['title'],
+            'start_date' => $validated['start_date'] ?? null,
+            'deadline' => $validated['deadline'] ?? null,
+            'status' => $validated['status'],
+            'progress' => $validated['progress'],
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('projects.show', $project)
+            ->with('success', 'Project berhasil dibuat.');
+    }
+
+    public function show(Project $project): View
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
+        abort_unless(in_array($role, ['admin', 'direktur', 'petugas-lapangan', 'client'], true), 403);
+
+        if ($role === 'petugas-lapangan' && $project->assigned_to !== $user->id) {
+            abort(403);
+        }
+
+        if ($role === 'client' && $project->order?->client_id !== $user->id) {
             abort(403);
         }
 
         $project->load([
-            'workEstimate.order',
-            'workEstimate.survey.assignedUser',
-            'workEstimate.approvals.approver',
+            'order',
+            'survey',
             'creator',
             'assignedUser',
-            'planning.production.bapp',
-            'invoice',
-            'rating',
+            'planning.production',
+            'documents.uploader',
+            'projectItems.item',
+            'fieldDocumentations.uploader',
+            'rating.client',
         ]);
 
-        return view(
-            'projects.show',
-            compact('project')
-        );
+        $items = Item::orderBy('name')->get();
+
+        return view('projects.show', compact('project', 'items'));
     }
 
-    public function updateProgress(
-        Request $request,
-        Project $project
-    ) {
+    public function edit(Project $project): View
+    {
         $user = auth()->user();
         $role = $user?->role?->slug;
 
-        abort_unless(
-            in_array(
-                $role,
-                ['admin', 'petugas-lapangan'],
-                true
-            ),
-            403
-        );
+        abort_unless($role === 'admin', 403);
 
-        if (
-            $role === 'petugas-lapangan'
-            && $project->assigned_to !== $user->id
-        ) {
-            abort(403);
-        }
+        $project->load(['order', 'survey', 'assignedUser']);
 
-        abort_if(
-            $project->status === 'completed',
-            422,
-            'Project yang sudah selesai tidak dapat diubah progress-nya.'
-        );
+        $fieldUsers = User::whereHas('role', function ($query) {
+            $query->where('slug', 'petugas-lapangan');
+        })->orderBy('name')->get();
 
-        abort_if(
-            $project->status === 'cancelled',
-            422,
-            'Project yang dibatalkan tidak dapat diubah progress-nya.'
-        );
-
-        $validated = $request->validate([
-            'progress' => [
-                'required',
-                'integer',
-                'min:0',
-                'max:100',
-            ],
-        ]);
-
-        $progress = (int) $validated['progress'];
-
-        $status = $progress > 0
-            ? 'ongoing'
-            : 'planning';
-
-        $project->update([
-            'progress' => $progress,
-            'status' => $status,
-        ]);
-
-        return redirect()
-            ->route(
-                'projects.show',
-                $project
-            )
-            ->with(
-                'success',
-                $progress === 100
-                    ? 'Progress Project mencapai 100%. Project tetap berstatus berjalan sampai BAPP disetujui.'
-                    : 'Progress Project berhasil diperbarui.'
-            );
+        return view('projects.edit', compact('project', 'fieldUsers'));
     }
 
-    public function updateStatus(
-        Request $request,
-        Project $project
-    ) {
-        abort_unless(
-            auth()->user()?->role?->slug === 'admin',
-            403
-        );
+    public function update(Request $request, Project $project): RedirectResponse
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
 
-        abort_if(
-            $project->status === 'completed',
-            422,
-            'Project yang sudah selesai tidak dapat diubah statusnya.'
-        );
+        abort_unless($role === 'admin', 403);
 
         $validated = $request->validate([
-            'status' => [
-                'required',
-                Rule::in([
-                    'planning',
-                    'ongoing',
-                    'cancelled',
-                ]),
-            ],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'start_date' => ['nullable', 'date'],
+            'deadline' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'status' => ['required', 'in:planning,in_progress,completed,cancelled'],
+            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+            'notes' => ['nullable', 'string'],
         ]);
 
-        $status = $validated['status'];
-
-        $data = [
-            'status' => $status,
-        ];
-
-        if ($status === 'planning') {
-            $data['progress'] = 0;
+        if ($validated['status'] === 'completed') {
+            $validated['progress'] = 100;
         }
 
-        $project->update($data);
+        $project->update([
+            'assigned_to' => $validated['assigned_to'] ?? null,
+            'title' => $validated['title'],
+            'start_date' => $validated['start_date'] ?? null,
+            'deadline' => $validated['deadline'] ?? null,
+            'status' => $validated['status'],
+            'progress' => $validated['progress'],
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        $returnedCount = 0;
+        if (in_array($validated['status'], ['completed', 'cancelled'], true)) {
+            $returnedCount = $project->returnAllocatedStock();
+            if ($validated['status'] === 'completed') {
+                $project->order?->update(['status' => 'selesai']);
+            }
+        }
+
+        $msg = 'Project berhasil diperbarui.';
+        if ($returnedCount > 0) {
+            $msg .= ' Semua stok barang yang dibawa ke proyek ini otomatis dikembalikan ke stok awal.';
+        }
 
         return redirect()
-            ->route(
-                'projects.show',
-                $project
-            )
-            ->with(
-                'success',
-                $status === 'cancelled'
-                    ? 'Project berhasil dibatalkan.'
-                    : 'Status Project berhasil diperbarui.'
-            );
+            ->route('projects.show', $project)
+            ->with('success', $msg);
+    }
+
+    public function destroy(Project $project): RedirectResponse
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
+        abort_unless($role === 'admin', 403);
+
+        $project->returnAllocatedStock();
+        $project->delete();
+
+        return redirect()
+            ->route('projects.index')
+            ->with('success', 'Project berhasil dihapus dan stok barang telah dikembalikan.');
     }
 
     private function generateProjectNumber(): string
     {
-        do {
-            $number = 'PRJ-'
-                . now()->format('YmdHis')
-                . '-'
-                . strtoupper(
-                    substr(
-                        uniqid(),
-                        -4
-                    )
-                );
-        } while (
-            Project::where(
-                'project_number',
-                $number
-            )->exists()
-        );
+        $date = now()->format('Ymd');
+        $count = Project::whereDate('created_at', today())->count() + 1;
 
-        return $number;
+        return 'PRJ-' . $date . '-' . str_pad((string) $count, 4, '0', STR_PAD_LEFT);
     }
 }

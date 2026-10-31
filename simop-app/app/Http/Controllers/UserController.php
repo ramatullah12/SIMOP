@@ -17,94 +17,55 @@ class UserController extends Controller
         $this->authorizeAdmin($request);
 
         $search = trim((string) $request->query('search'));
-        $roleId = $request->query('role');
+        $roleId = $request->query('role_id');
 
         $users = User::with('role')
             ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when(
-                $roleId,
-                fn ($query) => $query->where('role_id', $roleId)
-            )
-            ->latest()
+            ->when($roleId, fn ($query) => $query->where('role_id', $roleId))
+            ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
 
-        $roles = $this->availableRoles();
+        $roles = Role::orderBy('name')->get();
 
-        return view(
-            'users.index',
-            compact(
-                'users',
-                'roles',
-                'search',
-                'roleId'
-            )
-        );
+        return view('users.index', compact('users', 'roles', 'search', 'roleId'));
     }
 
     public function create(Request $request): View
     {
         $this->authorizeAdmin($request);
 
-        $roles = $this->availableRoles();
+        $roles = Role::orderBy('name')->get();
 
-        return view(
-            'users.create',
-            compact('roles')
-        );
+        return view('users.create', compact('roles'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $this->authorizeAdmin($request);
 
-        $allowedRoleIds = $this->availableRoles()
-            ->pluck('id')
-            ->all();
-
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                'unique:users,email',
-            ],
-            'role_id' => [
-                'required',
-                Rule::in($allowedRoleIds),
-            ],
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'role_id' => ['required', 'exists:roles,id'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
-        $user = User::create([
+        User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role_id' => $validated['role_id'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        $user->forceFill([
-            'email_verified_at' => now(),
-        ])->save();
-
         return redirect()
-            ->route('admin.users.show', $user)
-            ->with('success', 'Pengguna berhasil ditambahkan.');
+            ->route('admin.users.index')
+            ->with('success', 'Data pengguna berhasil ditambahkan.');
     }
 
     public function show(Request $request, User $user): View
@@ -113,68 +74,28 @@ class UserController extends Controller
 
         $user->load('role');
 
-        return view(
-            'users.show',
-            compact('user')
-        );
+        return view('users.show', compact('user'));
     }
 
     public function edit(Request $request, User $user): View
     {
         $this->authorizeAdmin($request);
 
-        $roles = $this->availableRoles();
+        $roles = Role::orderBy('name')->get();
 
-        return view(
-            'users.edit',
-            compact('user', 'roles')
-        );
+        return view('users.edit', compact('user', 'roles'));
     }
 
-    public function update(
-        Request $request,
-        User $user
-    ): RedirectResponse {
+    public function update(Request $request, User $user): RedirectResponse
+    {
         $this->authorizeAdmin($request);
 
-        $allowedRoleIds = $this->availableRoles()
-            ->pluck('id')
-            ->all();
-
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'role_id' => [
-                'required',
-                Rule::in($allowedRoleIds),
-            ],
-            'password' => [
-                'nullable',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'role_id' => ['required', 'exists:roles,id'],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
         ]);
-
-        if (
-            $request->user()->is($user)
-            && (int) $validated['role_id'] !== (int) $user->role_id
-        ) {
-            return back()
-                ->withErrors([
-                    'role_id' => 'Role akun yang sedang digunakan tidak dapat diubah.',
-                ])
-                ->withInput();
-        }
 
         $data = [
             'name' => $validated['name'],
@@ -182,68 +103,37 @@ class UserController extends Controller
             'role_id' => $validated['role_id'],
         ];
 
-        if (! empty($validated['password'])) {
+        if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
         }
 
         $user->update($data);
 
         return redirect()
-            ->route('admin.users.show', $user)
+            ->route('admin.users.index')
             ->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
-    public function updateVerification(
-        Request $request,
-        User $user
-    ): RedirectResponse {
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
         $this->authorizeAdmin($request);
 
-        if ($request->user()->is($user)) {
-            return back()
-                ->withErrors([
-                    'verification' => 'Akun yang sedang digunakan tidak dapat diubah status verifikasinya.',
-                ]);
+        if ($user->id === $request->user()?->id) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', 'Anda tidak dapat menghapus akun yang sedang digunakan.');
         }
 
-        if ($user->email_verified_at) {
-            $user->forceFill([
-                'email_verified_at' => null,
-            ])->save();
+        $user->delete();
 
-            return back()->with(
-                'success',
-                'Verifikasi pengguna berhasil dibatalkan.'
-            );
-        }
-
-        $user->forceFill([
-            'email_verified_at' => now(),
-        ])->save();
-
-        return back()->with(
-            'success',
-            'Pengguna berhasil diverifikasi.'
-        );
-    }
-
-    private function availableRoles()
-    {
-        return Role::whereIn('slug', [
-            'admin',
-            'direktur',
-            'petugas-lapangan',
-            'client',
-        ])
-            ->orderBy('name')
-            ->get();
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Data pengguna berhasil dihapus.');
     }
 
     private function authorizeAdmin(Request $request): void
     {
-        abort_unless(
-            $request->user()?->role?->slug === 'admin',
-            403
-        );
+        abort_unless($request->user()?->role?->slug === 'admin', 403);
     }
 }
+

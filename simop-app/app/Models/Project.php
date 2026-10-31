@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 class Project extends Model
 {
     protected $fillable = [
-        'work_estimate_id',
+        'order_id',
+        'survey_id',
         'created_by',
         'assigned_to',
         'project_number',
@@ -31,9 +33,24 @@ class Project extends Model
         ];
     }
 
-    public function workEstimate(): BelongsTo
+    public function order(): BelongsTo
     {
-        return $this->belongsTo(WorkEstimate::class);
+        return $this->belongsTo(Order::class);
+    }
+
+    public function survey(): BelongsTo
+    {
+        return $this->belongsTo(Survey::class);
+    }
+
+    public function getWorkEstimateAttribute(): self
+    {
+        return $this;
+    }
+
+    public function getItemsAttribute(): Collection
+    {
+        return collect();
     }
 
     public function creator(): BelongsTo
@@ -56,13 +73,28 @@ class Project extends Model
         return $this->hasMany(Document::class);
     }
 
-    public function invoice(): HasOne
+    public function projectItems(): HasMany
     {
-        return $this->hasOne(Invoice::class);
+        return $this->hasMany(ProjectItem::class);
+    }
+
+    public function fieldDocumentations(): HasMany
+    {
+        return $this->hasMany(FieldDocumentation::class);
     }
 
     public function rating(): HasOne
     {
         return $this->hasOne(Rating::class);
+    }
+
+    public function returnAllocatedStock(): int
+    {
+        return $this->projectItems()
+            ->where('status', 'allocated')
+            ->update([
+                'status' => 'returned',
+                'returned_at' => now(),
+            ]);
     }
 }

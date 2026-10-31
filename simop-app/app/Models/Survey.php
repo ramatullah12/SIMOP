@@ -9,19 +9,27 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Survey extends Model
 {
     protected $fillable = [
+        'sps_number',
         'order_id',
+        'requested_by',
         'assigned_to',
         'scheduled_at',
         'location',
         'status',
         'findings',
         'notes',
+        'submitted_to_direktur_at',
+        'approved_by',
+        'approved_at',
+        'rejection_notes',
     ];
 
     protected function casts(): array
     {
         return [
             'scheduled_at' => 'datetime',
+            'submitted_to_direktur_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -30,18 +38,23 @@ class Survey extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function assignedUser(): BelongsTo
+    public function requester(): BelongsTo
     {
-        return $this->belongsTo(
-            User::class,
-            'assigned_to'
-        );
+        return $this->belongsTo(User::class, 'requested_by');
     }
 
-    public function workEstimate(): HasOne
+    public function assignedUser(): BelongsTo
     {
-        return $this->hasOne(
-            WorkEstimate::class
-        );
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function project(): HasOne
+    {
+        return $this->hasOne(Project::class);
     }
 }

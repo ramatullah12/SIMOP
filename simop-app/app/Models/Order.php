@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
@@ -34,5 +36,25 @@ class Order extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function surveys(): HasMany
+    {
+        return $this->hasMany(Survey::class);
+    }
+
+    public function survey(): HasOne
+    {
+        return $this->hasOne(Survey::class)->latestOfMany();
+    }
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function project(): HasOne
+    {
+        return $this->hasOne(Project::class)->latestOfMany();
     }
 }
