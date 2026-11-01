@@ -1,100 +1,206 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ $role === 'client' ? 'Ajukan Permintaan Survei ke Admin' : 'Buat & Kirim Pengajuan Survei ke Direktur' }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Buat Pengajuan Survei Baru
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    Admin membuat pengajuan survei berdasarkan kebutuhan pelanggan untuk dikirimkan kepada Direktur.
+                </p>
+            </div>
+            <a href="{{ route('surveys.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                &larr; Kembali ke Daftar Survei
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-4">
-            <div class="rounded-lg bg-blue-50 border border-blue-200 text-blue-900 p-4 text-sm">
-                Pengajuan survei dari Klien akan diterima oleh Admin untuk dijadwalkan dan diteruskan ke Direktur. Setelah disetujui Direktur, Surat Perintah Survei akan dikirimkan ke Petugas Lapangan.
-            </div>
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @if ($errors->any())
+                <div class="rounded-lg bg-red-100 border border-red-300 text-red-800 px-4 py-3 text-sm">
+                    <p class="font-bold mb-1">Periksa kembali data pengajuan Anda:</p>
+                    <ul class="list-disc pl-5 space-y-0.5">
+                        @foreach ($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                @if ($orders->isEmpty() && $role === 'client')
-                    <div class="text-center py-6 space-y-3">
-                        <p class="text-gray-700 font-medium">Semua pesanan Anda sudah memiliki pengajuan survei aktif, atau Anda belum membuat pesanan baru.</p>
-                        <a href="{{ route('orders.create') }}"
-                           class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                            + Buat Pesanan & Pengajuan Survei Baru
-                        </a>
-                    </div>
-                @else
-                    <form method="POST" action="{{ route('surveys.store') }}" class="space-y-6">
-                        @csrf
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 p-6">
+                <form method="POST" action="{{ route('surveys.store') }}" class="space-y-6" id="surveyCreateForm">
+                    @csrf
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Pilih Pesanan / Kegiatan</label>
-                            <select name="order_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="">-- Pilih Pesanan --</option>
-                                @foreach ($orders as $order)
-                                    <option value="{{ $order->id }}" @selected(old('order_id', $selectedOrderId) == $order->id)>
-                                        {{ $order->order_number }} - {{ $order->company_name }} ({{ $order->event_name }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('order_id') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                        </div>
+                    <!-- 1. Data Pelanggan & Pesanan -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-blue-700 border-b pb-2 mb-4">
+                            1. Data Pelanggan & Pesanan
+                        </h3>
 
-                        @if ($role === 'admin')
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Petugas Lapangan yang Diajukan ke Direktur</label>
-                                    <select name="assigned_to" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                        <option value="">-- Pilih Petugas Lapangan --</option>
-                                        @foreach ($fieldOfficers as $officer)
-                                            <option value="{{ $officer->id }}" @selected(old('assigned_to') == $officer->id)>
-                                                {{ $officer->name }} ({{ $officer->email }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('assigned_to') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Jadwal Pelaksanaan Survei</label>
-                                    <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                    @error('scheduled_at') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Pilih Pesanan Pelanggan <span class="text-red-500">*</span>
+                                </label>
+                                <select name="order_id" id="order_id" required class="w-full rounded-md border-gray-300 text-sm">
+                                    <option value="">-- Pilih Pesanan / Pelanggan --</option>
+                                    @foreach ($orders as $order)
+                                        <option value="{{ $order->id }}"
+                                                data-customer="{{ $order->company_name }}"
+                                                data-contact="{{ $order->contact_person }}"
+                                                data-location="{{ $order->event_location }}"
+                                                data-event="{{ $order->event_name }}"
+                                                @selected(old('order_id', $selectedOrderId) == $order->id)>
+                                            {{ $order->order_number }} — {{ $order->company_name }} ({{ $order->event_name }})
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-                        @else
+
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Usulan Waktu Survei (Opsional)</label>
-                                <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}"
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                @error('scheduled_at') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Nama Pelanggan / Perusahaan <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="customer_name" id="customer_name"
+                                       value="{{ old('customer_name') }}" required
+                                       placeholder="Nama lengkap pelanggan / instansi"
+                                       class="w-full rounded-md border-gray-300 text-sm">
                             </div>
-                        @endif
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Lokasi Survei</label>
-                            <input type="text" name="location" value="{{ old('location') }}" required
-                                   placeholder="Masukkan alamat lengkap lokasi survei"
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            @error('location') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Alamat Lengkap Lokasi Survei <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="location" id="location"
+                                       value="{{ old('location') }}" required
+                                       placeholder="Gedung, jalan, kota lokasi survei"
+                                       class="w-full rounded-md border-gray-300 text-sm">
+                            </div>
                         </div>
+                    </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Catatan Pengajuan Survei</label>
-                            <textarea name="notes" rows="3"
-                                      placeholder="Catatan kebutuhan survei di lokasi..."
-                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('notes') }}</textarea>
-                            @error('notes') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+                    <!-- 2. Kebutuhan & Tujuan Survei -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-blue-700 border-b pb-2 mb-4">
+                            2. Kebutuhan & Tujuan Survei
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Jenis Kebutuhan Survei <span class="text-red-500">*</span>
+                                </label>
+                                <select name="survey_type" id="survey_type" required class="w-full rounded-md border-gray-300 text-sm">
+                                    <option value="">-- Pilih Jenis Survei --</option>
+                                    @foreach ($surveyTypes as $type)
+                                        <option value="{{ $type }}" @selected(old('survey_type') === $type)>{{ $type }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Tujuan Pelaksanaan Survei <span class="text-red-500">*</span>
+                                </label>
+                                <textarea name="purpose" rows="3" required
+                                          placeholder="Jelaskan secara spesifik tujuan survei (misal: pengukuran layout panggung dan booth, kapasitas daya listrik venue, rute loading barang, dll.)"
+                                          class="w-full rounded-md border-gray-300 text-sm">{{ old('purpose') }}</textarea>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="flex items-center justify-end gap-3">
-                            <a href="{{ route('surveys.index') }}" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700">
-                                Batal
-                            </a>
-                            <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 font-medium">
-                                {{ $role === 'client' ? 'Kirim Pengajuan Survei ke Admin' : 'Kirim ke Direktur (Minta Persetujuan SPS)' }}
+                    <!-- 3. Penugasan Petugas & Jadwal -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-blue-700 border-b pb-2 mb-4">
+                            3. Rencana Penugasan & Jadwal Survei
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Pilih Petugas Survei (Petugas Lapangan)
+                                </label>
+                                <select name="assigned_to" class="w-full rounded-md border-gray-300 text-sm">
+                                    <option value="">-- Pilih Petugas Survei --</option>
+                                    @foreach ($fieldOfficers as $officer)
+                                        <option value="{{ $officer->id }}" @selected(old('assigned_to') == $officer->id)>
+                                            {{ $officer->name }} ({{ $officer->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Wajib dipilih sebelum dikirimkan ke Direktur.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Rencana Jadwal Survei
+                                </label>
+                                <input type="datetime-local" name="scheduled_at"
+                                       value="{{ old('scheduled_at') }}"
+                                       class="w-full rounded-md border-gray-300 text-sm">
+                                <p class="text-xs text-gray-500 mt-1">Wajib ditentukan sebelum dikirimkan ke Direktur.</p>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Keterangan Tambahan / Catatan untuk Direktur
+                                </label>
+                                <textarea name="notes" rows="2"
+                                          placeholder="Catatan pengantar atau instruksi khusus dari Admin..."
+                                          class="w-full rounded-md border-gray-300 text-sm">{{ old('notes') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <a href="{{ route('surveys.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                            Batal
+                        </a>
+
+                        <div class="flex items-center gap-2">
+                            <button type="submit" name="action" value="draft"
+                                    class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-200">
+                                Simpan sebagai Draf
+                            </button>
+                            <button type="submit" name="action" value="submit"
+                                    class="px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 shadow-sm">
+                                Simpan & Kirim ke Direktur
                             </button>
                         </div>
-                    </form>
-                @endif
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const orderSelect = document.getElementById('order_id');
+            const customerInput = document.getElementById('customer_name');
+            const locationInput = document.getElementById('location');
+
+            function syncOrder() {
+                const opt = orderSelect.options[orderSelect.selectedIndex];
+                if (!opt || !opt.value) return;
+
+                if (!customerInput.value || customerInput.dataset.autoFilled === 'true') {
+                    customerInput.value = opt.dataset.customer || '';
+                    customerInput.dataset.autoFilled = 'true';
+                }
+                if (!locationInput.value || locationInput.dataset.autoFilled === 'true') {
+                    locationInput.value = opt.dataset.location || '';
+                    locationInput.dataset.autoFilled = 'true';
+                }
+            }
+
+            customerInput.addEventListener('input', () => customerInput.dataset.autoFilled = 'false');
+            locationInput.addEventListener('input', () => locationInput.dataset.autoFilled = 'false');
+            orderSelect.addEventListener('change', syncOrder);
+
+            if (orderSelect.value && (!customerInput.value || !locationInput.value)) {
+                syncOrder();
+            }
+        });
+    </script>
 </x-app-layout>

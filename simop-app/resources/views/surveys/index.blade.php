@@ -1,144 +1,209 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     @if ($role === 'direktur')
-                        Persetujuan Survei & Penerbitan Surat Perintah Survei (SPS)
+                        Persetujuan Pengajuan Survei & Surat Perintah Survei (SPS)
                     @elseif ($role === 'petugas-lapangan')
-                        Surat Perintah Survei (SPS) Lapangan
+                        Tugas Pelaksanaan Survei & Surat Perintah Survei (SPS)
                     @elseif ($role === 'client')
-                        Pengajuan Survei Saya
+                        Informasi Jadwal & Hasil Survei
                     @else
                         Manajemen Pengajuan Survei & Surat Perintah Survei (SPS)
                     @endif
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Daftar pengajuan survei lokasi dan penerbitan Surat Perintah Survei (SPS) untuk petugas lapangan.
+                    @if ($role === 'admin')
+                        Buat pengajuan survei berdasarkan kebutuhan pelanggan, kirim ke Direktur untuk persetujuan, dan pantau pelaksanaan survei.
+                    @elseif ($role === 'direktur')
+                        Tinjau detail pengajuan survei dari Admin, berikan keputusan (Setujui atau Tolak disertai alasan), dan terbitkan SPS.
+                    @elseif ($role === 'petugas-lapangan')
+                        Daftar tugas survei yang telah disetujui Direktur. Laksanakan survei di lokasi dan isi form hasil serta tanda tangan pelanggan.
+                    @else
+                        Pantau status pelaksanaan survei untuk pesanan kegiatan Anda.
+                    @endif
                 </p>
             </div>
 
-            @if ($role === 'client')
+            @if ($role === 'admin')
                 <a href="{{ route('surveys.create') }}"
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                    + Ajukan Survei ke Admin
-                </a>
-            @elseif ($role === 'admin')
-                <a href="{{ route('surveys.create') }}"
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                    + Buat & Kirim Survei ke Direktur
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md font-medium text-sm text-white hover:bg-blue-700">
+                    + Buat Pengajuan Survei
                 </a>
             @endif
         </div>
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-5">
             @if (session('success'))
-                <div class="rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3">
+                <div class="rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3 text-sm">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="rounded-lg bg-red-100 border border-red-300 text-red-800 px-4 py-3">
+                <div class="rounded-lg bg-red-100 border border-red-300 text-red-800 px-4 py-3 text-sm">
                     {{ session('error') }}
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <!-- Filter Status -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <form method="GET" action="{{ route('surveys.index') }}" class="flex flex-wrap items-center gap-2">
+                    <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Saring Status:</label>
+                    <select name="status" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm py-1.5 px-3">
+                        <option value="">Semua Status</option>
+                        @foreach ($statusOptions as $val => $lbl)
+                            <option value="{{ $val }}" @selected($statusFilter === $val)>{{ $lbl }}</option>
+                        @endforeach
+                    </select>
+                    @if ($statusFilter)
+                        <a href="{{ route('surveys.index') }}" class="text-xs text-gray-500 hover:text-gray-700 underline ml-1">
+                            Atur Ulang
+                        </a>
+                    @endif
+                </form>
+
+                <div class="text-xs text-gray-500">
+                    Menampilkan total <strong>{{ $surveys->total() }}</strong> data survei
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
                 <div class="p-6 text-gray-900 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 border border-gray-200 text-sm">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. SPS / Status Alur</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Pesanan & Kegiatan</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Klien</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">No. SPS / Dokumen</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Pelanggan & Kegiatan</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Jenis & Tujuan Survei</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Survei</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Jadwal & Lokasi</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Persetujuan Direktur</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status Alur</th>
+                                <th class="px-4 py-3 text-center font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($surveys as $survey)
-                                @php
-                                    $statusBadge = match ($survey->status) {
-                                        'diajukan_client' => ['bg-amber-100 text-amber-800', 'Diajukan Klien (Di Admin)'],
-                                        'menunggu_persetujuan_direktur' => ['bg-purple-100 text-purple-800', 'Menunggu Persetujuan Direktur'],
-                                        'ditolak_direktur' => ['bg-red-100 text-red-800', 'Ditolak / Revisi Direktur'],
-                                        'dijadwalkan' => ['bg-blue-100 text-blue-800', 'SPS Terkirim ke Petugas'],
-                                        'berlangsung' => ['bg-indigo-100 text-indigo-800', 'Survei Sedang Berlangsung'],
-                                        'selesai' => ['bg-emerald-100 text-emerald-800', 'Survei Lapangan Selesai'],
-                                        default => ['bg-gray-100 text-gray-700', strtoupper($survey->status)],
-                                    };
-                                @endphp
-                                <tr>
-                                    <td class="px-4 py-3">
+                                <tr class="hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-4 py-3 align-top">
                                         @if ($survey->sps_number)
-                                            <p class="font-bold text-blue-700">{{ $survey->sps_number }}</p>
+                                            <p class="font-bold text-blue-700 text-xs tracking-wide">{{ $survey->sps_number }}</p>
+                                            <span class="text-[11px] text-gray-500">Terbit: {{ $survey->sps_issued_at?->format('d/m/Y') ?? $survey->approved_at?->format('d/m/Y') }}</span>
                                         @else
-                                            <p class="text-xs text-gray-400 italic">SPS Belum Terbit</p>
+                                            <span class="inline-flex px-2 py-0.5 rounded text-xs text-gray-500 bg-gray-100 italic">
+                                                SPS Belum Terbit
+                                            </span>
                                         @endif
-                                        <span class="mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $statusBadge[0] }}">
-                                            {{ $statusBadge[1] }}
-                                        </span>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <p class="font-semibold text-gray-900">{{ $survey->order?->order_number ?? '-' }}</p>
-                                        <p class="text-xs text-gray-500">{{ $survey->order?->event_name ?? '-' }}</p>
+                                    <td class="px-4 py-3 align-top">
+                                        <p class="font-semibold text-gray-900">{{ $survey->customer_display_name }}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">
+                                            Pesanan: {{ $survey->order?->order_number ?? '-' }}
+                                            @if ($survey->order?->event_name)
+                                                ({{ $survey->order->event_name }})
+                                            @endif
+                                        </p>
                                     </td>
-                                    <td class="px-4 py-3">{{ $survey->order?->company_name ?? '-' }}</td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3 align-top max-w-xs">
+                                        <p class="font-medium text-gray-800 text-xs">{{ $survey->survey_type ?: 'Survei Lapangan' }}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5 line-clamp-2" title="{{ $survey->purpose }}">
+                                            {{ $survey->purpose ?: '-' }}
+                                        </p>
+                                    </td>
+                                    <td class="px-4 py-3 align-top">
                                         @if ($survey->assignedUser)
                                             <p class="font-medium text-gray-900">{{ $survey->assignedUser->name }}</p>
                                             @if (! $survey->approved_at)
-                                                <p class="text-xs text-amber-600">Menunggu SPS Direktur</p>
+                                                <span class="text-[11px] text-amber-600">(Menunggu Persetujuan Direktur)</span>
                                             @endif
                                         @else
-                                            <span class="text-xs text-gray-400">Belum dipilih Admin</span>
+                                            <span class="text-xs text-gray-400 italic">Belum ditentukan</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <p class="font-medium text-gray-900">{{ $survey->scheduled_at?->format('d M Y H:i') ?? 'Belum dijadwalkan' }}</p>
-                                        <p class="text-xs text-gray-500">{{ $survey->location }}</p>
+                                    <td class="px-4 py-3 align-top">
+                                        <p class="font-medium text-gray-900">{{ $survey->scheduled_at?->format('d M Y, H:i') ?? 'Belum dijadwalkan' }}</p>
+                                        <p class="text-xs text-gray-500 line-clamp-1" title="{{ $survey->location }}">{{ $survey->location }}</p>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        @if ($survey->approved_at)
-                                            <span class="inline-flex px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold">
-                                                Disetujui Direktur
+                                    <td class="px-4 py-3 align-top">
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $survey->status_color }}">
+                                            {{ $survey->status_label }}
+                                        </span>
+                                        @if ($survey->status === \App\Models\Survey::STATUS_REJECTED && $survey->rejection_notes)
+                                            <p class="text-xs text-red-600 mt-1 line-clamp-1" title="{{ $survey->rejection_notes }}">
+                                                Alasan: {{ $survey->rejection_notes }}
+                                            </p>
+                                        @endif
+                                        @if ($survey->isSigned())
+                                            <span class="block text-[11px] text-emerald-700 font-medium mt-1">
+                                                ✓ TTD Pelanggan ({{ $survey->signer_name }})
                                             </span>
-                                            <p class="text-xs text-gray-500 mt-0.5">{{ $survey->approved_at->format('d M Y H:i') }}</p>
-                                        @elseif ($survey->status === 'menunggu_persetujuan_direktur')
-                                            <span class="inline-flex px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-semibold">
-                                                Menunggu Persetujuan Direktur
-                                            </span>
-                                        @elseif ($survey->status === 'ditolak_direktur')
-                                            <span class="inline-flex px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold">
-                                                Revisi Direktur
-                                            </span>
-                                        @else
-                                            <span class="text-xs text-gray-400">Menunggu Admin</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex items-center gap-3">
-                                            <a href="{{ route('surveys.show', $survey) }}"
-                                               class="text-blue-600 hover:underline font-semibold">
-                                                @if ($role === 'direktur' && $survey->status === 'menunggu_persetujuan_direktur')
-                                                    Proses Persetujuan SPS
-                                                @elseif ($role === 'admin' && $survey->status === 'diajukan_client')
-                                                    Teruskan ke Direktur
-                                                @elseif ($role === 'petugas-lapangan')
-                                                    Buka SPS & Catat Hasil
+                                    <td class="px-4 py-3 align-top text-center whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            @if ($role === 'direktur' && $survey->status === \App\Models\Survey::STATUS_WAITING_DIRECTOR)
+                                                <a href="{{ route('surveys.show', $survey) }}"
+                                                   class="px-3 py-1 bg-purple-600 text-white rounded text-xs font-semibold hover:bg-purple-700">
+                                                    Proses Persetujuan
+                                                </a>
+                                            @elseif ($role === 'petugas-lapangan')
+                                                @if ($survey->status === \App\Models\Survey::STATUS_WAITING_EXECUTION)
+                                                    <a href="{{ route('surveys.show', $survey) }}"
+                                                       class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700">
+                                                        Buka SPS & Mulai
+                                                    </a>
+                                                @elseif ($survey->status === \App\Models\Survey::STATUS_IN_PROGRESS)
+                                                    <a href="{{ route('surveys.show', $survey) }}"
+                                                       class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-semibold hover:bg-indigo-700">
+                                                        Selesaikan Lapangan
+                                                    </a>
+                                                @elseif ($survey->status === \App\Models\Survey::STATUS_WAITING_RESULT)
+                                                    <a href="{{ route('surveys.edit', $survey) }}"
+                                                       class="px-2.5 py-1 bg-amber-600 text-white rounded text-xs font-semibold hover:bg-amber-700">
+                                                        Isi Hasil & TTD
+                                                    </a>
                                                 @else
-                                                    Detail
+                                                    <a href="{{ route('surveys.show', $survey) }}"
+                                                       class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200">
+                                                        Rincian
+                                                    </a>
                                                 @endif
-                                            </a>
-                                            @if ($survey->order)
-                                                <a href="{{ route('tracking.show', $survey->order) }}"
-                                                   class="text-emerald-600 hover:underline text-xs font-semibold">
-                                                    Lacak Alur
+                                            @elseif ($role === 'admin' && $survey->isEditableByAdmin())
+                                                <a href="{{ route('surveys.edit', $survey) }}"
+                                                   class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">
+                                                    {{ $survey->status === \App\Models\Survey::STATUS_REJECTED ? 'Perbaiki' : 'Ubah' }}
+                                                </a>
+                                                <a href="{{ route('surveys.show', $survey) }}"
+                                                   class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200">
+                                                    Rincian
+                                                </a>
+                                            @else
+                                                <a href="{{ route('surveys.show', $survey) }}"
+                                                   class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200">
+                                                    Rincian
+                                                </a>
+                                            @endif
+
+                                            @if ($survey->sps_number && $role !== 'client')
+                                                <a href="{{ route('surveys.pdf.sps', $survey) }}" target="_blank"
+                                                   class="p-1 text-gray-500 hover:text-blue-600" title="Unduh SPS PDF">
+                                                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
+                                                </a>
+                                            @endif
+
+                                            @if ($survey->status === \App\Models\Survey::STATUS_DONE && $role !== 'client')
+                                                <a href="{{ route('surveys.pdf.result', $survey) }}" target="_blank"
+                                                   class="p-1 text-gray-500 hover:text-emerald-600" title="Unduh Hasil Survei PDF">
+                                                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
                                                 </a>
                                             @endif
                                         </div>
@@ -146,18 +211,20 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada data pengajuan survei / Surat Perintah Survei.
+                                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                        Tidak ada data survei yang ditemukan.
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
+                </div>
 
-                    <div class="mt-4">
+                @if ($surveys->hasPages())
+                    <div class="px-6 py-4 border-t border-gray-100">
                         {{ $surveys->links() }}
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>

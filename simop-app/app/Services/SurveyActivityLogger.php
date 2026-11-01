@@ -15,9 +15,10 @@ class SurveyActivityLogger
         ?string $statusBefore = null,
         ?string $statusAfter = null,
         array $changes = [],
-        ?User $user = null
+        ?User $user = null,
+        bool $asSystem = false
     ): SurveyActivity {
-        $user ??= auth()->user();
+        $user = $asSystem ? null : ($user ?? auth()->user());
 
         return SurveyActivity::create([
             'survey_id' => $survey->id,

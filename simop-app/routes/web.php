@@ -36,6 +36,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('surveys.approve-direktur');
     Route::post('/surveys/{survey}/reject-direktur', [SurveyController::class, 'rejectByDirektur'])
         ->name('surveys.reject-direktur');
+    Route::post('/surveys/{survey}/start', [SurveyController::class, 'start'])
+        ->name('surveys.start');
+    Route::post('/surveys/{survey}/finish-field', [SurveyController::class, 'finishField'])
+        ->name('surveys.finish-field');
+    Route::post('/surveys/{survey}/signature', [SurveyController::class, 'saveSignature'])
+        ->name('surveys.signature.save');
+    Route::post('/surveys/{survey}/submit-result', [SurveyController::class, 'submitResult'])
+        ->name('surveys.submit-result');
+    Route::post('/surveys/{survey}/open-correction', [SurveyController::class, 'openCorrection'])
+        ->name('surveys.open-correction');
+    Route::delete('/surveys/{survey}/photos/{photo}', [SurveyController::class, 'destroyPhoto'])
+        ->name('surveys.photos.destroy');
+    Route::get('/surveys/{survey}/signature-image', [SurveyController::class, 'signature'])
+        ->name('surveys.signature.image');
+    Route::get('/surveys/{survey}/photos/{photo}', [SurveyController::class, 'photo'])
+        ->name('surveys.photos.show');
+    Route::get('/surveys/{survey}/pdf/request', [SurveyController::class, 'requestPdf'])
+        ->name('surveys.pdf.request');
+    Route::get('/surveys/{survey}/pdf/sps', [SurveyController::class, 'spsPdf'])
+        ->name('surveys.pdf.sps');
+    Route::get('/surveys/{survey}/pdf/result', [SurveyController::class, 'resultPdf'])
+        ->name('surveys.pdf.result');
     Route::resource('surveys', SurveyController::class);
 
     Route::resource('projects', ProjectController::class);

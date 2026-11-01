@@ -211,20 +211,29 @@ class TrackingController extends Controller
             $logs[] = [
                 'state' => 'done',
                 'badge' => 'Survei Selesai',
-                'title' => 'Petugas Lapangan Menyelesaikan Survei Lokasi',
-                'description' => 'Hasil temuan: ' . ($survey->findings ?: 'Data hasil survei telah diinput.'),
-                'actor' => $survey->assignedUser?->name ?? 'Petugas Lapangan',
-                'timestamp' => $survey->updated_at?->format('d M Y, H:i'),
+                'title' => 'Petugas Menyelesaikan Survei & Tanda Tangan Pelanggan Tersimpan',
+                'description' => 'Hasil pemeriksaan: ' . ($survey->findings ?: 'Data hasil survei telah diisi.') . ($survey->signer_name ? " (Ditandatangani oleh {$survey->signer_name})" : ''),
+                'actor' => $survey->assignedUser?->name ?? 'Petugas Survei',
+                'timestamp' => $survey->completed_at?->format('d M Y, H:i') ?? $survey->updated_at?->format('d M Y, H:i'),
             ];
-        } elseif ($survey && $survey->approved_at && in_array($survey->status, ['dijadwalkan', 'berlangsung'], true)) {
+        } elseif ($survey && $survey->status === 'menunggu_hasil') {
+            $logs[] = [
+                'state' => 'active',
+                'badge' => 'Pengisian Hasil',
+                'title' => 'Pemeriksaan Lapangan Selesai, Menunggu Form Hasil & Tanda Tangan',
+                'description' => 'Petugas telah menyelesaikan pemeriksaan di lokasi dan sedang melengkapi form hasil survei serta meminta tanda tangan digital pelanggan.',
+                'actor' => $survey->assignedUser?->name ?? 'Petugas Survei',
+                'timestamp' => $survey->field_finished_at?->format('d M Y, H:i') ?? $survey->updated_at?->format('d M Y, H:i'),
+            ];
+        } elseif ($survey && $survey->approved_at && in_array($survey->status, ['dijadwalkan', 'menunggu_pelaksanaan', 'berlangsung'], true)) {
             $logs[] = [
                 'state' => 'active',
                 'badge' => $survey->status === 'berlangsung' ? 'Sedang Survei' : 'Terjadwal',
                 'title' => $survey->status === 'berlangsung'
-                    ? 'Petugas Lapangan Sedang Melakukan Survei'
-                    : 'Surat Perintah Survei Diterima Petugas Lapangan',
-                'description' => "Petugas lapangan ({$survey->assignedUser?->name}) melaksanakan survei di {$survey->location}.",
-                'actor' => $survey->assignedUser?->name ?? 'Petugas Lapangan',
+                    ? 'Petugas Survei Sedang Melakukan Pemeriksaan di Lokasi'
+                    : 'Surat Perintah Survei Diterima Petugas',
+                'description' => "Petugas survei ({$survey->assignedUser?->name}) melaksanakan tugas survei di {$survey->location}.",
+                'actor' => $survey->assignedUser?->name ?? 'Petugas Survei',
                 'timestamp' => $survey->scheduled_at?->format('d M Y, H:i') ?? '-',
             ];
         } else {
@@ -374,18 +383,20 @@ class TrackingController extends Controller
         } elseif ($project) {
             $currentHeadline = 'Proyek Aktif';
         } elseif ($survey) {
-            if ($survey->status === 'diajukan_client') {
-                $currentHeadline = 'Menunggu Admin Meneruskan Survei ke Direktur';
-            } elseif ($survey->status === 'menunggu_persetujuan_direktur') {
+            if (in_array($survey->status, [Survey::STATUS_DRAFT, 'diajukan_client'], true)) {
+                $currentHeadline = 'Admin Sedang Menyiapkan Pengajuan Survei';
+            } elseif ($survey->status === Survey::STATUS_WAITING_DIRECTOR) {
                 $currentHeadline = 'Menunggu Persetujuan Direktur (Surat Perintah Survei)';
-            } elseif ($survey->status === 'ditolak_direktur') {
-                $currentHeadline = 'Pengajuan Survei Perlu Revisi';
-            } elseif ($survey->status === 'dijadwalkan') {
+            } elseif ($survey->status === Survey::STATUS_REJECTED) {
+                $currentHeadline = 'Pengajuan Survei Ditolak / Perlu Revisi Direktur';
+            } elseif (in_array($survey->status, [Survey::STATUS_APPROVED, Survey::STATUS_WAITING_EXECUTION, 'dijadwalkan'], true)) {
                 $currentHeadline = "Surat Perintah Survei ({$survey->sps_number}) Dikirim ke Petugas";
-            } elseif ($survey->status === 'berlangsung') {
-                $currentHeadline = 'Survei Lapangan Sedang Berlangsung';
-            } elseif ($survey->status === 'selesai') {
-                $currentHeadline = 'Survei Selesai';
+            } elseif ($survey->status === Survey::STATUS_IN_PROGRESS) {
+                $currentHeadline = 'Survei Sedang Berlangsung di Lokasi Pelanggan';
+            } elseif ($survey->status === Survey::STATUS_WAITING_RESULT) {
+                $currentHeadline = 'Pemeriksaan Lapangan Selesai, Menunggu Pengisian Hasil & Tanda Tangan Pelanggan';
+            } elseif ($survey->status === Survey::STATUS_DONE) {
+                $currentHeadline = 'Survei Selesai dan Ditandatangani Pelanggan';
             }
         }
 

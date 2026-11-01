@@ -16,10 +16,10 @@
                        class="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
                         Detail Survei / SPS
                     </a>
-                @elseif (in_array(auth()->user()->role?->slug, ['admin', 'client']))
+                @elseif (auth()->user()->role?->slug === 'admin')
                     <a href="{{ route('surveys.create', ['order_id' => $order->id]) }}"
                        class="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
-                        + Ajukan Survei
+                        + Buat Pengajuan Survei
                     </a>
                 @endif
 

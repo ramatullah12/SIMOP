@@ -31,8 +31,9 @@ class DashboardController extends Controller
     {
         $stats = [
             'orders_total' => Order::count(),
-            'surveys_waiting_admin' => Survey::where('status', 'diajukan_client')->count(),
-            'surveys_waiting_direktur' => Survey::where('status', 'menunggu_persetujuan_direktur')->count(),
+            'surveys_waiting_admin' => Survey::whereIn('status', [Survey::STATUS_DRAFT, Survey::STATUS_REJECTED, 'diajukan_client'])->count(),
+            'surveys_waiting_direktur' => Survey::where('status', Survey::STATUS_WAITING_DIRECTOR)->count(),
+            'surveys_active' => Survey::whereIn('status', [Survey::STATUS_WAITING_EXECUTION, Survey::STATUS_IN_PROGRESS, Survey::STATUS_WAITING_RESULT, 'dijadwalkan'])->count(),
             'projects_active' => Project::whereIn('status', ['planning', 'in_progress'])->count(),
             'projects_completed' => Project::where('status', 'completed')->count(),
             'items_count' => Item::count(),
@@ -79,7 +80,7 @@ class DashboardController extends Controller
         $activeSps = Survey::with(['order.client', 'approver'])
             ->where('assigned_to', $user->id)
             ->whereNotNull('approved_at')
-            ->whereIn('status', ['dijadwalkan', 'berlangsung', 'selesai'])
+            ->whereIn('status', array_merge(Survey::OFFICER_STATUSES, ['dijadwalkan']))
             ->latest()
             ->take(5)
             ->get();
@@ -97,8 +98,8 @@ class DashboardController extends Controller
             ->get();
 
         $stats = [
-            'sps_active' => Survey::where('assigned_to', $user->id)->whereNotNull('approved_at')->whereIn('status', ['dijadwalkan', 'berlangsung'])->count(),
-            'sps_completed' => Survey::where('assigned_to', $user->id)->where('status', 'selesai')->count(),
+            'sps_active' => Survey::where('assigned_to', $user->id)->whereNotNull('approved_at')->whereIn('status', [Survey::STATUS_WAITING_EXECUTION, Survey::STATUS_IN_PROGRESS, Survey::STATUS_WAITING_RESULT, 'dijadwalkan'])->count(),
+            'sps_completed' => Survey::where('assigned_to', $user->id)->where('status', Survey::STATUS_DONE)->count(),
             'productions_active' => Production::where('assigned_to', $user->id)->whereIn('status', ['pending', 'in_progress'])->count(),
             'field_docs_count' => FieldDocumentation::where('uploaded_by', $user->id)->count(),
         ];

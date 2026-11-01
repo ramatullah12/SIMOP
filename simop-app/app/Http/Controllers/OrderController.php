@@ -67,20 +67,12 @@ class OrderController extends Controller
             'event_date' => $validated['event_date'] ?? null,
             'description' => $validated['description'],
             'estimated_budget' => null,
-            'status' => 'menunggu_survey',
-        ]);
-
-        Survey::create([
-            'order_id' => $order->id,
-            'requested_by' => $user->id,
-            'location' => $validated['event_location'],
-            'status' => 'diajukan_client',
-            'notes' => 'Pengajuan survei awal dari Klien: ' . $validated['description'],
+            'status' => 'masuk',
         ]);
 
         return redirect()
             ->route('orders.index')
-            ->with('success', 'Pesanan dan pengajuan survei berhasil dikirim ke Admin untuk diteruskan ke Direktur.');
+            ->with('success', 'Pesanan berhasil dikirim ke Admin. Admin akan meninjau kebutuhan pelanggan dan membuat pengajuan survei.');
     }
 
     public function show(Order $order): View
