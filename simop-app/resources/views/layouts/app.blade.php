@@ -450,7 +450,7 @@
             'client' => [
                 ['Beranda', 'dashboard'],
                 ['Pesanan', 'orders.index'],
-                ['Informasi Survei', 'surveys.index'],
+                ['Status & Riwayat Survei', 'surveys.index'],
                 ['Status Pekerjaan', 'tracking.index'],
                 ['Dokumentasi Lapangan', 'field-documentations.index'],
                 ['Dokumen Umum', 'documents.index'],

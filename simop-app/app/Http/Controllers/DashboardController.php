@@ -120,9 +120,26 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Riwayat dan Monitoring Status Survei khusus milik Client ini
+        $clientSurveys = Survey::with(['order', 'assignedUser', 'approver'])
+            ->whereHas('order', fn ($q) => $q->where('client_id', $user->id))
+            ->latest()
+            ->get();
+
         $stats = [
             'orders_count' => Order::where('client_id', $user->id)->count(),
-            'surveys_count' => Survey::whereHas('order', fn ($q) => $q->where('client_id', $user->id))->count(),
+            'surveys_count' => $clientSurveys->count(),
+            'surveys_in_progress' => $clientSurveys->whereIn('status', [
+                Survey::STATUS_DRAFT,
+                Survey::STATUS_WAITING_DIRECTOR,
+                Survey::STATUS_APPROVED,
+                Survey::STATUS_WAITING_EXECUTION,
+                Survey::STATUS_IN_PROGRESS,
+                Survey::STATUS_WAITING_RESULT,
+                'dijadwalkan',
+                'diajukan_client',
+            ])->count(),
+            'surveys_completed' => $clientSurveys->where('status', Survey::STATUS_DONE)->count(),
             'active_projects' => Project::whereIn('status', ['planning', 'in_progress'])
                 ->whereHas('order', fn ($q) => $q->where('client_id', $user->id))
                 ->count(),
@@ -131,6 +148,6 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-        return view('dashboard.client', compact('stats', 'orders'));
+        return view('dashboard.client', compact('stats', 'orders', 'clientSurveys'));
     }
 }

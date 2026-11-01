@@ -29,7 +29,7 @@
                     </a>
                 @endif
 
-                @if ($survey->status === \App\Models\Survey::STATUS_DONE && $role !== 'client')
+                @if ($survey->status === \App\Models\Survey::STATUS_DONE)
                     <a href="{{ route('surveys.pdf.result', $survey) }}" target="_blank"
                        class="px-3.5 py-2 rounded-md bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 inline-flex items-center gap-1.5 shadow-sm">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Buat Pesanan & Ajukan Survei ke Admin
+            Buat Pesanan Kegiatan Baru
         </h2>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-4">
             <div class="rounded-lg bg-blue-50 border border-blue-200 text-blue-900 p-4 text-sm">
-                Saat Anda mengirim formulir ini, <strong>Pengajuan Survei</strong> otomatis dikirim ke <strong>Admin</strong>, lalu diteruskan ke <strong>Direktur</strong> untuk persetujuan <strong>Surat Perintah Survei (SPS)</strong> kepada <strong>Petugas Lapangan</strong>.
+                Kirimkan data pesanan dan kebutuhan kegiatan Anda. Tim Admin operasional akan meninjau kebutuhan teknis dan menjadwalkan survei lokasi bersama Anda.
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
@@ -81,7 +81,7 @@
                         </a>
                         <button type="submit"
                                 class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 font-medium">
-                            Kirim Pesanan & Pengajuan Survei ke Admin
+                            Kirim Pesanan ke Admin
                         </button>
                     </div>
                 </form>

@@ -8,8 +8,8 @@
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('surveys.index') }}" class="btn-primary">
-                    Pengajuan Survei ({{ $stats['surveys_waiting_admin'] ?? 0 }})
+                <a href="{{ route('surveys.create') }}" class="btn-primary">
+                    + Buat Pengajuan Survei
                 </a>
                 <a href="{{ route('inventories.index') }}" class="btn-secondary">
                     Stok Barang
@@ -30,9 +30,9 @@
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                <span class="text-xs font-semibold uppercase text-gray-500">Survei Baru (Klien)</span>
+                <span class="text-xs font-semibold uppercase text-gray-500">Draf & Revisi Survei</span>
                 <div class="text-2xl font-bold text-yellow-600 mt-2">{{ $stats['surveys_waiting_admin'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Menunggu diteruskan ke Direktur</span>
+                <span class="text-xs text-gray-500">Perlu diproses oleh Admin</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">

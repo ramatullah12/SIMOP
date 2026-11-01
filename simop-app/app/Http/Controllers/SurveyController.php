@@ -37,8 +37,7 @@ class SurveyController extends Controller
 
         $surveys = Survey::with(['order.client', 'assignedUser', 'approver', 'requester'])
             ->when($role === 'client', function ($query) use ($user) {
-                $query->whereHas('order', fn ($q) => $q->where('client_id', $user->id))
-                    ->whereNotIn('status', [Survey::STATUS_DRAFT, 'diajukan_client']);
+                $query->whereHas('order', fn ($q) => $q->where('client_id', $user->id));
             })
             ->when($role === 'direktur', function ($query) {
                 $query->whereNotIn('status', [Survey::STATUS_DRAFT, 'diajukan_client']);
@@ -697,7 +696,6 @@ class SurveyController extends Controller
     public function resultPdf(Request $request, Survey $survey): Response
     {
         $this->authorizeView($survey);
-        abort_if($this->role() === 'client', 403);
         abort_unless($survey->status === Survey::STATUS_DONE, 404, 'Dokumen hasil survei tersedia setelah survei selesai.');
 
         $survey->load(['order.client', 'assignedUser', 'approver', 'photos']);
@@ -767,7 +765,6 @@ class SurveyController extends Controller
 
         if ($role === 'client') {
             abort_unless($survey->order?->client_id === $user->id, 403);
-            abort_if(in_array($survey->status, [Survey::STATUS_DRAFT, 'diajukan_client'], true), 403);
         }
 
         if ($role === 'petugas-lapangan') {
