@@ -9,6 +9,7 @@ use App\Models\Production;
 use App\Models\Project;
 use App\Models\ProjectItem;
 use App\Models\Survey;
+use App\Models\User;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -31,6 +32,8 @@ class DashboardController extends Controller
     {
         $stats = [
             'orders_total' => Order::count(),
+            'orders_masuk_count' => Order::where('status', 'masuk')->count(),
+            'users_unverified_count' => User::whereNull('email_verified_at')->count(),
             'surveys_waiting_admin' => Survey::whereIn('status', [Survey::STATUS_DRAFT, Survey::STATUS_REJECTED, 'diajukan_client'])->count(),
             'surveys_waiting_direktur' => Survey::where('status', Survey::STATUS_WAITING_DIRECTOR)->count(),
             'surveys_active' => Survey::whereIn('status', [Survey::STATUS_WAITING_EXECUTION, Survey::STATUS_IN_PROGRESS, Survey::STATUS_WAITING_RESULT, 'dijadwalkan'])->count(),

@@ -111,6 +111,77 @@
                 </div>
             </div>
 
+            {{-- Panel Verifikasi Pesanan (Khusus Admin) --}}
+            @if ($role === 'admin' && in_array($order->status, ['masuk', 'diproses'], true))
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-200 p-6 shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-600 text-white">
+                                    Verifikasi Admin
+                                </span>
+                                <h3 class="text-base font-extrabold text-slate-900">Verifikasi & Tindak Lanjut Pesanan</h3>
+                            </div>
+                            <p class="text-xs text-slate-600 max-w-xl">
+                                Tinjau kelengkapan pesanan dari pelanggan. Verifikasi pesanan untuk meneruskannya langsung ke pengajuan survei, memproses operasional, atau menolaknya.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            {{-- Form Verifikasi & Lanjut Survei --}}
+                            <form method="POST" action="{{ route('orders.verify', $order) }}" class="inline">
+                                @csrf
+                                <input type="hidden" name="next_action" value="menunggu_survey">
+                                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-sm transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Verifikasi & Buat Pengajuan Survei
+                                </button>
+                            </form>
+
+                            {{-- Form Verifikasi & Proses --}}
+                            @if ($order->status === 'masuk')
+                                <form method="POST" action="{{ route('orders.verify', $order) }}" class="inline">
+                                    @csrf
+                                    <input type="hidden" name="next_action" value="diproses">
+                                    <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                                        Verifikasi & Proses
+                                    </button>
+                                </form>
+                            @endif
+
+                            {{-- Tombol Tolak Pesanan --}}
+                            <button type="button" onclick="document.getElementById('rejectOrderModal').classList.remove('hidden')"
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition">
+                                Tolak Pesanan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Modal Tolak Pesanan --}}
+                <div id="rejectOrderModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+                        <div class="flex items-center justify-between pb-3 border-b">
+                            <h4 class="font-extrabold text-slate-900 text-base">Tolak Pesanan Masuk</h4>
+                            <button type="button" onclick="document.getElementById('rejectOrderModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+                        </div>
+                        <form method="POST" action="{{ route('orders.reject', $order) }}" class="mt-4 space-y-4">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Alasan Penolakan Pesanan</label>
+                                <textarea name="rejection_reason" rows="3" required placeholder="Tuliskan alasan penolakan secara jelas untuk pelanggan..." class="w-full text-xs rounded-xl border-slate-300 focus:border-rose-500 focus:ring-rose-500"></textarea>
+                            </div>
+                            <div class="flex items-center justify-end gap-2 pt-2">
+                                <button type="button" onclick="document.getElementById('rejectOrderModal').classList.add('hidden')" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition">Batal</button>
+                                <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm transition">Kirim Penolakan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
             {{-- Detail Informasi Pesanan --}}
             <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">

@@ -28,6 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::post('/orders/{order}/verify', [OrderController::class, 'verify'])->name('orders.verify');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject');
     Route::resource('orders', OrderController::class);
 
     Route::post('/surveys/{survey}/submit-to-direktur', [SurveyController::class, 'submitToDirektur'])
@@ -92,6 +94,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('employees', EmployeeController::class);
 
     Route::prefix('admin')->name('admin.')->group(function () {
+        Route::post('/users/{user}/verify', [UserController::class, 'verify'])->name('users.verify');
+        Route::post('/users/{user}/unverify', [UserController::class, 'unverify'])->name('users.unverify');
         Route::resource('users', UserController::class);
         Route::resource('vendors', VendorController::class);
     });

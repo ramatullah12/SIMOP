@@ -286,6 +286,51 @@ class OrderController extends Controller
             ->with('success', 'Data pesanan berhasil dihapus.');
     }
 
+    public function verify(Request $request, Order $order): RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user?->role?->slug === 'admin', 403, 'Hanya Admin yang berhak memverifikasi pesanan.');
+
+        $validated = $request->validate([
+            'next_action' => ['required', 'in:diproses,menunggu_survey'],
+            'admin_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $order->update([
+            'status' => $validated['next_action'],
+            'admin_notes' => $validated['admin_notes'] ?? $order->admin_notes,
+        ]);
+
+        if ($validated['next_action'] === 'menunggu_survey') {
+            return redirect()
+                ->route('surveys.create', ['order_id' => $order->id])
+                ->with('success', "Pesanan {$order->order_number} berhasil diverifikasi. Lanjutkan dengan membuat pengajuan survei.");
+        }
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', "Pesanan {$order->order_number} berhasil diverifikasi dan diproses.");
+    }
+
+    public function reject(Request $request, Order $order): RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user?->role?->slug === 'admin', 403, 'Hanya Admin yang berhak menolak pesanan.');
+
+        $validated = $request->validate([
+            'rejection_reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $order->update([
+            'status' => 'ditolak',
+            'admin_notes' => $validated['rejection_reason'],
+        ]);
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', "Pesanan {$order->order_number} telah ditolak.");
+    }
+
     private function generateOrderNumber(): string
     {
         $date = now()->format('Ymd');

@@ -17,6 +17,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'email_verified_at',
     ];
 
     protected $hidden = [
@@ -30,6 +31,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isVerified(): bool
+    {
+        return ! is_null($this->email_verified_at);
     }
 
     public function role(): BelongsTo

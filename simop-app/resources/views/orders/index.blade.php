@@ -204,18 +204,35 @@
                                             ];
                                             $badgeColor = $statusColors[$order->status] ?? 'bg-slate-100 text-slate-700';
                                         @endphp
-                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold {{ $badgeColor }}">
-                                            {{ strtoupper(str_replace('_', ' ', $order->status)) }}
-                                        </span>
+                                        <div class="space-y-1">
+                                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold {{ $badgeColor }}">
+                                                {{ strtoupper(str_replace('_', ' ', $order->status)) }}
+                                            </span>
+                                            @if ($role === 'admin' && $order->status === 'masuk')
+                                                <span class="block text-[10px] font-semibold text-blue-700">
+                                                    âš¡ Perlu Verifikasi
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     {{-- Aksi --}}
                                     <td class="px-5 py-4 align-top text-center whitespace-nowrap">
                                         <div class="inline-flex items-center gap-1.5">
-                                            <a href="{{ route('orders.show', $order) }}"
-                                               class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-200 transition">
-                                                Rincian
-                                            </a>
+                                            @if ($role === 'admin' && $order->status === 'masuk')
+                                                <a href="{{ route('orders.show', $order) }}"
+                                                   class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm transition inline-flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    Verifikasi
+                                                </a>
+                                            @else
+                                                <a href="{{ route('orders.show', $order) }}"
+                                                   class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-200 transition">
+                                                    Rincian
+                                                </a>
+                                            @endif
 
                                             <a href="{{ route('tracking.show', $order) }}"
                                                class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold hover:bg-emerald-100 transition">
@@ -224,7 +241,7 @@
 
                                             @if ($role === 'admin' || ($role === 'client' && in_array($order->status, ['masuk', 'menunggu_survey', 'ditolak'])))
                                                 <a href="{{ route('orders.edit', $order) }}"
-                                                   class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm transition">
+                                                   class="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-900 shadow-sm transition">
                                                     Ubah
                                                 </a>
                                             @endif

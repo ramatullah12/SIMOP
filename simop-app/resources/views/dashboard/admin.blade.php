@@ -22,6 +22,50 @@
     </x-slot>
 
     <div class="space-y-6">
+        @if (($stats['users_unverified_count'] ?? 0) > 0)
+            <div class="rounded-xl bg-amber-50 border border-amber-300 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-amber-100 rounded-lg text-amber-700 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-amber-900 text-sm">Verifikasi Pengguna Baru</h4>
+                        <p class="text-xs text-amber-700 mt-0.5">
+                            Ada <strong class="underline">{{ $stats['users_unverified_count'] }} akun pendaftar</strong> yang menunggu verifikasi Anda agar dapat masuk ke sistem.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.users.index', ['verification_status' => 'unverified']) }}"
+                   class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-xs font-semibold shadow-sm transition shrink-0 inline-flex items-center gap-1.5">
+                    Verifikasi Sekarang &rarr;
+                </a>
+            </div>
+        @endif
+
+        @if (($stats['orders_masuk_count'] ?? 0) > 0)
+            <div class="rounded-xl bg-blue-50 border border-blue-300 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 rounded-lg text-blue-700 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-900 text-sm">Pesanan Baru Perlu Diverifikasi</h4>
+                        <p class="text-xs text-blue-700 mt-0.5">
+                            Terdapat <strong class="underline">{{ $stats['orders_masuk_count'] }} pesanan baru</strong> berstatus Masuk yang perlu diverifikasi oleh Admin.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('orders.index', ['status' => 'masuk']) }}"
+                   class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold shadow-sm transition shrink-0 inline-flex items-center gap-1.5">
+                    Tinjau Pesanan &rarr;
+                </a>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                 <span class="text-xs font-semibold uppercase text-gray-500">Total Pesanan</span>
