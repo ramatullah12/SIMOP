@@ -75,7 +75,12 @@
 
                     <div class="flex items-center gap-2 shrink-0">
                         @if (! $user->isVerified())
-                            <form method="POST" action="{{ route('admin.users.verify', $user) }}" onsubmit="return confirm('Verifikasi akun pengguna {{ $user->name }} sekarang?')">
+                            <form method="POST" action="{{ route('admin.users.verify', $user) }}"
+                                  data-confirm-title="Konfirmasi Verifikasi Pengguna"
+                                  data-confirm-detail="{{ $user->name }} ({{ $user->email }})"
+                                  data-confirm-message="Apakah Anda yakin ingin memverifikasi dan mengaktifkan akun pengguna ini? Pengguna akan dapat masuk ke sistem."
+                                  data-confirm-btn="Ya, Verifikasi Akun"
+                                  data-confirm-type="success">
                                 @csrf
                                 <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-sm font-semibold shadow-sm transition inline-flex items-center gap-1.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,7 +91,12 @@
                             </form>
                         @else
                             @if ($user->id !== auth()->id())
-                                <form method="POST" action="{{ route('admin.users.unverify', $user) }}" onsubmit="return confirm('Batalkan verifikasi akun {{ $user->name }}?')">
+                                <form method="POST" action="{{ route('admin.users.unverify', $user) }}"
+                                      data-confirm-title="Konfirmasi Pembatalan Verifikasi"
+                                      data-confirm-detail="{{ $user->name }} ({{ $user->email }})"
+                                      data-confirm-message="Apakah Anda yakin ingin membatalkan verifikasi akun pengguna ini? Pengguna tidak akan dapat masuk ke sistem sampai diverifikasi kembali."
+                                      data-confirm-btn="Ya, Batalkan Verifikasi"
+                                      data-confirm-type="warning">
                                     @csrf
                                     <button type="submit" class="px-3.5 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-md text-xs font-semibold transition">
                                         Batalkan Verifikasi

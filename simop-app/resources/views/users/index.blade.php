@@ -162,7 +162,12 @@
                                     <td class="px-4 py-3">
                                         <div class="flex items-center flex-wrap gap-1.5">
                                             @if (! $item->isVerified())
-                                                <form method="POST" action="{{ route('admin.users.verify', $item) }}" onsubmit="return confirm('Verifikasi dan aktifkan akun {{ $item->name }} ({{ $item->email }}) sekarang?')">
+                                                <form method="POST" action="{{ route('admin.users.verify', $item) }}"
+                                                      data-confirm-title="Konfirmasi Verifikasi Pengguna"
+                                                      data-confirm-detail="{{ $item->name }} ({{ $item->email }})"
+                                                      data-confirm-message="Apakah Anda yakin ingin memverifikasi dan mengaktifkan akun pengguna ini? Pengguna akan dapat masuk ke sistem."
+                                                      data-confirm-btn="Ya, Verifikasi Akun"
+                                                      data-confirm-type="success">
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-600 text-white rounded text-xs font-semibold hover:bg-emerald-700 shadow-sm transition">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +178,12 @@
                                                 </form>
                                             @else
                                                 @if ($item->id !== auth()->id())
-                                                    <form method="POST" action="{{ route('admin.users.unverify', $item) }}" onsubmit="return confirm('Batalkan verifikasi akun {{ $item->name }}? Pengguna tidak akan bisa login sampai diverifikasi kembali.')">
+                                                    <form method="POST" action="{{ route('admin.users.unverify', $item) }}"
+                                                          data-confirm-title="Konfirmasi Pembatalan Verifikasi"
+                                                          data-confirm-detail="{{ $item->name }} ({{ $item->email }})"
+                                                          data-confirm-message="Apakah Anda yakin ingin membatalkan verifikasi akun pengguna ini? Pengguna tidak akan dapat masuk ke sistem sampai diverifikasi kembali."
+                                                          data-confirm-btn="Ya, Batalkan Verifikasi"
+                                                          data-confirm-type="warning">
                                                         @csrf
                                                         <button type="submit" class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded text-xs font-medium hover:bg-amber-200 transition" title="Nonaktifkan verifikasi">
                                                             Batal Verif

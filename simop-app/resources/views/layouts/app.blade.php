@@ -641,22 +641,22 @@
         <div class="confirm-modal-box">
             <div class="confirm-modal-body">
                 <div class="confirm-modal-header">
-                    <div class="confirm-modal-icon">
-                        <svg style="width:22px;height:22px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div id="confirmModalIcon" class="confirm-modal-icon icon-danger">
+                        <svg id="confirmModalIconSvg" style="width:22px;height:22px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                     </div>
                     <div style="flex:1">
-                        <h3 id="confirmModalTitle" class="confirm-modal-title">Konfirmasi Penghapusan</h3>
-                        <p id="confirmModalMessage" class="confirm-modal-message">Apakah Anda yakin ingin menghapus data ini?</p>
+                        <h3 id="confirmModalTitle" class="confirm-modal-title">Konfirmasi Tindakan</h3>
+                        <p id="confirmModalMessage" class="confirm-modal-message">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
                         <div id="confirmModalDetail" class="confirm-modal-detail" style="display:none"></div>
                     </div>
                 </div>
             </div>
             <div class="confirm-modal-footer">
                 <button type="button" id="confirmModalCancelBtn" class="confirm-btn-cancel">Batal</button>
-                <button type="button" id="confirmModalSubmitBtn" class="confirm-btn-danger">Ya, Hapus</button>
+                <button type="button" id="confirmModalSubmitBtn" class="confirm-btn-danger">Ya, Lanjutkan</button>
             </div>
         </div>
     </div>
@@ -676,16 +676,27 @@
         (function () {
             var pendingForm = null;
             var backdrop = document.getElementById('confirmModalBackdrop');
+            var iconBox = document.getElementById('confirmModalIcon');
+            var iconSvg = document.getElementById('confirmModalIconSvg');
             var titleEl = document.getElementById('confirmModalTitle');
             var messageEl = document.getElementById('confirmModalMessage');
             var detailEl = document.getElementById('confirmModalDetail');
             var cancelBtn = document.getElementById('confirmModalCancelBtn');
             var submitBtn = document.getElementById('confirmModalSubmitBtn');
 
-            function openConfirmModal(form, title, message, detail) {
+            var ICONS = {
+                danger: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+                success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+                warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+            };
+
+            function openConfirmModal(form, title, message, detail, btnText, type) {
                 pendingForm = form;
-                titleEl.textContent = title || 'Konfirmasi Penghapusan';
-                messageEl.textContent = message || 'Apakah Anda yakin ingin menghapus data ini?';
+                type = type || 'danger';
+
+                titleEl.textContent = title || (type === 'success' ? 'Konfirmasi Verifikasi' : (type === 'warning' ? 'Konfirmasi Perubahan' : 'Konfirmasi Penghapusan'));
+                messageEl.textContent = message || (type === 'success' ? 'Apakah Anda yakin ingin memverifikasi data ini?' : 'Apakah Anda yakin ingin melanjutkan tindakan ini?');
+                
                 if (detail) {
                     detailEl.textContent = detail;
                     detailEl.style.display = 'block';
@@ -693,6 +704,24 @@
                     detailEl.textContent = '';
                     detailEl.style.display = 'none';
                 }
+
+                // Styling icon dan submit button sesuai type (success / warning / danger)
+                iconBox.className = 'confirm-modal-icon icon-' + type;
+                iconSvg.innerHTML = ICONS[type] || ICONS.danger;
+
+                submitBtn.className = 'confirm-btn-' + type;
+                if (btnText) {
+                    submitBtn.textContent = btnText;
+                } else {
+                    if (type === 'success') {
+                        submitBtn.textContent = 'Ya, Verifikasi';
+                    } else if (type === 'warning') {
+                        submitBtn.textContent = 'Ya, Lanjutkan';
+                    } else {
+                        submitBtn.textContent = 'Ya, Hapus';
+                    }
+                }
+
                 backdrop.classList.add('open');
             }
 
@@ -706,7 +735,23 @@
                 var match = attr.match(/confirm\(['"](.+?)['"]\)/);
                 if (match) {
                     form.removeAttribute('onsubmit');
-                    form.setAttribute('data-confirm-message', match[1]);
+                    var rawMsg = match[1];
+                    form.setAttribute('data-confirm-message', rawMsg);
+                    if (!form.hasAttribute('data-confirm-title')) {
+                        if (/verifi|aktifkan/i.test(rawMsg)) {
+                            form.setAttribute('data-confirm-title', 'Konfirmasi Verifikasi');
+                            form.setAttribute('data-confirm-btn', 'Ya, Verifikasi');
+                            form.setAttribute('data-confirm-type', 'success');
+                        } else if (/batal|nonaktif/i.test(rawMsg)) {
+                            form.setAttribute('data-confirm-title', 'Konfirmasi Pembatalan');
+                            form.setAttribute('data-confirm-btn', 'Ya, Batalkan');
+                            form.setAttribute('data-confirm-type', 'warning');
+                        } else {
+                            form.setAttribute('data-confirm-title', 'Konfirmasi Penghapusan');
+                            form.setAttribute('data-confirm-btn', 'Ya, Hapus');
+                            form.setAttribute('data-confirm-type', 'danger');
+                        }
+                    }
                 }
             });
 
@@ -723,7 +768,9 @@
                     form,
                     form.getAttribute('data-confirm-title'),
                     form.getAttribute('data-confirm-message'),
-                    form.getAttribute('data-confirm-detail')
+                    form.getAttribute('data-confirm-detail'),
+                    form.getAttribute('data-confirm-btn'),
+                    form.getAttribute('data-confirm-type')
                 );
             });
 

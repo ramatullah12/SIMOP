@@ -129,7 +129,12 @@
 
                         <div class="flex flex-wrap items-center gap-2.5">
                             {{-- Form Verifikasi & Lanjut Survei --}}
-                            <form method="POST" action="{{ route('orders.verify', $order) }}" class="inline">
+                            <form method="POST" action="{{ route('orders.verify', $order) }}" class="inline"
+                                  data-confirm-title="Konfirmasi Verifikasi Pesanan"
+                                  data-confirm-detail="{{ $order->order_number }} - {{ $order->event_name }} ({{ $order->company_name }})"
+                                  data-confirm-message="Verifikasi pesanan ini dan lanjutkan langsung ke pembuatan Pengajuan Survei?"
+                                  data-confirm-btn="Ya, Verifikasi & Buat Survei"
+                                  data-confirm-type="success">
                                 @csrf
                                 <input type="hidden" name="next_action" value="menunggu_survey">
                                 <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-sm transition">
@@ -142,7 +147,12 @@
 
                             {{-- Form Verifikasi & Proses --}}
                             @if ($order->status === 'masuk')
-                                <form method="POST" action="{{ route('orders.verify', $order) }}" class="inline">
+                                <form method="POST" action="{{ route('orders.verify', $order) }}" class="inline"
+                                      data-confirm-title="Konfirmasi Verifikasi Pesanan"
+                                      data-confirm-detail="{{ $order->order_number }} - {{ $order->event_name }} ({{ $order->company_name }})"
+                                      data-confirm-message="Verifikasi pesanan ini untuk langsung diproses ke tahap operasional?"
+                                      data-confirm-btn="Ya, Verifikasi Pesanan"
+                                      data-confirm-type="success">
                                     @csrf
                                     <input type="hidden" name="next_action" value="diproses">
                                     <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
