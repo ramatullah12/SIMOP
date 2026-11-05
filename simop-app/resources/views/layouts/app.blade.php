@@ -386,6 +386,44 @@
         .confirm-btn-danger:hover {
             background: #b91c1c;
         }
+        .confirm-btn-success {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #059669;
+            background: #059669;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .confirm-btn-success:hover {
+            background: #047857;
+        }
+        .confirm-btn-warning {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d97706;
+            background: #d97706;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .confirm-btn-warning:hover {
+            background: #b45309;
+        }
+        .confirm-modal-icon.icon-success {
+            background: #ecfdf5;
+            color: #059669;
+        }
+        .confirm-modal-icon.icon-warning {
+            background: #fffbeb;
+            color: #d97706;
+        }
+        .confirm-modal-icon.icon-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
     </style>
 </head>
 
