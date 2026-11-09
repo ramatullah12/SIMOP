@@ -14,7 +14,6 @@
                 Halo, <span class="font-semibold text-blue-400">{{ session('registered_name') }}</span>!
             </p>
         @endif
-
         <p class="mt-3 text-sm text-slate-400 leading-relaxed">
             Akun Anda telah berhasil didaftarkan. Namun, Anda perlu menunggu verifikasi dari
             <span class="text-white font-medium">administrator</span> sebelum dapat menggunakan aplikasi SIMOP.
