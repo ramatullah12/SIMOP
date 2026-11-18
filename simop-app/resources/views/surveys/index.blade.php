@@ -128,7 +128,7 @@
                                         @endif
                                     </td>
 
-                                    {{-- Pelanggan & Pesanan --}}
+                                    
                                     <td class="px-5 py-4 align-top">
                                         <div class="flex items-center gap-2.5">
                                             <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-extrabold text-xs flex items-center justify-center flex-shrink-0">
