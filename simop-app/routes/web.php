@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('documents', DocumentController::class)->except(['edit', 'update']);
 
     Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking.index');
+    Route::get('/riwayat-event', [\App\Http\Controllers\EventHistoryController::class, 'index'])->name('event-history.index');
     Route::get('/tracking/{order}', [TrackingController::class, 'show'])->name('tracking.show');
 
     Route::resource('ratings', RatingController::class)->except(['edit', 'update']);
