@@ -88,7 +88,7 @@ class TrackingController extends Controller
         $step4Done = $project !== null;
         $step4Current = $step3Done && ! $step4Done;
 
-        $step5Done = ($production && $production->status === 'completed') || ($project && $project->status === 'completed');
+        $step5Done = $fieldDocs->isNotEmpty() || ($project && $project->status === 'completed');
         $step5Current = $step4Done && ! $step5Done;
 
         $step6Done = $project && $project->status === 'completed';
@@ -118,17 +118,17 @@ class TrackingController extends Controller
             ],
             [
                 'number' => 4,
-                'title' => 'Persiapan & Barang',
-                'subtitle' => 'Proyek, Perencanaan & Stok',
+                'title' => 'Proyek & Stok Barang',
+                'subtitle' => 'Alokasi Barang Proyek',
                 'state' => $step4Done ? 'done' : ($step4Current ? 'active' : 'pending'),
                 'time' => $project?->created_at?->format('d/m/Y H:i'),
             ],
             [
                 'number' => 5,
-                'title' => 'Pengerjaan Lapangan',
-                'subtitle' => 'Produksi & Dokumentasi',
+                'title' => 'Pelaksanaan Lapangan',
+                'subtitle' => 'Dokumentasi Lapangan',
                 'state' => $step5Done ? 'done' : ($step5Current ? 'active' : 'pending'),
-                'time' => $production?->updated_at?->format('d/m/Y H:i'),
+                'time' => $fieldDocs->last()?->created_at?->format('d/m/Y H:i'),
             ],
             [
                 'number' => 6,
@@ -273,45 +273,13 @@ class TrackingController extends Controller
                 ];
             }
 
-            if ($planning) {
-                $logs[] = [
-                    'state' => in_array($planning->status, ['approved', 'in_progress', 'completed'], true) ? 'done' : 'active',
-                    'badge' => 'Perencanaan',
-                    'title' => "Perencanaan ({$planning->planning_number}) - {$planning->title}",
-                    'description' => $planning->work_scope ?? $planning->description,
-                    'actor' => 'Admin',
-                    'timestamp' => $planning->created_at?->format('d M Y, H:i'),
-                ];
-            }
         } else {
             $logs[] = [
                 'state' => 'pending',
                 'badge' => 'Belum Berjalan',
-                'title' => 'Pembuatan Proyek, Perencanaan & Alokasi Stok Barang',
-                'description' => 'Penjadwalan proyek dan alokasi barang dilakukan setelah survei lapangan selesai.',
+                'title' => 'Pembuatan Proyek & Alokasi Stok Barang',
+                'description' => 'Pembuatan proyek dan alokasi barang dilakukan setelah survei lapangan selesai.',
                 'actor' => 'Admin',
-                'timestamp' => '-',
-            ];
-        }
-
-        if ($production) {
-            $logs[] = [
-                'state' => $production->status === 'completed' ? 'done' : 'active',
-                'badge' => "Produksi {$production->progress}%",
-                'title' => $production->status === 'completed'
-                    ? "Pengerjaan Produksi ({$production->production_number}) Selesai"
-                    : "Pengerjaan Produksi Sedang Berjalan ({$production->progress}%)",
-                'description' => $production->description,
-                'actor' => $production->assignedUser?->name ?? 'Petugas Lapangan',
-                'timestamp' => $production->updated_at?->format('d M Y, H:i'),
-            ];
-        } else {
-            $logs[] = [
-                'state' => 'pending',
-                'badge' => 'Belum Berjalan',
-                'title' => 'Pelaksanaan Produksi & Instalasi di Lapangan',
-                'description' => 'Pengerjaan lapangan dilaksanakan sesuai perencanaan proyek.',
-                'actor' => 'Petugas Lapangan',
                 'timestamp' => '-',
             ];
         }
@@ -377,12 +345,8 @@ class TrackingController extends Controller
         $currentHeadline = 'Pengajuan Survei Diterima Admin';
         if ($project && $project->status === 'completed') {
             $currentHeadline = 'Pekerjaan Selesai & Stok Barang Telah Dikembalikan';
-        } elseif ($production) {
-            $currentHeadline = "Pengerjaan Produksi Lapangan ({$production->progress}%)";
-        } elseif ($planning) {
-            $currentHeadline = 'Perencanaan Teknis & Persiapan Barang';
         } elseif ($project) {
-            $currentHeadline = 'Proyek Aktif';
+            $currentHeadline = "Proyek Aktif ({$project->progress}%)";
         } elseif ($survey) {
             if (in_array($survey->status, [Survey::STATUS_DRAFT, 'diajukan_client'], true)) {
                 $currentHeadline = 'Admin Sedang Menyiapkan Pengajuan Survei';

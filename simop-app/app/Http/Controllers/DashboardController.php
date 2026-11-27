@@ -103,7 +103,7 @@ class DashboardController extends Controller
         $stats = [
             'sps_active' => Survey::where('assigned_to', $user->id)->whereNotNull('approved_at')->whereIn('status', [Survey::STATUS_WAITING_EXECUTION, Survey::STATUS_IN_PROGRESS, Survey::STATUS_WAITING_RESULT, 'dijadwalkan'])->count(),
             'sps_completed' => Survey::where('assigned_to', $user->id)->where('status', Survey::STATUS_DONE)->count(),
-            'productions_active' => Production::where('assigned_to', $user->id)->whereIn('status', ['pending', 'in_progress'])->count(),
+            'projects_active' => Project::accessibleByOfficer($user->id)->whereIn('status', ['planning', 'in_progress', 'ongoing'])->count(),
             'field_docs_count' => FieldDocumentation::where('uploaded_by', $user->id)->count(),
         ];
 

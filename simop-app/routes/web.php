@@ -6,8 +6,6 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\FieldDocumentationController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PlanningController;
-use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RatingController;
@@ -65,14 +63,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/projects/{project}/complete', [ProjectController::class, 'complete'])
         ->name('projects.complete');
     Route::resource('projects', ProjectController::class);
-
-    Route::patch('/plannings/{planning}/status', [PlanningController::class, 'updateStatus'])
-        ->name('plannings.update-status');
-    Route::resource('plannings', PlanningController::class);
-
-    Route::patch('/productions/{production}/progress', [ProductionController::class, 'updateProgress'])
-        ->name('productions.update-progress');
-    Route::resource('productions', ProductionController::class);
 
     Route::get('/inventories', [InventoryController::class, 'index'])->name('inventories.index');
     Route::post('/inventories/items', [InventoryController::class, 'storeItem'])->name('inventories.items.store');

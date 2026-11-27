@@ -149,41 +149,19 @@ class Project extends Model
             return 0;
         }
 
-        $progress = 20; // Tahap 1: Proyek dibuat
+        $progress = 25; // Tahap 1: Proyek dibuat
 
-        // Tahap 2: Alokasi stok barang (+10%)
+        // Tahap 2: Alokasi stok barang (+25%)
         if ($this->projectItems()->exists()) {
-            $progress += 10;
+            $progress += 25;
         }
 
-        // Tahap 3: Perencanaan teknis (draft +10%, ready/in_progress/completed +20%)
-        $planning = $this->planning()->with('production')->first();
-        if ($planning) {
-            if (in_array($planning->status, ['ready', 'in_progress', 'completed'], true)) {
-                $progress += 20;
-            } elseif ($planning->status === 'draft') {
-                $progress += 10;
-            }
-
-            // Tahap 4: Produksi & instalasi (pending +10%, in_progress +20%, completed +30%)
-            $production = $planning->production;
-            if ($production) {
-                if ($production->status === 'completed') {
-                    $progress += 30;
-                } elseif ($production->status === 'in_progress') {
-                    $progress += 20;
-                } elseif ($production->status === 'pending') {
-                    $progress += 10;
-                }
-            }
-        }
-
-        // Tahap 5: Dokumentasi lapangan (+10%)
+        // Tahap 3: Dokumentasi lapangan (+25%)
         if ($this->fieldDocumentations()->exists()) {
-            $progress += 10;
+            $progress += 25;
         }
 
-        return min(95, $progress);
+        return min(75, $progress);
     }
 
     /**
@@ -205,8 +183,6 @@ class Project extends Model
      */
     public function getAutoProgressStepsAttribute(): array
     {
-        $planning = $this->relationLoaded('planning') ? $this->planning : $this->planning()->with('production')->first();
-        $production = $planning?->production;
         $hasItems = $this->relationLoaded('projectItems') ? $this->projectItems->isNotEmpty() : $this->projectItems()->exists();
         $hasDocs = $this->relationLoaded('fieldDocumentations') ? $this->fieldDocumentations->isNotEmpty() : $this->fieldDocumentations()->exists();
         $isCompleted = $this->status === 'completed';
@@ -214,29 +190,17 @@ class Project extends Model
         return [
             [
                 'label' => 'Proyek Dibuat',
-                'weight' => '20%',
+                'weight' => '25%',
                 'done' => $this->status !== 'cancelled',
             ],
             [
                 'label' => 'Alokasi Stok Barang',
-                'weight' => '+10%',
+                'weight' => '+25%',
                 'done' => $isCompleted || $hasItems,
             ],
             [
-                'label' => 'Perencanaan Teknis',
-                'weight' => '+20%',
-                'done' => $isCompleted || ($planning && in_array($planning->status, ['ready', 'in_progress', 'completed'], true)),
-                'partial' => ! $isCompleted && $planning && $planning->status === 'draft',
-            ],
-            [
-                'label' => 'Produksi & Instalasi',
-                'weight' => '+30%',
-                'done' => $isCompleted || ($production && $production->status === 'completed'),
-                'partial' => ! $isCompleted && $production && in_array($production->status, ['pending', 'in_progress'], true),
-            ],
-            [
                 'label' => 'Dokumentasi Lapangan',
-                'weight' => '+10%',
+                'weight' => '+25%',
                 'done' => $isCompleted || $hasDocs,
             ],
             [

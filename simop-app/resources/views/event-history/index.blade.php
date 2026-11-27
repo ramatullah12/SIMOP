@@ -143,10 +143,6 @@
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Proyek & Pelaksanaan</span>
                                     @if ($project)
                                         <p class="font-bold text-slate-800 mt-1">{{ $project->project_number ?? $project->title }}</p>
-                                        <p class="text-slate-500">PJ: <span class="font-semibold text-slate-700">{{ $project->assignedUser?->name ?? '-' }}</span></p>
-                                        @if ($production)
-                                            <p class="text-slate-500">Instalasi: <span class="font-semibold text-slate-700">{{ $production->assignedUser?->name ?? '-' }}</span></p>
-                                        @endif
                                         <div class="mt-2">
                                             <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-0.5">
                                                 <span>{{ $projectLabels[$project->status] ?? ucfirst($project->status) }}</span>

@@ -19,18 +19,6 @@
                 @endif
 
                 @if (auth()->user()?->role?->slug === 'admin')
-                    @if (! $project->planning)
-                        <a href="{{ route('plannings.create', ['project_id' => $project->id]) }}"
-                           class="inline-flex items-center px-4 py-2 bg-indigo-600 rounded-md text-white text-sm font-medium hover:bg-indigo-700">
-                            + Buat Perencanaan
-                        </a>
-                    @else
-                        <a href="{{ route('plannings.show', $project->planning) }}"
-                           class="inline-flex items-center px-4 py-2 bg-indigo-600 rounded-md text-white text-sm font-medium hover:bg-indigo-700">
-                            Lihat Perencanaan
-                        </a>
-                    @endif
-
                     <a href="{{ route('projects.edit', $project) }}"
                        class="inline-flex items-center px-4 py-2 bg-yellow-500 rounded-md text-white text-sm font-medium hover:bg-yellow-600">
                         Ubah Proyek
@@ -173,7 +161,7 @@
                          style="width: {{ (int) $project->progress }}%"></div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                     @foreach ($project->auto_progress_steps as $step)
                         @php
                             $isDone = ! empty($step['done']);

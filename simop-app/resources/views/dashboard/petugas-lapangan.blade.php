@@ -4,7 +4,7 @@
             <div>
                 <h2 class="text-xl font-bold text-slate-900">Beranda Petugas Lapangan</h2>
                 <p class="mt-0.5 text-sm text-slate-500">
-                    Daftar Surat Perintah Survei, pengerjaan produksi, dan dokumentasi lapangan.
+                    Daftar Surat Perintah Survei, proyek aktif, dan dokumentasi lapangan.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -14,8 +14,8 @@
                 <a href="{{ route('field-documentations.create') }}" class="btn-secondary">
                     Input Dokumentasi Lapangan
                 </a>
-                <a href="{{ route('productions.index') }}" class="btn-secondary">
-                    Produksi
+                <a href="{{ route('projects.index') }}" class="btn-secondary">
+                    Proyek
                 </a>
             </div>
         </div>
@@ -36,9 +36,9 @@
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                <span class="text-xs font-semibold uppercase text-gray-500">Produksi Aktif</span>
-                <div class="text-2xl font-bold text-yellow-600 mt-2">{{ $stats['productions_active'] ?? 0 }}</div>
-                <span class="text-xs text-gray-500">Tugas pengerjaan lapangan</span>
+                <span class="text-xs font-semibold uppercase text-gray-500">Proyek Aktif</span>
+                <div class="text-2xl font-bold text-yellow-600 mt-2">{{ $stats['projects_active'] ?? 0 }}</div>
+                <span class="text-xs text-gray-500">Proyek operasional berjalan</span>
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
