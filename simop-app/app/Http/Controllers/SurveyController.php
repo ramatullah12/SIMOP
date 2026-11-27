@@ -157,7 +157,9 @@ class SurveyController extends Controller
 
         if ($role === 'petugas-lapangan') {
             $this->authorizeOfficer($survey);
-            abort_unless($survey->status === Survey::STATUS_WAITING_RESULT, 403, 'Form hasil survei hanya dapat diisi setelah pemeriksaan lapangan selesai.');
+            // Survei yang sudah berjalan langsung dibukakan form hasilnya
+            $this->openResultForm($survey);
+            abort_unless($survey->status === Survey::STATUS_WAITING_RESULT, 403, 'Form hasil survei hanya dapat diisi setelah survei dimulai.');
 
             $survey->load(['order.client', 'assignedUser', 'approver', 'photos']);
 
@@ -390,7 +392,31 @@ class SurveyController extends Controller
 
         Activity::log($survey, 'survei_dimulai', 'Petugas memulai pelaksanaan survei di lokasi.', $before, Survey::STATUS_IN_PROGRESS);
 
-        return back()->with('success', 'Status survei: sedang berlangsung. Selamat bertugas.');
+        // Langsung buka Form Hasil Survei tanpa perlu menekan tombol tambahan
+        $this->openResultForm($survey);
+
+        return redirect()
+            ->route('surveys.edit', $survey)
+            ->with('success', 'Survei dimulai. Silakan langsung isi Form Hasil Survei dan minta tanda tangan pelanggan.');
+    }
+
+    /**
+     * Memindahkan survei dari "Sedang Berlangsung" ke "Menunggu Pengisian Hasil"
+     * sehingga Form Hasil Survei langsung dapat diisi oleh Petugas.
+     */
+    private function openResultForm(Survey $survey): void
+    {
+        if ($survey->status !== Survey::STATUS_IN_PROGRESS) {
+            return;
+        }
+
+        $survey->update([
+            'status' => Survey::STATUS_WAITING_RESULT,
+            'field_finished_at' => now(),
+            'executed_on' => $survey->executed_on ?? now()->toDateString(),
+        ]);
+
+        Activity::log($survey, 'form_hasil_dibuka', 'Form Hasil Survei dibuka otomatis untuk diisi petugas di lokasi.', Survey::STATUS_IN_PROGRESS, Survey::STATUS_WAITING_RESULT);
     }
 
     public function finishField(Survey $survey): RedirectResponse

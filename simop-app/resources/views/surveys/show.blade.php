@@ -290,13 +290,10 @@
                                 </button>
                             </form>
                         @elseif ($survey->status === \App\Models\Survey::STATUS_IN_PROGRESS)
-                            <form method="POST" action="{{ route('surveys.finish-field', $survey) }}">
-                                @csrf
-                                <button type="submit"
-                                        class="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-sm font-bold shadow-lg transition transform hover:-translate-y-0.5">
-                                    Selesaikan Pemeriksaan & Buka Form Hasil
-                                </button>
-                            </form>
+                            <a href="{{ route('surveys.edit', $survey) }}"
+                               class="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-extrabold shadow-lg transition transform hover:-translate-y-0.5">
+                                Isi Form Hasil & Tanda Tangan Pelanggan
+                            </a>
                         @elseif ($survey->status === \App\Models\Survey::STATUS_WAITING_RESULT)
                             <a href="{{ route('surveys.edit', $survey) }}"
                                class="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-extrabold shadow-lg transition transform hover:-translate-y-0.5">

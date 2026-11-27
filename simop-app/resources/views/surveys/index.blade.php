@@ -194,9 +194,9 @@
                                                         Buka SPS & Mulai
                                                     </a>
                                                 @elseif ($survey->status === \App\Models\Survey::STATUS_IN_PROGRESS)
-                                                    <a href="{{ route('surveys.show', $survey) }}"
-                                                       class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-sm transition">
-                                                        Selesaikan & Isi
+                                                    <a href="{{ route('surveys.edit', $survey) }}"
+                                                       class="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 shadow-sm transition">
+                                                        Isi Hasil & TTD
                                                     </a>
                                                 @elseif ($survey->status === \App\Models\Survey::STATUS_WAITING_RESULT)
                                                     <a href="{{ route('surveys.edit', $survey) }}"
