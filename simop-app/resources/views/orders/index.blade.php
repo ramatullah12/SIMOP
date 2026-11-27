@@ -234,11 +234,6 @@
                                                 </a>
                                             @endif
 
-                                            <a href="{{ route('orders.invoice', ['order' => $order, 'download' => 1]) }}"
-                                               class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold hover:bg-indigo-100 transition">
-                                                Invoice
-                                            </a>
-
                                             <a href="{{ route('tracking.show', $order) }}"
                                                class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold hover:bg-emerald-100 transition">
                                                 Lacak

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Project;
 use App\Models\Rating;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,14 @@ class RatingController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('ratings.index', compact('ratings'));
+        $clientOrders = $role === 'client'
+            ? Order::with(['project.rating', 'survey'])
+                ->where('client_id', $user->id)
+                ->latest()
+                ->get()
+            : collect();
+
+        return view('ratings.index', compact('ratings', 'clientOrders', 'role'));
     }
 
     public function create(Request $request): View
@@ -95,7 +103,7 @@ class RatingController extends Controller
                 ]);
         }
 
-        $rating = Rating::create([
+        Rating::create([
             'project_id' => $project->id,
             'client_id' => $user->id,
             'rating' => $validated['rating'],
@@ -103,8 +111,8 @@ class RatingController extends Controller
         ]);
 
         return redirect()
-            ->route('ratings.show', $rating)
-            ->with('success', 'Terima kasih, penilaian dan ulasan berhasil dikirim.');
+            ->route('ratings.index')
+            ->with('success', 'Terima kasih, penilaian dan ulasan untuk pesanan ' . ($project->order?->order_number ?? $project->project_number) . ' berhasil disimpan.');
     }
 
     public function show(Rating $rating): View
