@@ -37,6 +37,10 @@ class OrderController extends Controller
             ->when($statusFilter, function ($query) use ($statusFilter) {
                 $query->where('status', $statusFilter);
             })
+            ->when($role !== 'client' && ! $statusFilter, function ($query) {
+                // Pesanan yang sudah selesai otomatis masuk ke Riwayat Event agar daftar aktif tidak menumpuk
+                $query->where('status', '!=', 'selesai');
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('order_number', 'like', "%{$search}%")
@@ -295,9 +299,18 @@ class OrderController extends Controller
 
         $order->update($validated);
 
+        $msg = 'Data pesanan berhasil diperbarui oleh Admin.';
+        if ($validated['status'] === 'selesai') {
+            $returnedCount = $order->markCompleted();
+            $msg = "Pesanan {$order->order_number} selesai. Seluruh proyek & survei terkait otomatis diselesaikan dan diarsipkan ke Riwayat Event.";
+            if ($returnedCount > 0) {
+                $msg .= " {$returnedCount} alokasi stok barang otomatis dikembalikan ke stok awal.";
+            }
+        }
+
         return redirect()
             ->route('orders.show', $order)
-            ->with('success', 'Data pesanan berhasil diperbarui oleh Admin.');
+            ->with('success', $msg);
     }
 
     public function destroy(Order $order): RedirectResponse

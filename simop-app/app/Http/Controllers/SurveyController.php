@@ -50,6 +50,10 @@ class SurveyController extends Controller
                     ->whereIn('status', array_merge(Survey::OFFICER_STATUSES, ['dijadwalkan']));
             })
             ->when($statusFilter, fn ($query) => $query->where('status', $statusFilter))
+            ->when($role !== 'client' && ! $statusFilter, function ($query) {
+                // Survei dari pesanan yang sudah selesai otomatis diarsipkan ke Riwayat Event
+                $query->whereHas('order', fn ($q) => $q->where('status', '!=', 'selesai'));
+            })
             ->when($role === 'direktur', function ($query) {
                 $query->orderByRaw("CASE WHEN status = 'menunggu_persetujuan_direktur' THEN 0 ELSE 1 END");
             })

@@ -57,4 +57,37 @@ class Order extends Model
     {
         return $this->hasOne(Project::class)->latestOfMany();
     }
+
+    /**
+     * Tandai pesanan selesai sekaligus menyelesaikan seluruh data terkait
+     * (proyek, pengembalian stok barang ke gudang, dan survei aktif) agar otomatis
+     * terarsip di Riwayat Event.
+     */
+    public function markCompleted(): int
+    {
+        if ($this->status !== 'selesai') {
+            $this->update(['status' => 'selesai']);
+        }
+
+        $returnedCount = 0;
+
+        foreach ($this->projects()->get() as $project) {
+            if ($project->status !== 'completed' || (int) $project->progress !== 100) {
+                $project->update([
+                    'status' => 'completed',
+                    'progress' => 100,
+                ]);
+            }
+            $returnedCount += $project->returnAllocatedStock();
+        }
+
+        $this->surveys()
+            ->whereNotIn('status', [Survey::STATUS_DONE, Survey::STATUS_REJECTED])
+            ->update([
+                'status' => Survey::STATUS_DONE,
+                'completed_at' => now(),
+            ]);
+
+        return $returnedCount;
+    }
 }

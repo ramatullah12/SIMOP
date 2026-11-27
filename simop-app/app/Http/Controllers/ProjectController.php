@@ -30,6 +30,10 @@ class ProjectController extends Controller
             ->when($role === 'petugas-lapangan', function ($query) use ($user) {
                 $query->accessibleByOfficer($user->id);
             })
+            ->when($role !== 'client', function ($query) {
+                // Proyek yang sudah selesai otomatis masuk ke Riwayat Event agar tidak menumpuk
+                $query->where('status', '!=', 'completed');
+            })
             ->when($role === 'client', function ($query) use ($user) {
                 $query->whereHas('order', function ($orderQuery) use ($user) {
                     $orderQuery->where('client_id', $user->id);
@@ -122,8 +126,7 @@ class ProjectController extends Controller
         $project->syncAutoProgress();
 
         if ($validated['status'] === 'completed') {
-            $project->returnAllocatedStock();
-            $project->order?->update(['status' => 'selesai']);
+            $order->markCompleted();
         }
 
         return redirect()
@@ -212,16 +215,18 @@ class ProjectController extends Controller
         $project->syncAutoProgress();
 
         $returnedCount = 0;
-        if (in_array($validated['status'], ['completed', 'cancelled'], true)) {
+        if ($validated['status'] === 'completed') {
+            $returnedCount = $project->order ? $project->order->markCompleted() : $project->returnAllocatedStock();
+        } elseif ($validated['status'] === 'cancelled') {
             $returnedCount = $project->returnAllocatedStock();
-            if ($validated['status'] === 'completed') {
-                $project->order?->update(['status' => 'selesai']);
-            }
         }
 
         $msg = 'Data proyek berhasil diperbarui.';
+        if ($validated['status'] === 'completed') {
+            $msg = "Proyek {$project->project_number} & pesanan terkait otomatis diselesaikan dan diarsipkan ke Riwayat Event.";
+        }
         if ($returnedCount > 0) {
-            $msg .= ' Semua stok barang yang dibawa ke proyek ini otomatis dikembalikan ke stok awal.';
+            $msg .= " {$returnedCount} alokasi stok barang otomatis dikembalikan ke stok awal.";
         }
 
         return redirect()
@@ -238,8 +243,8 @@ class ProjectController extends Controller
 
         if ($project->status === 'completed') {
             return redirect()
-                ->route('projects.show', $project)
-                ->with('success', 'Proyek ini sudah berstatus Selesai.');
+                ->route('projects.index')
+                ->with('success', 'Proyek ini sudah berstatus Selesai dan tersimpan di Riwayat Event.');
         }
 
         $project->update([
@@ -247,16 +252,15 @@ class ProjectController extends Controller
             'progress' => 100,
         ]);
 
-        $returnedCount = $project->returnAllocatedStock();
-        $project->order?->update(['status' => 'selesai']);
+        $returnedCount = $project->order ? $project->order->markCompleted() : $project->returnAllocatedStock();
 
-        $msg = "Proyek {$project->project_number} berhasil diselesaikan (100%).";
+        $msg = "Proyek {$project->project_number} & seluruh proses pesanan terkait otomatis selesai (100%) dan diarsipkan ke Riwayat Event.";
         if ($returnedCount > 0) {
             $msg .= " {$returnedCount} alokasi stok barang otomatis dikembalikan ke stok awal gudang.";
         }
 
         return redirect()
-            ->route('projects.show', $project)
+            ->route('projects.index')
             ->with('success', $msg);
     }
 

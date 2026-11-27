@@ -94,7 +94,8 @@ class EventHistoryController extends Controller
     private function baseQuery(string $role, int $userId): Builder
     {
         $query = Order::query()->where(function (Builder $q) {
-            $q->whereHas('surveys', fn (Builder $s) => $s->where('status', Survey::STATUS_DONE))
+            $q->where('status', 'selesai')
+                ->orWhereHas('surveys', fn (Builder $s) => $s->where('status', Survey::STATUS_DONE))
                 ->orWhereHas('projects');
         });
 

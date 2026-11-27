@@ -10,12 +10,20 @@
                 </p>
             </div>
 
-            @if (auth()->user()?->role?->slug === 'admin')
-                <a href="{{ route('projects.create') }}"
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
-                    + Buat Proyek
-                </a>
-            @endif
+            <div class="flex items-center gap-2">
+                @if (in_array(auth()->user()?->role?->slug, ['admin', 'direktur', 'petugas-lapangan'], true))
+                    <a href="{{ route('event-history.index') }}"
+                       class="inline-flex items-center px-4 py-2 bg-slate-100 border border-slate-200 rounded-md text-slate-700 text-sm font-medium hover:bg-slate-200">
+                        Riwayat Event
+                    </a>
+                @endif
+                @if (auth()->user()?->role?->slug === 'admin')
+                    <a href="{{ route('projects.create') }}"
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-white text-sm font-medium hover:bg-blue-700">
+                        + Buat Proyek
+                    </a>
+                @endif
+            </div>
         </div>
     </x-slot>
 
