@@ -35,6 +35,24 @@
                        class="inline-flex items-center px-4 py-2 bg-yellow-500 rounded-md text-white text-sm font-medium hover:bg-yellow-600">
                         Ubah Proyek
                     </a>
+
+                    @if (! in_array($project->status, ['completed', 'cancelled'], true))
+                        <form method="POST" action="{{ route('projects.complete', $project) }}" class="inline"
+                              data-confirm-title="Konfirmasi Penyelesaian Proyek"
+                              data-confirm-detail="{{ $project->project_number }} — {{ $project->title }}"
+                              data-confirm-message="Tandai proyek ini Selesai (100%)? Seluruh stok barang yang dibawa ke proyek ini akan otomatis dikembalikan ke stok awal gudang dan status pesanan menjadi Selesai."
+                              data-confirm-btn="Ya, Selesaikan & Kembalikan Stok"
+                              data-confirm-type="success">
+                            @csrf
+                            <button type="submit"
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 rounded-md text-white text-sm font-semibold hover:bg-emerald-700 shadow-sm transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Selesaikan Proyek
+                            </button>
+                        </form>
+                    @endif
                 @endif
 
                 @if (auth()->user()?->role?->slug === 'petugas-lapangan')
@@ -104,16 +122,16 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Petugas Lapangan</p>
+                        <p class="text-gray-500">Dibuat Oleh</p>
                         <p class="font-semibold text-gray-900">
-                            {{ $project->assignedUser?->name ?? '-' }}
+                            {{ $project->creator?->name ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-gray-500">Dibuat Oleh</p>
+                        <p class="text-gray-500">Status Proyek</p>
                         <p class="font-semibold text-gray-900">
-                            {{ $project->creator?->name ?? '-' }}
+                            {{ $project->status_label }}
                         </p>
                     </div>
 
@@ -131,22 +149,48 @@
                         </p>
                     </div>
 
-                    <div>
-                        <p class="text-gray-500">Status Proyek</p>
-                        <p class="font-semibold text-gray-900">
-                            {{ strtoupper(str_replace('_', ' ', $project->status)) }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p class="text-gray-500">Kemajuan</p>
-                        <p class="font-semibold text-gray-900">{{ $project->progress }}%</p>
-                    </div>
-
                     <div class="md:col-span-2">
                         <p class="text-gray-500">Catatan</p>
                         <p class="font-semibold text-gray-900">{{ $project->notes ?: '-' }}</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Progres Proyek Otomatis Per Tahap -->
+            <div class="bg-white shadow-sm sm:rounded-lg p-6 border border-gray-200 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h3 class="font-semibold text-lg text-gray-800">Progres Proyek Otomatis</h3>
+                        <p class="text-xs text-gray-500">Persentase dihitung otomatis oleh sistem berdasarkan tahapan proses yang telah diselesaikan.</p>
+                    </div>
+                    <span class="text-2xl font-extrabold {{ $project->status === 'completed' ? 'text-emerald-600' : 'text-blue-600' }}">
+                        {{ (int) $project->progress }}%
+                    </span>
+                </div>
+
+                <div class="w-full h-3 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-300 {{ $project->status === 'completed' ? 'bg-emerald-500' : 'bg-blue-600' }}"
+                         style="width: {{ (int) $project->progress }}%"></div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
+                    @foreach ($project->auto_progress_steps as $step)
+                        @php
+                            $isDone = ! empty($step['done']);
+                            $isPartial = ! empty($step['partial']);
+                        @endphp
+                        <div class="p-3 rounded-xl border {{ $isDone ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : ($isPartial ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-gray-50 border-gray-200 text-gray-500') }}">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="font-bold text-[11px]">{{ $step['weight'] }}</span>
+                                @if ($isDone)
+                                    <span class="text-emerald-600 font-bold">&#10003;</span>
+                                @elseif ($isPartial)
+                                    <span class="text-amber-600 font-bold">&#8226;</span>
+                                @endif
+                            </div>
+                            <p class="font-semibold leading-snug">{{ $step['label'] }}</p>
+                        </div>
+                    @endforeach
                 </div>
             </div>
 

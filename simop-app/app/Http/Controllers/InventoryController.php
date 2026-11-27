@@ -141,6 +141,8 @@ class InventoryController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+            $project->syncAutoProgress();
+
             $remaining = $available - $validated['quantity'];
 
             return back()->with(

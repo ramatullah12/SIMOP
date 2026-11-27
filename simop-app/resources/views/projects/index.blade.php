@@ -6,7 +6,7 @@
                     Daftar Proyek Operasional
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Kelola proyek, pemantauan kemajuan, dan alokasi stok barang proyek.
+                    Kelola proyek, status pelaksanaan, dan alokasi stok barang proyek.
                 </p>
             </div>
 
@@ -35,22 +35,28 @@
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">No. Proyek</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Judul & Kegiatan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Klien</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Petugas Lapangan</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Stok Barang Dibawa</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Kemajuan & Status</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Status & Progres</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($projects as $project)
+                                @php
+                                    $statusColor = match ($project->status) {
+                                        'completed' => 'bg-emerald-100 text-emerald-800',
+                                        'in_progress', 'ongoing' => 'bg-blue-100 text-blue-800',
+                                        'cancelled' => 'bg-rose-100 text-rose-800',
+                                        default => 'bg-amber-100 text-amber-800',
+                                    };
+                                @endphp
                                 <tr>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ $project->project_number }}</td>
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-gray-900">{{ $project->title }}</p>
-                                        <p class="text-xs text-gray-500">{{ $project->workEstimate?->order?->event_name ?? '-' }}</p>
+                                        <p class="text-xs text-gray-500">{{ $project->order?->event_name ?? '-' }}</p>
                                     </td>
-                                    <td class="px-4 py-3">{{ $project->workEstimate?->order?->company_name ?? '-' }}</td>
-                                    <td class="px-4 py-3">{{ $project->assignedUser?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3">{{ $project->order?->company_name ?? '-' }}</td>
                                     <td class="px-4 py-3 text-xs">
                                         @if ($project->projectItems->isNotEmpty())
                                             @foreach ($project->projectItems as $pi)
@@ -66,30 +72,52 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold
-                                            {{ $project->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800' }}">
-                                            {{ strtoupper(str_replace('_', ' ', $project->status)) }} ({{ $project->progress }}%)
-                                        </span>
+                                        <div class="space-y-1.5 min-w-[140px]">
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $statusColor }}">
+                                                {{ $project->status_label }}
+                                            </span>
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                                                    <div class="h-full rounded-full {{ $project->status === 'completed' ? 'bg-emerald-500' : 'bg-blue-600' }}"
+                                                         style="width: {{ (int) $project->progress }}%"></div>
+                                                </div>
+                                                <span class="text-xs font-bold text-gray-700">{{ (int) $project->progress }}%</span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-center flex-wrap gap-2">
                                             <a href="{{ route('projects.show', $project) }}"
                                                class="text-blue-600 hover:underline font-medium">
                                                 Detail
                                             </a>
-                                            @if ($project->workEstimate?->order)
-                                                <a href="{{ route('tracking.show', $project->workEstimate->order) }}"
+                                            @if ($project->order)
+                                                <a href="{{ route('tracking.show', $project->order) }}"
                                                    class="text-emerald-600 hover:underline text-xs font-semibold">
                                                     Lacak Alur
                                                 </a>
+                                            @endif
+                                            @if (auth()->user()?->role?->slug === 'admin' && ! in_array($project->status, ['completed', 'cancelled'], true))
+                                                <form method="POST" action="{{ route('projects.complete', $project) }}" class="inline"
+                                                      data-confirm-title="Konfirmasi Penyelesaian Proyek"
+                                                      data-confirm-detail="{{ $project->project_number }} — {{ $project->title }}"
+                                                      data-confirm-message="Tandai proyek ini Selesai (100%)? Seluruh stok barang yang dialokasikan ke proyek ini akan otomatis dikembalikan ke stok awal gudang."
+                                                      data-confirm-btn="Ya, Selesaikan Proyek"
+                                                      data-confirm-type="success">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold transition">
+                                                        Selesai
+                                                    </button>
+                                                </form>
                                             @endif
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
-                                        Belum ada data project.
+                                    <td colspan="6" class="px-4 py-6 text-center text-gray-500">
+                                        Belum ada data proyek.
                                     </td>
                                 </tr>
                             @endforelse

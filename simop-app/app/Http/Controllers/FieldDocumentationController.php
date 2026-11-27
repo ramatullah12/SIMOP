@@ -44,12 +44,7 @@ class FieldDocumentationController extends Controller
         abort_unless($role === 'petugas-lapangan', 403, 'Hanya Petugas Lapangan yang dapat mencatat dokumentasi lapangan pengerjaan.');
 
         $projects = Project::with(['order', 'planning.production'])
-            ->where(function ($q) use ($user) {
-                $q->where('assigned_to', $user->id)
-                    ->orWhereHas('planning.production', function ($sub) use ($user) {
-                        $sub->where('assigned_to', $user->id);
-                    });
-            })
+            ->accessibleByOfficer($user->id)
             ->latest()
             ->get();
 
@@ -118,6 +113,8 @@ class FieldDocumentationController extends Controller
             'file_size' => $fileSize,
             'notes' => $validated['notes'] ?? null,
         ]);
+
+        $project->syncAutoProgress();
 
         return redirect()
             ->route('field-documentations.show', $doc)

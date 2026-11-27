@@ -397,15 +397,20 @@
                                         <p class="text-xs font-bold text-slate-900">Langkah Terakhir:</p>
                                         <p class="text-xs text-slate-600">Seluruh isian dan tanda tangan lengkap. Kirim hasil untuk menyelesaikan status survei.</p>
                                     </div>
-                                    <form method="POST" action="{{ route('surveys.submit-result', $survey) }}">
+                                    <form method="POST" action="{{ route('surveys.submit-result', $survey) }}"
+                                          data-confirm-title="Konfirmasi Penyelesaian Survei"
+                                          data-confirm-detail="{{ $survey->sps_number ?: 'Survei #' . $survey->id }} — {{ $survey->customer_display_name }}"
+                                          data-confirm-message="Apakah Anda yakin ingin mengirim dan menyelesaikan survei ini? Status akan berubah menjadi Survei Selesai dan laporan PDF resmi akan diterbitkan."
+                                          data-confirm-btn="Ya, Kirim & Selesaikan"
+                                          data-confirm-type="success">
                                         @csrf
                                         <button type="submit"
-                                                onclick="return confirm('Apakah Anda yakin ingin menyelesaikan survei ini? Status akan berubah menjadi Selesai dan laporan PDF akan resmi diterbitkan.')"
-                                                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-extrabold hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5">
+                                                style="background-color: #059669; color: #ffffff;"
+                                                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold shadow-lg hover:shadow-xl transition">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
-                                            Kirim & Selesaikan Survei
+                                            Kirim &amp; Selesaikan Survei
                                         </button>
                                     </form>
                                 </div>
@@ -468,10 +473,8 @@
                                     </button>
                                 </div>
 
-                                <div class="w-full border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50/70 hover:bg-white transition-colors relative shadow-inner overflow-hidden" style="touch-action: none;">
-                                    <canvas id="signatureCanvas" class="w-full block" height="230" style="cursor: crosshair;"></canvas>
-                                    
-                                    <div id="canvasPlaceholder" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
+                                <div class="w-full border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50/70 hover:bg-white transition-colors shadow-inner overflow-hidden" style="position: relative; touch-action: none; user-select: none; -webkit-user-select: none;">
+                                    <div id="canvasPlaceholder" class="text-slate-400 text-xs p-4 text-center" style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; user-select: none; -webkit-user-select: none; z-index: 1;">
                                         <div class="w-12 h-12 rounded-full bg-slate-200/60 flex items-center justify-center mb-2">
                                             <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
@@ -480,6 +483,8 @@
                                         <p class="font-semibold text-slate-600">Bubuhkan tanda tangan pelanggan di sini</p>
                                         <span class="text-[11px] text-slate-400 mt-0.5">Dapat digoreskan menggunakan jari (HP/Tablet) atau kursor mouse/touchpad (Komputer).</span>
                                     </div>
+
+                                    <canvas id="signatureCanvas" style="position: relative; z-index: 2; width: 100%; height: 230px; cursor: crosshair; touch-action: none; display: block; background: transparent; user-select: none; -webkit-user-select: none;"></canvas>
                                 </div>
                             </div>
 
@@ -512,133 +517,194 @@
         </div>
     </div>
 
-    {{-- Script Canvas Signature Pad dengan Smoothing Kurva --}}
+    {{-- Script Canvas Signature Pad (Pointer, Mouse & Touch) --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const canvas = document.getElementById('signatureCanvas');
-            if (!canvas) return;
+        (function () {
+            function initSignaturePad() {
+                const canvas = document.getElementById('signatureCanvas');
+                if (!canvas) return;
 
-            const ctx = canvas.getContext('2d');
-            const clearBtn = document.getElementById('clearSigBtn');
-            const sigInput = document.getElementById('signatureInput');
-            const placeholder = document.getElementById('canvasPlaceholder');
-            const form = document.getElementById('signatureForm');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
 
-            let isDrawing = false;
-            let hasDrawn = false;
-            let points = [];
+                const clearBtn = document.getElementById('clearSigBtn');
+                const sigInput = document.getElementById('signatureInput');
+                const placeholder = document.getElementById('canvasPlaceholder');
+                const form = document.getElementById('signatureForm');
 
-            function resizeCanvas() {
-                const rect = canvas.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
+                const CANVAS_HEIGHT = 230;
+                let isDrawing = false;
+                let hasDrawn = false;
+                let lastPoint = null;
+                let activePointerId = null;
 
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(canvas, 0, 0);
-
-                canvas.width = rect.width * dpr;
-                canvas.height = 230 * dpr;
-                ctx.scale(dpr, dpr);
-                ctx.lineWidth = 2.6;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = '#0f2b5c'; // Premium dark ink
-
-                if (hasDrawn) {
-                    ctx.drawImage(tempCanvas, 0, 0, rect.width, 230);
+                function applyPenStyle(dpr) {
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    ctx.lineWidth = 2.6;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.strokeStyle = '#0f2b5c';
+                    ctx.fillStyle = '#0f2b5c';
                 }
-            }
 
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-
-            function getPos(e) {
-                const rect = canvas.getBoundingClientRect();
-                let clientX = e.clientX;
-                let clientY = e.clientY;
-                if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                }
-                return {
-                    x: clientX - rect.left,
-                    y: clientY - rect.top
-                };
-            }
-
-            function startDraw(e) {
-                e.preventDefault();
-                isDrawing = true;
-                points = [];
-                const pos = getPos(e);
-                points.push(pos);
-
-                if (!hasDrawn && placeholder) {
-                    placeholder.style.display = 'none';
-                }
-            }
-
-            function draw(e) {
-                if (!isDrawing) return;
-                e.preventDefault();
-                const pos = getPos(e);
-                points.push(pos);
-
-                if (points.length >= 3) {
-                    const xc = (points[points.length - 2].x + points[points.length - 1].x) / 2;
-                    const yc = (points[points.length - 2].y + points[points.length - 1].y) / 2;
-                    ctx.beginPath();
-                    ctx.moveTo(points[points.length - 3].x, points[points.length - 3].y);
-                    ctx.quadraticCurveTo(points[points.length - 2].x, points[points.length - 2].y, xc, yc);
-                    ctx.stroke();
-                } else if (points.length === 2) {
-                    ctx.beginPath();
-                    ctx.moveTo(points[0].x, points[0].y);
-                    ctx.lineTo(points[1].x, points[1].y);
-                    ctx.stroke();
-                }
-                hasDrawn = true;
-            }
-
-            function stopDraw(e) {
-                if (!isDrawing) return;
-                isDrawing = false;
-                points = [];
-            }
-
-            canvas.addEventListener('mousedown', startDraw);
-            canvas.addEventListener('mousemove', draw);
-            window.addEventListener('mouseup', stopDraw);
-
-            canvas.addEventListener('touchstart', startDraw, { passive: false });
-            canvas.addEventListener('touchmove', draw, { passive: false });
-            window.addEventListener('touchend', stopDraw);
-            window.addEventListener('touchcancel', stopDraw);
-
-            if (clearBtn) {
-                clearBtn.addEventListener('click', function () {
+                function resizeCanvas() {
                     const rect = canvas.getBoundingClientRect();
-                    ctx.clearRect(0, 0, rect.width, 230);
-                    hasDrawn = false;
-                    sigInput.value = '';
-                    if (placeholder) {
-                        placeholder.style.display = 'flex';
+                    const cssWidth = Math.floor(rect.width || canvas.parentElement?.clientWidth || 0);
+                    if (cssWidth <= 0) return;
+
+                    const dpr = window.devicePixelRatio || 1;
+                    let snapshot = null;
+
+                    if (hasDrawn && canvas.width > 0 && canvas.height > 0) {
+                        snapshot = document.createElement('canvas');
+                        snapshot.width = canvas.width;
+                        snapshot.height = canvas.height;
+                        const snapCtx = snapshot.getContext('2d');
+                        if (snapCtx) {
+                            snapCtx.drawImage(canvas, 0, 0);
+                        }
                     }
-                });
+
+                    canvas.width = Math.round(cssWidth * dpr);
+                    canvas.height = Math.round(CANVAS_HEIGHT * dpr);
+                    applyPenStyle(dpr);
+
+                    if (snapshot) {
+                        ctx.drawImage(snapshot, 0, 0, cssWidth, CANVAS_HEIGHT);
+                    }
+                }
+
+                function getPos(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    let clientX = e.clientX;
+                    let clientY = e.clientY;
+                    if (e.touches && e.touches.length > 0) {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    } else if (e.changedTouches && e.changedTouches.length > 0) {
+                        clientX = e.changedTouches[0].clientX;
+                        clientY = e.changedTouches[0].clientY;
+                    }
+                    return {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+                }
+
+                function startDraw(e) {
+                    if (e.type === 'pointerdown' && e.button !== 0 && e.pointerType === 'mouse') {
+                        return;
+                    }
+                    if (canvas.width === 0 || canvas.height === 0) {
+                        resizeCanvas();
+                    }
+                    e.preventDefault();
+
+                    isDrawing = true;
+                    if (e.pointerId !== undefined) {
+                        activePointerId = e.pointerId;
+                        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+                    }
+
+                    const pos = getPos(e);
+                    lastPoint = pos;
+
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 1.3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    hasDrawn = true;
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                }
+
+                function draw(e) {
+                    if (!isDrawing) return;
+                    if (activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) {
+                        return;
+                    }
+                    e.preventDefault();
+
+                    const pos = getPos(e);
+                    if (lastPoint) {
+                        const midX = (lastPoint.x + pos.x) / 2;
+                        const midY = (lastPoint.y + pos.y) / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(lastPoint.x, lastPoint.y);
+                        ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midX, midY);
+                        ctx.lineTo(pos.x, pos.y);
+                        ctx.stroke();
+                    }
+                    lastPoint = pos;
+                    hasDrawn = true;
+                }
+
+                function stopDraw(e) {
+                    if (!isDrawing) return;
+                    if (activePointerId !== null && e && e.pointerId !== undefined && e.pointerId !== activePointerId) {
+                        return;
+                    }
+                    isDrawing = false;
+                    lastPoint = null;
+                    if (activePointerId !== null) {
+                        try { canvas.releasePointerCapture(activePointerId); } catch (_) {}
+                        activePointerId = null;
+                    }
+                }
+
+                resizeCanvas();
+                window.addEventListener('load', resizeCanvas);
+                window.addEventListener('resize', resizeCanvas);
+
+                if (window.PointerEvent) {
+                    canvas.addEventListener('pointerdown', startDraw);
+                    canvas.addEventListener('pointermove', draw);
+                    canvas.addEventListener('pointerup', stopDraw);
+                    canvas.addEventListener('pointercancel', stopDraw);
+                    window.addEventListener('pointerup', stopDraw);
+                } else {
+                    canvas.addEventListener('mousedown', startDraw);
+                    canvas.addEventListener('mousemove', draw);
+                    window.addEventListener('mouseup', stopDraw);
+                    canvas.addEventListener('touchstart', startDraw, { passive: false });
+                    canvas.addEventListener('touchmove', draw, { passive: false });
+                    window.addEventListener('touchend', stopDraw);
+                    window.addEventListener('touchcancel', stopDraw);
+                }
+
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function () {
+                        const dpr = window.devicePixelRatio || 1;
+                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        applyPenStyle(dpr);
+                        hasDrawn = false;
+                        lastPoint = null;
+                        if (sigInput) sigInput.value = '';
+                        if (placeholder) {
+                            placeholder.style.display = 'flex';
+                        }
+                    });
+                }
+
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        if (!hasDrawn) {
+                            e.preventDefault();
+                            alert('Silakan bubuhkan tanda tangan terlebih dahulu pada area canvas yang disediakan.');
+                            return false;
+                        }
+                        sigInput.value = canvas.toDataURL('image/png');
+                    });
+                }
             }
 
-            if (form) {
-                form.addEventListener('submit', function (e) {
-                    if (!hasDrawn) {
-                        e.preventDefault();
-                        alert('Silakan bubuhkan tanda tangan terlebih dahulu pada area canvas yang disediakan.');
-                        return false;
-                    }
-                    sigInput.value = canvas.toDataURL('image/png');
-                });
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSignaturePad);
+            } else {
+                initSignaturePad();
             }
-        });
+        })();
     </script>
 </x-app-layout>

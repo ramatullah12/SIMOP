@@ -25,7 +25,7 @@ class DocumentController extends Controller
         ])
             ->when($role === 'petugas-lapangan', function ($query) use ($user) {
                 $query->whereHas('project', function ($projectQuery) use ($user) {
-                    $projectQuery->where('assigned_to', $user->id);
+                    $projectQuery->accessibleByOfficer($user->id);
                 });
             })
             ->when($role === 'client', function ($query) use ($user) {
@@ -48,7 +48,7 @@ class DocumentController extends Controller
 
         $projects = Project::with(['order'])
             ->when($role === 'petugas-lapangan', function ($query) use ($user) {
-                $query->where('assigned_to', $user->id);
+                $query->accessibleByOfficer($user->id);
             })
             ->latest()
             ->get();
@@ -80,7 +80,7 @@ class DocumentController extends Controller
 
         $project = Project::findOrFail($validated['project_id']);
 
-        if ($role === 'petugas-lapangan' && $project->assigned_to !== $user->id) {
+        if ($role === 'petugas-lapangan' && ! $project->isAccessibleByOfficer($user->id)) {
             abort(403);
         }
 
@@ -112,7 +112,7 @@ class DocumentController extends Controller
 
         abort_unless(in_array($role, ['admin', 'direktur', 'petugas-lapangan', 'client'], true), 403);
 
-        if ($role === 'petugas-lapangan' && $document->project->assigned_to !== $user->id) {
+        if ($role === 'petugas-lapangan' && ! $document->project->isAccessibleByOfficer($user->id)) {
             abort(403);
         }
 
@@ -135,7 +135,7 @@ class DocumentController extends Controller
 
         abort_unless(in_array($role, ['admin', 'direktur', 'petugas-lapangan', 'client'], true), 403);
 
-        if ($role === 'petugas-lapangan' && $document->project->assigned_to !== $user->id) {
+        if ($role === 'petugas-lapangan' && ! $document->project->isAccessibleByOfficer($user->id)) {
             abort(403);
         }
 

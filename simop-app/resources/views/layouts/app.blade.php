@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SIMOP') – Sistem Informasi Manajemen Operasional</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-smg.jpg') }}">
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,12 +41,16 @@
             text-decoration: none;
         }
         .sidebar-logo {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            border-radius: 10px;
+            width: 60px; height: 36px;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 3px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.125rem; font-weight: 800; color: white;
-            box-shadow: 0 4px 14px rgba(59,130,246,0.45); flex-shrink: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.28); flex-shrink: 0;
+        }
+        .sidebar-logo img {
+            width: 100%; height: 100%; object-fit: contain; display: block;
         }
         .sidebar-brand-text { flex: 1; min-width: 0; }
         .sidebar-brand-text h1 { color: white; font-size: 1.0625rem; font-weight: 700; letter-spacing: 0.02em; margin: 0; }
@@ -534,7 +539,9 @@
 
         <aside class="sidebar" id="sidebar">
             <a href="{{ route('dashboard') }}" class="sidebar-brand">
-                <div class="sidebar-logo">S</div>
+                <div class="sidebar-logo">
+                    <img src="{{ asset('images/logo-smg.jpg') }}" alt="PT. Solusi Media Group">
+                </div>
                 <div class="sidebar-brand-text">
                     <h1>SIMOP</h1>
                     <p>Manajemen Operasional</p>

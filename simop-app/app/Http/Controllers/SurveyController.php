@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\Order;
 use App\Models\Survey;
 use App\Models\SurveyPhoto;
@@ -716,7 +717,30 @@ class SurveyController extends Controller
 
         $survey->load(['order.client', 'assignedUser', 'approver', 'requester']);
 
-        return $this->pdf($request, 'surveys.pdf.sps', compact('survey'), 'SPS-' . $survey->sps_number);
+        $approverEmployee = $survey->approver?->email
+            ? Employee::where('email', $survey->approver->email)->first()
+            : null;
+        $officerEmployee = $survey->assignedUser?->email
+            ? Employee::where('email', $survey->assignedUser->email)->first()
+            : null;
+
+        $logoDataUri = null;
+        if (extension_loaded('gd')) {
+            $logoJpg = public_path('images/logo-mediasolution.jpg');
+            $logoPng = public_path('images/logo-mediasolution.png');
+            if (is_file($logoJpg)) {
+                $logoDataUri = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoJpg));
+            } elseif (is_file($logoPng)) {
+                $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPng));
+            }
+        }
+
+        return $this->pdf(
+            $request,
+            'surveys.pdf.sps',
+            compact('survey', 'approverEmployee', 'officerEmployee', 'logoDataUri'),
+            'Surat-Tugas-Survey-' . str_replace('/', '-', $survey->sps_number)
+        );
     }
 
     public function resultPdf(Request $request, Survey $survey): Response
@@ -724,25 +748,46 @@ class SurveyController extends Controller
         $this->authorizeView($survey);
         abort_unless($survey->status === Survey::STATUS_DONE, 404, 'Dokumen hasil survei tersedia setelah survei selesai.');
 
-        $survey->load(['order.client', 'assignedUser', 'approver', 'photos']);
+        $survey->load(['order.client', 'assignedUser', 'approver', 'requester', 'photos']);
 
-        $signature = $survey->signature_path && Storage::disk(self::DISK)->exists($survey->signature_path)
+        $hasGd = extension_loaded('gd');
+
+        $logoDataUri = null;
+        if ($hasGd) {
+            $logoForm = public_path('images/logo-mediasolution-form.jpg');
+            $logoFallback = public_path('images/logo-mediasolution.jpg');
+            if (is_file($logoForm)) {
+                $logoDataUri = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoForm));
+            } elseif (is_file($logoFallback)) {
+                $logoDataUri = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoFallback));
+            }
+        }
+
+        $signature = $hasGd && $survey->signature_path && Storage::disk(self::DISK)->exists($survey->signature_path)
             ? 'data:image/png;base64,' . base64_encode(Storage::disk(self::DISK)->get($survey->signature_path))
             : null;
 
-        $photos = $survey->photos->take(6)->map(function ($photo) {
-            if (! Storage::disk(self::DISK)->exists($photo->file_path)) {
-                return null;
-            }
-            $mime = Storage::disk(self::DISK)->mimeType($photo->file_path) ?: 'image/jpeg';
+        $photos = $hasGd
+            ? $survey->photos->take(6)->map(function ($photo) {
+                if (! Storage::disk(self::DISK)->exists($photo->file_path)) {
+                    return null;
+                }
+                $mime = Storage::disk(self::DISK)->mimeType($photo->file_path) ?: 'image/jpeg';
 
-            return [
-                'src' => 'data:' . $mime . ';base64,' . base64_encode(Storage::disk(self::DISK)->get($photo->file_path)),
-                'caption' => $photo->caption ?: $photo->file_name,
-            ];
-        })->filter()->values();
+                return [
+                    'src' => 'data:' . $mime . ';base64,' . base64_encode(Storage::disk(self::DISK)->get($photo->file_path)),
+                    'caption' => $photo->caption ?: $photo->file_name,
+                ];
+            })->filter()->values()
+            : collect();
 
-        return $this->pdf($request, 'surveys.pdf.result', compact('survey', 'signature', 'photos'), 'Hasil-Survei-' . ($survey->sps_number ?: $survey->id));
+        return $this->pdf(
+            $request,
+            'surveys.pdf.result',
+            compact('survey', 'signature', 'photos', 'logoDataUri'),
+            'Survey-Form-' . str_replace('/', '-', ($survey->sps_number ?: (string) $survey->id)),
+            'landscape'
+        );
     }
 
     public function destroy(Survey $survey): RedirectResponse
@@ -869,7 +914,7 @@ class SurveyController extends Controller
     {
         $romans = [1 => 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
         $now = now();
-        $number = sprintf('SPS/%04d/SIMOP/%s/%s', $survey->id, $romans[(int) $now->format('n')], $now->format('Y'));
+        $number = sprintf('%03d/MS/ST-SRV/%s/%s', $survey->id, $romans[(int) $now->format('n')], $now->format('Y'));
 
         // Pengaman tambahan bila nomor sudah pernah dipakai
         $suffix = 1;
@@ -916,9 +961,9 @@ class SurveyController extends Controller
         return $changes;
     }
 
-    private function pdf(Request $request, string $view, array $data, string $filename): Response
+    private function pdf(Request $request, string $view, array $data, string $filename, string $orientation = 'portrait'): Response
     {
-        $pdf = Pdf::loadView($view, $data)->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView($view, $data)->setPaper('a4', $orientation);
         $filename = Str::slug(str_replace('/', '-', $filename)) . '.pdf';
 
         return $request->boolean('print') ? $pdf->stream($filename) : $pdf->download($filename);

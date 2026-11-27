@@ -28,7 +28,7 @@ class ProjectController extends Controller
             'projectItems.item',
         ])
             ->when($role === 'petugas-lapangan', function ($query) use ($user) {
-                $query->where('assigned_to', $user->id);
+                $query->accessibleByOfficer($user->id);
             })
             ->when($role === 'client', function ($query) use ($user) {
                 $query->whereHas('order', function ($orderQuery) use ($user) {
@@ -91,7 +91,7 @@ class ProjectController extends Controller
             'start_date' => ['nullable', 'date'],
             'deadline' => ['nullable', 'date', 'after_or_equal:start_date'],
             'status' => ['required', 'in:planning,in_progress,completed,cancelled'],
-            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+            'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -109,19 +109,26 @@ class ProjectController extends Controller
             'order_id' => $order->id,
             'survey_id' => $order->survey?->id,
             'created_by' => $user->id,
-            'assigned_to' => $validated['assigned_to'] ?? null,
+            'assigned_to' => $validated['assigned_to'] ?? $order->survey?->assigned_to,
             'project_number' => $this->generateProjectNumber(),
             'title' => $validated['title'],
             'start_date' => $validated['start_date'] ?? null,
             'deadline' => $validated['deadline'] ?? null,
             'status' => $validated['status'],
-            'progress' => $validated['progress'],
+            'progress' => 0,
             'notes' => $validated['notes'] ?? null,
         ]);
 
+        $project->syncAutoProgress();
+
+        if ($validated['status'] === 'completed') {
+            $project->returnAllocatedStock();
+            $project->order?->update(['status' => 'selesai']);
+        }
+
         return redirect()
             ->route('projects.show', $project)
-            ->with('success', 'Proyek berhasil dibuat.');
+            ->with('success', 'Proyek berhasil dibuat. Persentase kemajuan dihitung otomatis oleh sistem.');
     }
 
     public function show(Project $project): View
@@ -131,7 +138,7 @@ class ProjectController extends Controller
 
         abort_unless(in_array($role, ['admin', 'direktur', 'petugas-lapangan', 'client'], true), 403);
 
-        if ($role === 'petugas-lapangan' && $project->assigned_to !== $user->id) {
+        if ($role === 'petugas-lapangan' && ! $project->isAccessibleByOfficer($user->id)) {
             abort(403);
         }
 
@@ -185,23 +192,24 @@ class ProjectController extends Controller
             'start_date' => ['nullable', 'date'],
             'deadline' => ['nullable', 'date', 'after_or_equal:start_date'],
             'status' => ['required', 'in:planning,in_progress,completed,cancelled'],
-            'progress' => ['required', 'integer', 'min:0', 'max:100'],
+            'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        if ($validated['status'] === 'completed') {
-            $validated['progress'] = 100;
-        }
-
-        $project->update([
-            'assigned_to' => $validated['assigned_to'] ?? null,
+        $updateData = [
             'title' => $validated['title'],
             'start_date' => $validated['start_date'] ?? null,
             'deadline' => $validated['deadline'] ?? null,
             'status' => $validated['status'],
-            'progress' => $validated['progress'],
             'notes' => $validated['notes'] ?? null,
-        ]);
+        ];
+
+        if ($request->has('assigned_to')) {
+            $updateData['assigned_to'] = $validated['assigned_to'] ?? null;
+        }
+
+        $project->update($updateData);
+        $project->syncAutoProgress();
 
         $returnedCount = 0;
         if (in_array($validated['status'], ['completed', 'cancelled'], true)) {
@@ -214,6 +222,37 @@ class ProjectController extends Controller
         $msg = 'Data proyek berhasil diperbarui.';
         if ($returnedCount > 0) {
             $msg .= ' Semua stok barang yang dibawa ke proyek ini otomatis dikembalikan ke stok awal.';
+        }
+
+        return redirect()
+            ->route('projects.show', $project)
+            ->with('success', $msg);
+    }
+
+    public function complete(Project $project): RedirectResponse
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
+        abort_unless($role === 'admin', 403);
+
+        if ($project->status === 'completed') {
+            return redirect()
+                ->route('projects.show', $project)
+                ->with('success', 'Proyek ini sudah berstatus Selesai.');
+        }
+
+        $project->update([
+            'status' => 'completed',
+            'progress' => 100,
+        ]);
+
+        $returnedCount = $project->returnAllocatedStock();
+        $project->order?->update(['status' => 'selesai']);
+
+        $msg = "Proyek {$project->project_number} berhasil diselesaikan (100%).";
+        if ($returnedCount > 0) {
+            $msg .= " {$returnedCount} alokasi stok barang otomatis dikembalikan ke stok awal gudang.";
         }
 
         return redirect()

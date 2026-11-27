@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'SIMOP') }} – Sistem Informasi Manajemen Operasional</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-smg.jpg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -169,19 +170,23 @@
         }
 
         .brand-logo {
-            width: 46px;
-            height: 46px;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            border-radius: 13px;
+            width: 84px;
+            height: 48px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 1.125rem;
-            color: white;
-            box-shadow: 0 4px 18px rgba(37,99,235,0.45);
+            overflow: hidden;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.35);
             flex-shrink: 0;
-            letter-spacing: -0.5px;
+        }
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .brand-tagline {
@@ -245,7 +250,9 @@
         <div class="relative z-10 w-full max-w-md">
             <div class="mb-8 flex flex-col items-center text-center">
                 <a href="/" class="flex items-center gap-3 group">
-                    <div class="brand-logo group-hover:scale-105 transition-transform duration-200">S</div>
+                    <div class="brand-logo group-hover:scale-105 transition-transform duration-200">
+                        <img src="{{ asset('images/logo-smg.jpg') }}" alt="PT. Solusi Media Group">
+                    </div>
                     <div class="text-left">
                         <h1 class="text-xl font-bold text-white tracking-wide">SIMOP</h1>
                         <p class="text-xs text-slate-500 mt-0.5">Sistem Informasi Manajemen</p>

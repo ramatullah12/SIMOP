@@ -36,10 +36,7 @@ class PlanningController extends Controller
                     $query->whereHas(
                         'project',
                         function ($projectQuery) use ($user) {
-                            $projectQuery->where(
-                                'assigned_to',
-                                $user->id
-                            );
+                            $projectQuery->accessibleByOfficer($user->id);
                         }
                     );
                 }
@@ -149,7 +146,7 @@ class PlanningController extends Controller
                     'Proyek ini sudah memiliki perencanaan.'
                 );
 
-                return Planning::create([
+                $planning = Planning::create([
                     'project_id' => $project->id,
                     'created_by' => auth()->id(),
                     'planning_number' => $this->generatePlanningNumber(),
@@ -160,6 +157,10 @@ class PlanningController extends Controller
                     'status' => 'draft',
                     'notes' => $validated['notes'] ?? null,
                 ]);
+
+                $project->syncAutoProgress();
+
+                return $planning;
             }
         );
 
@@ -198,7 +199,7 @@ class PlanningController extends Controller
 
         if (
             $role === 'petugas-lapangan'
-            && $planning->project->assigned_to !== $user->id
+            && ! $planning->project->isAccessibleByOfficer($user->id)
         ) {
             abort(403);
         }
@@ -257,7 +258,7 @@ class PlanningController extends Controller
 
                 if (
                     $role === 'petugas-lapangan'
-                    && $project->assigned_to !== $user->id
+                    && ! $project->isAccessibleByOfficer($user->id)
                 ) {
                     abort(403);
                 }
@@ -338,9 +339,11 @@ class PlanningController extends Controller
                     && $project->status === 'planning'
                 ) {
                     $project->update([
-                        'status' => 'ongoing',
+                        'status' => 'in_progress',
                     ]);
                 }
+
+                $project->syncAutoProgress();
             }
         );
 

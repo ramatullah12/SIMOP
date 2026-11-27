@@ -112,10 +112,7 @@ class ProductionController extends Controller
 
         if ($validated['status'] === 'in_progress') {
             $planning->update(['status' => 'in_progress']);
-            $project->update([
-                'status' => 'in_progress',
-                'progress' => max((int) $project->progress, (int) $validated['progress']),
-            ]);
+            $project->update(['status' => 'in_progress']);
         }
 
         if ($validated['status'] === 'completed' || (int) $validated['progress'] === 100) {
@@ -126,6 +123,8 @@ class ProductionController extends Controller
             ]);
             $project->returnAllocatedStock();
             $project->order?->update(['status' => 'selesai']);
+        } else {
+            $project->syncAutoProgress();
         }
 
         return redirect()
@@ -214,10 +213,8 @@ class ProductionController extends Controller
 
         if ($validated['status'] === 'in_progress') {
             $planning->update(['status' => 'in_progress']);
-            $project->update([
-                'status' => 'in_progress',
-                'progress' => (int) $validated['progress'],
-            ]);
+            $project->update(['status' => 'in_progress']);
+            $project->syncAutoProgress();
         } elseif ($validated['status'] === 'completed' || (int) $validated['progress'] === 100) {
             $planning->update(['status' => 'completed']);
             $project->update([
@@ -228,6 +225,9 @@ class ProductionController extends Controller
             $project->order?->update(['status' => 'selesai']);
         } elseif ($validated['status'] === 'cancelled') {
             $returnedCount = $project->returnAllocatedStock();
+            $project->syncAutoProgress();
+        } else {
+            $project->syncAutoProgress();
         }
 
         $msg = 'Data produksi & instalasi berhasil diperbarui.';
@@ -272,10 +272,8 @@ class ProductionController extends Controller
 
         if ($validated['status'] === 'in_progress') {
             $planning->update(['status' => 'in_progress']);
-            $project->update([
-                'status' => 'in_progress',
-                'progress' => (int) $validated['progress'],
-            ]);
+            $project->update(['status' => 'in_progress']);
+            $project->syncAutoProgress();
         } elseif ($validated['status'] === 'completed') {
             $planning->update(['status' => 'completed']);
             $project->update([
@@ -284,6 +282,8 @@ class ProductionController extends Controller
             ]);
             $returnedCount = $project->returnAllocatedStock();
             $project->order?->update(['status' => 'selesai']);
+        } else {
+            $project->syncAutoProgress();
         }
 
         $msg = 'Kemajuan produksi & instalasi berhasil diperbarui.';

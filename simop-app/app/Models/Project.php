@@ -97,4 +97,153 @@ class Project extends Model
                 'returned_at' => now(),
             ]);
     }
+
+    public function scopeAccessibleByOfficer($query, int $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->whereNull('assigned_to')
+                ->orWhere('assigned_to', $userId)
+                ->orWhereHas('survey', fn ($s) => $s->where('assigned_to', $userId))
+                ->orWhereHas('planning.production', fn ($p) => $p->where('assigned_to', $userId));
+        });
+    }
+
+    public function isAccessibleByOfficer(int $userId): bool
+    {
+        if ($this->assigned_to === null || $this->assigned_to === $userId) {
+            return true;
+        }
+
+        if ($this->survey?->assigned_to === $userId) {
+            return true;
+        }
+
+        if ($this->planning?->production?->assigned_to === $userId) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'planning' => 'Perencanaan',
+            'in_progress', 'ongoing' => 'Sedang Dikerjakan',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+            default => strtoupper(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
+
+    /**
+     * Hitung persentase kemajuan proyek secara otomatis berdasarkan tahapan proses.
+     */
+    public function calculateAutoProgress(): int
+    {
+        if ($this->status === 'completed') {
+            return 100;
+        }
+
+        if ($this->status === 'cancelled') {
+            return 0;
+        }
+
+        $progress = 20; // Tahap 1: Proyek dibuat
+
+        // Tahap 2: Alokasi stok barang (+10%)
+        if ($this->projectItems()->exists()) {
+            $progress += 10;
+        }
+
+        // Tahap 3: Perencanaan teknis (draft +10%, ready/in_progress/completed +20%)
+        $planning = $this->planning()->with('production')->first();
+        if ($planning) {
+            if (in_array($planning->status, ['ready', 'in_progress', 'completed'], true)) {
+                $progress += 20;
+            } elseif ($planning->status === 'draft') {
+                $progress += 10;
+            }
+
+            // Tahap 4: Produksi & instalasi (pending +10%, in_progress +20%, completed +30%)
+            $production = $planning->production;
+            if ($production) {
+                if ($production->status === 'completed') {
+                    $progress += 30;
+                } elseif ($production->status === 'in_progress') {
+                    $progress += 20;
+                } elseif ($production->status === 'pending') {
+                    $progress += 10;
+                }
+            }
+        }
+
+        // Tahap 5: Dokumentasi lapangan (+10%)
+        if ($this->fieldDocumentations()->exists()) {
+            $progress += 10;
+        }
+
+        return min(95, $progress);
+    }
+
+    /**
+     * Hitung dan simpan persentase kemajuan otomatis ke database.
+     */
+    public function syncAutoProgress(): int
+    {
+        $progress = $this->calculateAutoProgress();
+
+        if ((int) $this->progress !== $progress) {
+            $this->update(['progress' => $progress]);
+        }
+
+        return $progress;
+    }
+
+    /**
+     * Rincian tahapan progres otomatis untuk ditampilkan di detail proyek.
+     */
+    public function getAutoProgressStepsAttribute(): array
+    {
+        $planning = $this->relationLoaded('planning') ? $this->planning : $this->planning()->with('production')->first();
+        $production = $planning?->production;
+        $hasItems = $this->relationLoaded('projectItems') ? $this->projectItems->isNotEmpty() : $this->projectItems()->exists();
+        $hasDocs = $this->relationLoaded('fieldDocumentations') ? $this->fieldDocumentations->isNotEmpty() : $this->fieldDocumentations()->exists();
+        $isCompleted = $this->status === 'completed';
+
+        return [
+            [
+                'label' => 'Proyek Dibuat',
+                'weight' => '20%',
+                'done' => $this->status !== 'cancelled',
+            ],
+            [
+                'label' => 'Alokasi Stok Barang',
+                'weight' => '+10%',
+                'done' => $isCompleted || $hasItems,
+            ],
+            [
+                'label' => 'Perencanaan Teknis',
+                'weight' => '+20%',
+                'done' => $isCompleted || ($planning && in_array($planning->status, ['ready', 'in_progress', 'completed'], true)),
+                'partial' => ! $isCompleted && $planning && $planning->status === 'draft',
+            ],
+            [
+                'label' => 'Produksi & Instalasi',
+                'weight' => '+30%',
+                'done' => $isCompleted || ($production && $production->status === 'completed'),
+                'partial' => ! $isCompleted && $production && in_array($production->status, ['pending', 'in_progress'], true),
+            ],
+            [
+                'label' => 'Dokumentasi Lapangan',
+                'weight' => '+10%',
+                'done' => $isCompleted || $hasDocs,
+            ],
+            [
+                'label' => 'Proyek Selesai & Stok Kembali',
+                'weight' => '100%',
+                'done' => $isCompleted,
+            ],
+        ];
+    }
 }

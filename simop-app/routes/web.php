@@ -62,6 +62,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('surveys.pdf.result');
     Route::resource('surveys', SurveyController::class);
 
+    Route::post('/projects/{project}/complete', [ProjectController::class, 'complete'])
+        ->name('projects.complete');
     Route::resource('projects', ProjectController::class);
 
     Route::patch('/plannings/{planning}/status', [PlanningController::class, 'updateStatus'])
