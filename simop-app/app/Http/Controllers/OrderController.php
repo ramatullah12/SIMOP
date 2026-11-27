@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Survey;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class OrderController extends Controller
 {
@@ -171,9 +174,39 @@ class OrderController extends Controller
             abort(403, 'Anda tidak memiliki hak akses untuk melihat pesanan ini.');
         }
 
-        $order->load(['client', 'survey.assignedUser', 'survey.approver', 'project']);
+        $order->load(['client', 'survey.assignedUser', 'survey.approver', 'project.projectItems.item', 'project.rating']);
 
         return view('orders.show', compact('order', 'role'));
+    }
+
+    public function invoice(Request $request, Order $order): Response
+    {
+        $user = auth()->user();
+        $role = $user?->role?->slug;
+
+        abort_unless(in_array($role, ['admin', 'client', 'direktur'], true), 403);
+
+        if ($role === 'client' && $order->client_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki hak akses untuk mengunduh invoice pesanan ini.');
+        }
+
+        $order->load(['client', 'survey.assignedUser', 'survey.approver', 'project.projectItems.item', 'project.rating']);
+
+        $logoDataUri = null;
+        if (extension_loaded('gd')) {
+            $logoSmg = public_path('images/logo-smg.jpg');
+            if (is_file($logoSmg)) {
+                $logoDataUri = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoSmg));
+            }
+        }
+
+        $invoiceNumber = 'INV/' . $order->order_number;
+        $filename = Str::slug('invoice-' . $order->order_number) . '.pdf';
+
+        $pdf = Pdf::loadView('orders.pdf.invoice', compact('order', 'invoiceNumber', 'logoDataUri'))
+            ->setPaper('a4', 'portrait');
+
+        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
     }
 
     public function edit(Order $order): View

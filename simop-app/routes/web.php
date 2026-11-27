@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::post('/orders/{order}/verify', [OrderController::class, 'verify'])->name('orders.verify');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject');
     Route::resource('orders', OrderController::class);

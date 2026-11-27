@@ -120,7 +120,6 @@ class DashboardController extends Controller
         $orders = Order::with(['survey.assignedUser', 'project'])
             ->where('client_id', $user->id)
             ->latest()
-            ->take(5)
             ->get();
 
         // Riwayat dan Monitoring Status Survei khusus milik Client ini

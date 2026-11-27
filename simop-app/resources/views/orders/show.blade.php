@@ -16,6 +16,14 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('orders.invoice', ['order' => $order, 'download' => 1]) }}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 shadow-sm transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Unduh Invoice (PDF)
+                </a>
+
                 <a href="{{ route('tracking.show', $order) }}"
                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 shadow-sm transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,7 +341,7 @@
                         </h4>
                         @if ($order->project)
                             <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                                {{ strtoupper($order->project->status) }}
+                                {{ $order->project->status_label }}
                             </span>
                         @endif
                     </div>
@@ -346,10 +354,24 @@
                             <p class="text-slate-600">
                                 Progres: <strong class="text-emerald-700">{{ $order->project->progress }}%</strong>
                             </p>
-                            <div class="pt-2">
+                            @if ($order->project->projectItems->isNotEmpty())
+                                <div class="pt-1">
+                                    <p class="text-slate-500 font-semibold mb-1">Barang / Perlengkapan:</p>
+                                    <ul class="space-y-0.5 text-slate-700">
+                                        @foreach ($order->project->projectItems as $pi)
+                                            <li>&bull; {{ $pi->item?->name }} (<strong>{{ $pi->quantity }} {{ $pi->item?->unit }}</strong>)</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            <div class="pt-2 flex items-center gap-4">
                                 <a href="{{ route('tracking.show', $order) }}"
                                    class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline">
                                     Pantau Progres Pekerjaan &rarr;
+                                </a>
+                                <a href="{{ route('orders.invoice', ['order' => $order, 'download' => 1]) }}"
+                                   class="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                                    Unduh Invoice &rarr;
                                 </a>
                             </div>
                         </div>

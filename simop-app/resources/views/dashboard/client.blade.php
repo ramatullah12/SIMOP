@@ -360,8 +360,8 @@
                     <h3 class="font-semibold text-gray-900 text-base">Daftar Pesanan & Status Pekerjaan</h3>
                     <p class="text-xs text-gray-500 mt-0.5">Seluruh pesanan kegiatan yang telah Anda ajukan.</p>
                 </div>
-                <a href="{{ route('tracking.index') }}" class="text-xs font-semibold text-blue-600 hover:underline">
-                    Lihat Semua
+                <a href="{{ route('orders.index') }}" class="text-xs font-semibold text-blue-600 hover:underline">
+                    Lihat Semua Pesanan &amp; Invoice &rarr;
                 </a>
             </div>
             <div class="overflow-x-auto">
@@ -402,10 +402,20 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">
-                                    <a href="{{ route('tracking.show', $order) }}"
-                                       class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">
-                                        Lihat Status
-                                    </a>
+                                    <div class="flex items-center flex-wrap gap-1.5">
+                                        <a href="{{ route('orders.show', $order) }}"
+                                           class="px-2.5 py-1.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold hover:bg-slate-200">
+                                            Detail
+                                        </a>
+                                        <a href="{{ route('orders.invoice', ['order' => $order, 'download' => 1]) }}"
+                                           class="px-2.5 py-1.5 bg-emerald-600 text-white rounded text-xs font-semibold hover:bg-emerald-700">
+                                            Invoice
+                                        </a>
+                                        <a href="{{ route('tracking.show', $order) }}"
+                                           class="px-2.5 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">
+                                            Status
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
